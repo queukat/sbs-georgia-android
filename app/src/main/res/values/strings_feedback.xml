@@ -1,0 +1,66 @@
+<resources>
+    <string name="manual_entry_error_amount_required">Enter an amount greater than zero.</string>
+    <string name="manual_entry_error_category_required">Source category is required.</string>
+
+    <string name="fx_override_error_not_found">Income entry was not found.</string>
+    <string name="fx_override_error_units">Units must be a positive integer.</string>
+    <string name="fx_override_error_rate">Rate must be greater than zero.</string>
+
+    <string name="workflow_error_declaration_date_required">Declaration filed date is required for the selected status.</string>
+    <string name="workflow_error_payment_sent_date_required">Payment sent date is required for the selected status.</string>
+    <string name="workflow_error_payment_credited_date_required">Payment credited date is required for the selected status.</string>
+
+    <string name="fx_resolve_none">No unresolved FX entries were found.</string>
+    <string name="fx_resolve_resolved_all">Resolved FX for %1$d entries.</string>
+    <string name="fx_resolve_partial">Resolved FX for %1$d entries, %2$d still need review.</string>
+    <string name="fx_resolve_manual_review_needed">%1$d entries still need manual FX review.</string>
+
+    <string name="settings_error_registration_id_required">IE registration ID is required.</string>
+    <string name="settings_error_display_name_required">Taxpayer display name is required.</string>
+    <string name="settings_error_tax_rate_invalid">Tax rate must be a non-negative number.</string>
+    <string name="settings_error_reminder_time_invalid">Reminder time must use HH:mm format, for example 09:00.</string>
+    <string name="settings_error_declaration_days_invalid">Declaration reminder days must be comma-separated numbers between 1 and 15.</string>
+    <string name="settings_error_payment_days_invalid">Payment reminder days must be comma-separated numbers between 1 and 15.</string>
+    <string name="settings_message_income_csv_exported">Income entries CSV exported.</string>
+    <string name="settings_message_monthly_csv_exported">Monthly summaries CSV exported.</string>
+    <string name="settings_message_backup_exported">JSON backup exported.</string>
+    <string name="settings_message_backup_imported_summary">Backup imported. Restored %1$d income entries, %2$d month records, %3$d statements, and %4$d imported transactions.</string>
+    <string name="settings_message_data_operation_failed">Data operation failed.</string>
+
+    <string name="import_statement_message_duplicate_file">This PDF has already been imported. The source fingerprint matches an existing statement.</string>
+    <string name="import_statement_message_skipped_lines">%1$d statement lines could not be parsed and were skipped.</string>
+    <string name="import_statement_message_import_summary">Imported %1$d income rows. Stored %2$d parsed transactions. Skipped %3$d duplicates and left %4$d rows excluded.</string>
+    <string name="import_statement_message_import_snackbar">Imported %1$d income rows from %2$s.</string>
+    <string name="import_statement_message_fx_auto_resolved_all">Official NBG FX rates were applied automatically for %1$d entries.</string>
+    <string name="import_statement_message_fx_auto_resolved_partial">Official NBG FX rates were applied for %1$d entries. %2$d still need review.</string>
+    <string name="import_statement_message_fx_manual_review_needed">%1$d imported entries still need manual FX review.</string>
+    <string name="import_statement_error_no_preview">No preview was produced for the selected PDF.</string>
+    <string name="import_statement_error_parse_failed">Failed to parse the selected PDF.</string>
+    <string name="import_statement_error_unsupported_pdf">Unsupported PDF. This importer only supports the current TBC statement layout without OCR.</string>
+    <string name="import_statement_error_pick_pdf_first">Pick and parse a PDF before importing.</string>
+    <string name="import_statement_error_invalid_rows">Included taxable rows must have a positive amount, currency, and source category.</string>
+    <string name="import_statement_error_import_failed">Import failed.</string>
+
+    <string name="onboarding_error_unsupported_document">Unsupported PDF. Only text-based registry extracts and Georgian small business status certificates are supported in onboarding.</string>
+    <string name="onboarding_error_expected_registry_extract">This PDF looks like a Georgian small business status certificate, not a registry extract.</string>
+    <string name="onboarding_error_expected_sbs_certificate">This PDF looks like a registry extract, not a small business status certificate.</string>
+    <string name="onboarding_error_parse_failed">Failed to parse the selected PDF.</string>
+    <string name="onboarding_error_display_name_required">Display name is required.</string>
+    <string name="onboarding_error_registration_id_required">Registration or personal ID is required.</string>
+    <string name="onboarding_error_tax_rate_invalid">Default tax rate must be a non-negative number.</string>
+    <string name="onboarding_error_registration_date_invalid">Registration date must use YYYY-MM-DD format.</string>
+    <string name="onboarding_error_certificate_issued_date_invalid">Certificate issued date must use YYYY-MM-DD format.</string>
+    <string name="onboarding_error_save_failed">Failed to save onboarding data.</string>
+    <string name="onboarding_note_registry_effective_date_manual">Registry extract import does not autofill small business status effective date.</string>
+    <string name="onboarding_note_certificate_effective_date_autofilled">Small business status effective date is parsed from the certificate line stating when the status was granted.</string>
+    <string name="onboarding_note_review_before_apply">Review every parsed field before applying it to onboarding.</string>
+
+    <string name="source_category_software_services">Software services</string>
+    <string name="source_category_consulting">Consulting</string>
+    <string name="source_category_marketplace_payout">Marketplace payout</string>
+    <string name="source_category_other">Other</string>
+    <string name="source_category_bank_fee">Bank fee</string>
+    <string name="source_category_own_account_transfer">Own account transfer</string>
+    <string name="source_category_imported_statement_income">Imported statement income</string>
+    <string name="source_category_imported_statement_review">Imported statement review</string>
+</resources>

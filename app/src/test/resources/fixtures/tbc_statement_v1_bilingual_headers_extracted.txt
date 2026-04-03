@@ -1,0 +1,4 @@
+Account currency: USD
+Date / თარიღი  Description / დანიშნულება  Additional Information / დამატებითი ინფორმაცია  Paid Out / გასული თანხა  Paid In / შემოსული თანხა  Balance / ბალანსი
+09/03/2026  FOR SOFTWARE SERVICES  invoice 004  -  300.00 USD  1895.00 USD
+10/03/2026  INTERNAL TRANSFER  own account transfer  -  100.00 USD  1995.00 USD

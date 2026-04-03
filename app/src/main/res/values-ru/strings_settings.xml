@@ -1,0 +1,30 @@
+<resources>
+    <string name="settings_title">Настройки</string>
+    <string name="settings_saved">Настройки сохранены локально.</string>
+    <string name="settings_section_taxpayer_profile">Профиль налогоплательщика</string>
+    <string name="settings_section_reminder_preferences">Настройки напоминаний</string>
+    <string name="settings_section_appearance">Оформление</string>
+    <string name="settings_section_data_management">Данные</string>
+    <string name="settings_section_save">Сохранение</string>
+    <string name="settings_registration_id">Регистрационный ID ИП</string>
+    <string name="settings_display_name">Имя налогоплательщика</string>
+    <string name="settings_effective_date">Дата начала действия статуса малого бизнеса</string>
+    <string name="settings_tax_rate">Ставка налога по умолчанию (%)</string>
+    <string name="settings_notifications_blocked">Уведомления Android отключены, поэтому напоминания могут быть запланированы, но не будут показаны до выдачи разрешения.</string>
+    <string name="settings_grant_notification_permission">Разрешить уведомления</string>
+    <string name="settings_default_reminder_time">Время напоминаний по умолчанию</string>
+    <string name="settings_default_reminder_time_hint">Используйте локальный формат HH:mm, например 09:00</string>
+    <string name="settings_declaration_reminder_days">Дни напоминаний о декларации</string>
+    <string name="settings_payment_reminder_days">Дни напоминаний об оплате</string>
+    <string name="settings_reminder_days_hint">Дни с 1 по 15 через запятую, например 10,13,15</string>
+    <string name="settings_enable_declaration_reminders">Включить напоминания о декларации</string>
+    <string name="settings_enable_payment_reminders">Включить напоминания об оплате</string>
+    <string name="settings_data_management_body">В локальном режиме резервное копирование и экспорт являются частью основного продукта. JSON-резервная копия сохраняет настройки приложения, месячные записи, кэш FX и сырые метаданные импортированных выписок.</string>
+    <string name="settings_data_management_warning">Импорт JSON-резервной копии заменяет текущую локальную базу данных выбранной резервной копией.</string>
+    <string name="settings_export_income_csv">Экспорт CSV доходов</string>
+    <string name="settings_export_monthly_csv">Экспорт CSV месячных сводок</string>
+    <string name="settings_export_backup_json">Экспорт JSON-резервной копии</string>
+    <string name="settings_import_backup_json">Импорт JSON-резервной копии</string>
+    <string name="settings_data_operation_in_progress">Идёт работа с локальной резервной копией и экспортом…</string>
+    <string name="settings_save">Сохранить настройки</string>
+</resources>

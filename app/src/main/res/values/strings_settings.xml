@@ -1,0 +1,30 @@
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_saved">Settings saved locally.</string>
+    <string name="settings_section_taxpayer_profile">Taxpayer profile</string>
+    <string name="settings_section_reminder_preferences">Reminder preferences</string>
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_data_management">Data management</string>
+    <string name="settings_section_save">Save</string>
+    <string name="settings_registration_id">IE registration ID</string>
+    <string name="settings_display_name">Taxpayer display name</string>
+    <string name="settings_effective_date">Small business status effective date</string>
+    <string name="settings_tax_rate">Default tax rate (%)</string>
+    <string name="settings_notifications_blocked">Android notifications are blocked, so reminders can be scheduled but will not be shown until permission is granted.</string>
+    <string name="settings_grant_notification_permission">Grant notification permission</string>
+    <string name="settings_default_reminder_time">Default reminder time</string>
+    <string name="settings_default_reminder_time_hint">Use HH:mm local time, for example 09:00</string>
+    <string name="settings_declaration_reminder_days">Declaration reminder days</string>
+    <string name="settings_payment_reminder_days">Payment reminder days</string>
+    <string name="settings_reminder_days_hint">Comma-separated days from 1 to 15, for example 10,13,15</string>
+    <string name="settings_enable_declaration_reminders">Enable declaration reminders</string>
+    <string name="settings_enable_payment_reminders">Enable payment reminders</string>
+    <string name="settings_data_management_body">Local-only mode means backup/export is part of the core product flow. JSON backup preserves app settings, monthly records, FX cache, and raw imported statement metadata.</string>
+    <string name="settings_data_management_warning">Importing a JSON backup replaces the current local database with the selected backup.</string>
+    <string name="settings_export_income_csv">Export income entries CSV</string>
+    <string name="settings_export_monthly_csv">Export monthly summaries CSV</string>
+    <string name="settings_export_backup_json">Export JSON backup</string>
+    <string name="settings_import_backup_json">Import JSON backup</string>
+    <string name="settings_data_operation_in_progress">Working with local backup/export data…</string>
+    <string name="settings_save">Save settings</string>
+</resources>

@@ -1,0 +1,8 @@
+Account Statement
+Statement currency: USD
+Date  Description  Additional Information  Paid Out  Paid In  Balance
+24/03/2026  FOR SOFTWARE SERVICES
+Invoice 003 for March retainer  0.00 USD  175.00 USD  1087.50 USD
+23/03/2026  CLIENT PAYMENT  Second milestone for
+mobile release  0.00 USD  220.00 USD  912.50 USD
+Page 1

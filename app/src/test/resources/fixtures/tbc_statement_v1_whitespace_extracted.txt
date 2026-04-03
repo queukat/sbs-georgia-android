@@ -1,0 +1,7 @@
+Account Statement
+Statement currency: usd
+Date		Description		Additional Information		Paid Out		Paid In		Balance
+22/03/2026		for software services		Invoice 004		0.00 USD		300.00 USD		1212.50 USD
+21/03/2026      bank fee      Monthly package      4.00 USD      0.00 USD      912.50 USD
+20/03/2026  Own Account Transfer  Savings top up  150.00 USD  0.00 USD  916.50 USD
+19/03/2026  Client Payment  Final settlement  0.00 USD  85.00 USD  1066.50 USD

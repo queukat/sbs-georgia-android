@@ -1,0 +1,190 @@
+package com.queukat.sbsgeorgia.domain.service
+
+import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class TbcStatementParserTest {
+    private val parser = TbcStatementParser()
+
+    @Test
+    fun parsesTbcFixtureAndExtractsRows() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-sample.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_extracted.txt"),
+        )
+
+        assertEquals(4, preview.rows.size)
+        assertEquals("tbc-sample.pdf", preview.sourceFileName)
+        assertEquals("USD", preview.rows.first().suggestedCurrency)
+        assertEquals("125.50", preview.rows.first().suggestedAmount.toPlainString())
+    }
+
+    @Test
+    fun appliesTaxableAndNonTaxableHeuristics() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-sample.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_extracted.txt"),
+        )
+
+        val softwareServices = preview.rows.first { it.description == "FOR SOFTWARE SERVICES" }
+        val internalTransfer = preview.rows.first { it.description == "INTERNAL TRANSFER" }
+        val genericInbound = preview.rows.first { it.description == "CLIENT PAYMENT" }
+
+        assertEquals(DeclarationInclusion.INCLUDED, softwareServices.suggestedInclusion)
+        assertEquals("Software services", softwareServices.suggestedSourceCategory)
+        assertEquals(DeclarationInclusion.EXCLUDED, internalTransfer.suggestedInclusion)
+        assertEquals("Own account transfer", internalTransfer.suggestedSourceCategory)
+        assertEquals(DeclarationInclusion.REVIEW_REQUIRED, genericInbound.suggestedInclusion)
+        assertTrue(genericInbound.transactionFingerprint.isNotBlank())
+    }
+
+    @Test
+    fun parsesAcrossMultiplePagesWithRepeatedHeaders() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-multipage.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_multipage_extracted.txt"),
+        )
+
+        assertEquals(4, preview.rows.size)
+        val commission = preview.rows.first { it.description == "BANK COMMISSION" }
+        assertEquals(DeclarationInclusion.EXCLUDED, commission.suggestedInclusion)
+        assertEquals("Bank fee", commission.suggestedSourceCategory)
+        assertEquals("Own account transfer", preview.rows.last().suggestedSourceCategory)
+    }
+
+    @Test
+    fun mergesWrappedTransactionLinesIntoSinglePreviewRows() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-wrapped.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_wrapped_extracted.txt"),
+        )
+
+        assertEquals(2, preview.rows.size)
+        val wrappedSoftwareRow = preview.rows.first()
+        val wrappedClientPayment = preview.rows.last()
+
+        assertEquals("175.00", wrappedSoftwareRow.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.INCLUDED, wrappedSoftwareRow.suggestedInclusion)
+        assertTrue(wrappedSoftwareRow.additionalInformation.orEmpty().contains("Invoice 003"))
+        assertEquals(DeclarationInclusion.REVIEW_REQUIRED, wrappedClientPayment.suggestedInclusion)
+        assertTrue(wrappedClientPayment.additionalInformation.orEmpty().contains("mobile release"))
+    }
+
+    @Test
+    fun handlesWhitespaceVariantsWithoutLosingSuggestionQuality() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-whitespace.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_whitespace_extracted.txt"),
+        )
+
+        assertEquals(4, preview.rows.size)
+        assertEquals(
+            DeclarationInclusion.INCLUDED,
+            preview.rows.first { it.description.equals("for software services", ignoreCase = true) }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.EXCLUDED,
+            preview.rows.first { it.description.equals("bank fee", ignoreCase = true) }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.EXCLUDED,
+            preview.rows.first { it.description.equals("Own Account Transfer", ignoreCase = true) }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.REVIEW_REQUIRED,
+            preview.rows.first { it.description.equals("Client Payment", ignoreCase = true) }.suggestedInclusion,
+        )
+    }
+
+    @Test
+    fun parsesGeorgianHeadersAndKeepsSafeSuggestionQuality() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-georgian.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_georgian_extracted.txt"),
+        )
+
+        assertEquals(4, preview.rows.size)
+        assertEquals("USD", preview.rows.first().suggestedCurrency)
+        assertEquals(
+            DeclarationInclusion.INCLUDED,
+            preview.rows.first { it.description == "პროგრამული მომსახურება" }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.EXCLUDED,
+            preview.rows.first { it.description == "საბანკო საკომისიო" }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.EXCLUDED,
+            preview.rows.first { it.description == "საკუთარ ანგარიშებს შორის გადარიცხვა" }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.REVIEW_REQUIRED,
+            preview.rows.first { it.description == "კლიენტის გადახდა" }.suggestedInclusion,
+        )
+    }
+
+    @Test
+    fun parsesBilingualHeaderVariant() {
+        val preview = parser.parse(
+            sourceFileName = "tbc-bilingual.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_bilingual_headers_extracted.txt"),
+        )
+
+        assertEquals(2, preview.rows.size)
+        assertEquals(
+            DeclarationInclusion.INCLUDED,
+            preview.rows.first { it.description == "FOR SOFTWARE SERVICES" }.suggestedInclusion,
+        )
+        assertEquals(
+            DeclarationInclusion.EXCLUDED,
+            preview.rows.first { it.description == "INTERNAL TRANSFER" }.suggestedInclusion,
+        )
+    }
+
+    @Test
+    fun parsesRealCollapsedBilingualStatementExport() {
+        val preview = parser.parse(
+            sourceFileName = "statement-818670212_260402_120010.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = fixtureText("tbc_statement_v1_collapsed_bilingual_extracted.txt"),
+        )
+
+        assertEquals(30, preview.rows.size)
+        assertEquals("USD", preview.rows.first().suggestedCurrency)
+        assertEquals(0, preview.skippedLineCount)
+
+        val firstTransfer = preview.rows.first()
+        assertEquals("Transfer between your accounts", firstTransfer.description)
+        assertTrue(firstTransfer.additionalInformation.orEmpty().contains("Iaroslav Rychenkov"))
+        assertEquals("400.00", firstTransfer.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, firstTransfer.suggestedInclusion)
+
+        val softwareIncome = preview.rows.first {
+            it.incomeDate.toString() == "2026-01-12" && it.description.equals("for software services", ignoreCase = true)
+        }
+        assertTrue(softwareIncome.additionalInformation.orEmpty().contains("WAVEACCESS USA"))
+        assertEquals("3031.00", softwareIncome.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.INCLUDED, softwareIncome.suggestedInclusion)
+
+        val januaryFee = preview.rows.first {
+            it.incomeDate.toString() == "2026-01-28" && it.description.contains("მომსახურების საკომისიო")
+        }
+        assertTrue(januaryFee.additionalInformation.orEmpty().contains("დებიტორები -"))
+        assertEquals("0.74", januaryFee.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, januaryFee.suggestedInclusion)
+        assertEquals("Bank fee", januaryFee.suggestedSourceCategory)
+    }
+
+    private fun fixtureText(fileName: String): String =
+        requireNotNull(javaClass.getResource("/fixtures/$fileName"))
+            .readText()
+}

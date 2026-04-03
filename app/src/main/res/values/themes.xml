@@ -1,0 +1,7 @@
+<resources>
+    <style name="Theme.SbsGeorgiaAndroid" parent="Theme.Material3.DayNight.NoActionBar" />
+
+    <style name="Theme.SbsGeorgiaAndroid.Launcher" parent="Theme.SbsGeorgiaAndroid">
+        <item name="android:windowBackground">@drawable/launch_window_background</item>
+    </style>
+</resources>

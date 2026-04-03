@@ -1,0 +1,12 @@
+Account Statement
+Statement currency: USD
+Date  Description  Additional Information  Paid Out  Paid In  Balance
+28/03/2026  FOR SOFTWARE SERVICES  Invoice 002  0.00 USD  210.00 USD  1210.00 USD
+27/03/2026  CLIENT PAYMENT  Milestone 2  0.00 USD  90.00 USD  1000.00 USD
+Page 1
+Account Statement
+Statement currency: USD
+Date  Description  Additional Information  Paid Out  Paid In  Balance
+26/03/2026  BANK COMMISSION  Transfer commission  2.50 USD  0.00 USD  997.50 USD
+25/03/2026  INTERNAL TRANSFER  Own account transfer  300.00 USD  0.00 USD  1297.50 USD
+Page 2

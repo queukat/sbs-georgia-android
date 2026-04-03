@@ -1,0 +1,102 @@
+ამონაწერი ანგარიშიდან:
+GE57TB7209436110100010 01/01/2026- 02/04/2026 02/04/2026 11:58:42
+Account Statement:
+ანგარიშის მფლობელი: ი/მ იაროსლავ რიჩენკოვ
+Account Holder: P/E Iaroslav Rychenkov
+საწყისი ნაშთი / Opening Balance 530.97USD
+საბოლოო ნაშთი / Closing Balance 1610.77USD
+სულ გასული თანხა / Total Paid out 8013.20USD
+სულ შემოსული თანხა / Total Paid in 9093.00USD
+ამონაწერი შესაძლოა შეიცავდეს ბანკის მიერ დაუავტორიზებელი
+(დაუსრულებელი) ტრანზაქციების (საბანკო ოპერაციების) შესახებ
+ინფორმაციას, რომელიც დამუშავების პროცესშია. შესაბამისად,
+ინფორმაცია შესაძლებელია შეიცვალოს.
+Statements contain transactions that are waiting for authorisation or are
+processing within bank. Information might change.
+თარიღი
+Date
+დანიშნულება
+Description
+დამატებითი ინფორმაცია
+Additional Information
+გასული
+თანხა
+Paid Out
+შემოსული
+თანხა
+Paid In
+ბალანსი
+Balance
+03/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 130.97
+04/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001130.97 0.00
+12/01/2026for software services WAVEACCESS USA, WFBIUS6SXXX, 6914524407 3031.00 3031.00
+12/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001600.00 2431.00
+15/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001100.00 2331.00
+1 - 3
+თარიღი
+Date
+დანიშნულება
+Description
+დამატებითი ინფორმაცია
+Additional Information
+გასული
+თანხა
+Paid Out
+შემოსული
+თანხა
+Paid In
+ბალანსი
+Balance
+19/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001500.00 1831.00
+28/01/2026ანგარიშის GE57TB7209436110100010/USD მომსახურების
+საკომისიო, იანვარი, 2026
+დებიტორები - ანგარიში მომსახურების საკომისიო,
+TBCBGE22, GE90TB0000025013100002
+0.74 1830.26
+28/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001330.00 1500.26
+29/01/2026for software services WAVEACCESS USA, WFBIUS6SXXX, 6914524407 3031.00 4531.26
+31/01/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 4131.26
+02/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001450.00 3681.26
+03/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001200.00 3481.26
+08/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001300.00 3181.26
+14/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 2781.26
+18/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001100.00 2681.26
+18/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001300.00 2381.26
+21/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001300.00 2081.26
+28/02/2026ანგარიშის GE57TB7209436110100010/USD მომსახურების
+საკომისიო, თებერვალი, 2026
+დებიტორები - ანგარიში მომსახურების საკომისიო,
+TBCBGE22, GE90TB0000025013100002
+0.75 2080.51
+28/02/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 1680.51
+02/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001200.00 1480.51
+02/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001450.00 1030.51
+04/03/2026for software services WAVEACCESS USA, WFBIUS6SXXX, 6914524407 3031.00 4061.51
+2 - 3
+თარიღი
+Date
+დანიშნულება
+Description
+დამატებითი ინფორმაცია
+Additional Information
+გასული
+თანხა
+Paid Out
+შემოსული
+თანხა
+Paid In
+ბალანსი
+Balance
+06/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 3661.51
+12/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001100.00 3561.51
+12/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001300.00 3261.51
+16/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 2861.51
+24/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 2461.51
+28/03/2026ანგარიშის GE57TB7209436110100010/USD მომსახურების
+საკომისიო, მარტი, 2026
+დებიტორები - ანგარიში მომსახურების საკომისიო,
+TBCBGE22, GE90TB0000025013100002
+0.74 2460.77
+29/03/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001400.00 2060.77
+02/04/2026Transfer between your accounts Iaroslav Rychenkov, TBCBGE22, GE94TB7209445168200001450.00 1610.77
+3 - 3

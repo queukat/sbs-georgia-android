@@ -1,0 +1,8 @@
+Account Statement
+Statement currency: USD
+Date  Description  Additional Information  Paid Out  Paid In  Balance
+15/03/2026  FOR SOFTWARE SERVICES  Invoice 001  0.00 USD  125.50 USD  1240.75 USD
+14/03/2026  INTERNAL TRANSFER  Own account transfer  500.00 USD  0.00 USD  740.75 USD
+13/03/2026  CARD FEE  Monthly account fee  5.00 USD  0.00 USD  745.75 USD
+12/03/2026  CLIENT PAYMENT  Project settlement  0.00 USD  300.00 USD  1045.75 USD
+Page 1

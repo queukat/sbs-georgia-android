@@ -1,0 +1,32 @@
+<resources>
+    <string name="common_back">Назад</string>
+    <string name="common_ok">ОК</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="common_yes">Да</string>
+    <string name="common_no">Нет</string>
+    <string name="common_not_detected">Не найдено</string>
+    <string name="common_needs_review">Нужна проверка</string>
+    <string name="common_confident">Уверенно</string>
+    <string name="common_selected_file">Выбранный файл</string>
+    <string name="common_copy_code">Скопировать код</string>
+    <string name="common_copy_comment">Скопировать комментарий</string>
+    <string name="common_copy_amount">Скопировать сумму</string>
+    <string name="common_copied_template">Скопировано: %1$s</string>
+    <string name="nav_home">Главная</string>
+    <string name="nav_months">Месяцы</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="workflow_status_draft">Черновик</string>
+    <string name="workflow_status_ready_to_file">Готово к подаче</string>
+    <string name="workflow_status_filed">Подано</string>
+    <string name="workflow_status_tax_payment_pending">Ожидает оплаты налога</string>
+    <string name="workflow_status_payment_sent">Оплата отправлена</string>
+    <string name="workflow_status_payment_credited">Оплата зачислена</string>
+    <string name="workflow_status_settled">Закрыто</string>
+    <string name="workflow_status_overdue">Просрочено</string>
+    <string name="fx_rate_source_none">Не задано</string>
+    <string name="fx_rate_source_official_nbg_json">Официальный NBG JSON</string>
+    <string name="fx_rate_source_manual_override">Ручное переопределение</string>
+</resources>

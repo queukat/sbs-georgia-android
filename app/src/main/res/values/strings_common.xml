@@ -1,0 +1,32 @@
+<resources>
+    <string name="common_back">Back</string>
+    <string name="common_ok">OK</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_yes">Yes</string>
+    <string name="common_no">No</string>
+    <string name="common_not_detected">Not detected</string>
+    <string name="common_needs_review">Needs review</string>
+    <string name="common_confident">Confident</string>
+    <string name="common_selected_file">Selected file</string>
+    <string name="common_copy_code">Copy code</string>
+    <string name="common_copy_comment">Copy comment</string>
+    <string name="common_copy_amount">Copy amount</string>
+    <string name="common_copied_template">%1$s copied</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_months">Months</string>
+    <string name="nav_settings">Settings</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="workflow_status_draft">Draft</string>
+    <string name="workflow_status_ready_to_file">Ready to file</string>
+    <string name="workflow_status_filed">Filed</string>
+    <string name="workflow_status_tax_payment_pending">Tax payment pending</string>
+    <string name="workflow_status_payment_sent">Payment sent</string>
+    <string name="workflow_status_payment_credited">Payment credited</string>
+    <string name="workflow_status_settled">Settled</string>
+    <string name="workflow_status_overdue">Overdue</string>
+    <string name="fx_rate_source_none">Not set</string>
+    <string name="fx_rate_source_official_nbg_json">Official NBG JSON</string>
+    <string name="fx_rate_source_manual_override">Manual override</string>
+</resources>
