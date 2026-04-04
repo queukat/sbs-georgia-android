@@ -19,3 +19,7 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# pdfbox-android references the optional JPEG2000 decoder class.
+# We do not bundle that decoder, so suppress the warning to allow release minification.
+-dontwarn com.gemalto.jp2.JP2Decoder
