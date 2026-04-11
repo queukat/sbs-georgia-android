@@ -5,8 +5,8 @@ import java.time.LocalDate
 
 data class MonthsMonthItemUiState(
     val snapshot: MonthlyDeclarationSnapshot,
-    val canQuickMarkDeclarationFiled: Boolean,
-    val declarationAlreadyFiled: Boolean,
+    val canQuickSettleMonth: Boolean,
+    val monthAlreadySettled: Boolean,
     val filingOpensOn: LocalDate? = null,
 )
 

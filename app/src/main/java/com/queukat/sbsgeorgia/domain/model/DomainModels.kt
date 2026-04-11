@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.domain.model
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
@@ -133,6 +134,7 @@ data class MonthlyDeclarationRecord(
     val declarationFiledDate: LocalDate? = null,
     val paymentSentDate: LocalDate? = null,
     val paymentCreditedDate: LocalDate? = null,
+    val paymentAmountGel: BigDecimal? = null,
     val notes: String = "",
 )
 
@@ -167,7 +169,23 @@ data class MonthlyDeclarationSnapshot(
     val reviewNeeded: Boolean,
     val setupRequired: Boolean,
     val record: MonthlyDeclarationRecord?,
-)
+) {
+    val paidTaxAmountGel: BigDecimal?
+        get() = record?.paymentAmountGel
+
+    val taxPaymentDifferenceGel: BigDecimal?
+        get() {
+            val estimatedTax = estimatedTaxAmountGel ?: return null
+            val paidTax = paidTaxAmountGel ?: return null
+            return paidTax.subtract(estimatedTax).setScale(2, RoundingMode.HALF_UP)
+        }
+
+    val taxPaymentMismatch: Boolean
+        get() = taxPaymentDifferenceGel?.compareTo(BigDecimal.ZERO)?.let { it != 0 } ?: false
+
+    val taxPaymentUnderpaid: Boolean
+        get() = taxPaymentDifferenceGel?.signum() == -1
+}
 
 data class DashboardSummary(
     val taxpayerName: String?,
@@ -176,6 +194,8 @@ data class DashboardSummary(
     val ytdIncomeGel: BigDecimal,
     val unresolvedFxCount: Int,
     val unsettledMonthsCount: Int,
+    val paidTaxAmountGel: BigDecimal,
+    val paymentMismatchMonthsCount: Int,
     val currentDuePeriod: MonthlyDeclarationSnapshot?,
     val nextReminderDay: Int?,
 )

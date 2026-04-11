@@ -1,6 +1,14 @@
 <resources>
-    <string name="onboarding_title">Welcome to SBS Georgia</string>
+    <string name="onboarding_title">Welcome to Georgia Small Biz Tracker</string>
     <string name="onboarding_subtitle">Start by importing a registry extract or Georgian small business status certificate PDF, or fill the fields manually.</string>
+    <string name="onboarding_section_intro">Before you start</string>
+    <string name="onboarding_intro_body">This first-run setup prepares the taxpayer profile and small business status data used across monthly declarations, FX conversion, payment helper, and reminders.</string>
+    <string name="onboarding_intro_step_one_title">Import a document or fill everything manually</string>
+    <string name="onboarding_intro_step_one_body">You can import a registry extract or Georgian small business certificate PDF, or skip import and type the fields below yourself.</string>
+    <string name="onboarding_intro_step_two_title">Review and edit every recognized field</string>
+    <string name="onboarding_intro_step_two_body">Nothing is locked. Parsed values stay editable before you continue into the app.</string>
+    <string name="onboarding_intro_step_three_title">You can change these settings later</string>
+    <string name="onboarding_intro_step_three_body">If you only want to get started quickly, save a minimal profile now and adjust details later in Settings.</string>
     <string name="onboarding_section_options">Onboarding options</string>
     <string name="onboarding_section_preview">Import preview</string>
     <string name="onboarding_section_taxpayer">Taxpayer details</string>
@@ -34,6 +42,10 @@
     <string name="snapshot_due_date">Filing deadline</string>
     <string name="snapshot_status">Status</string>
     <string name="snapshot_estimated_tax">Estimated tax</string>
+    <string name="snapshot_paid_tax">Paid tax</string>
+    <string name="snapshot_tax_mismatch">Tax payment mismatch</string>
+    <string name="snapshot_tax_underpaid">Tax payment is short by %1$s</string>
+    <string name="snapshot_tax_overpaid">Tax payment exceeds estimate by %1$s</string>
     <string name="snapshot_unresolved_fx_entries">Unresolved FX entries: %1$d</string>
     <string name="snapshot_zero_declaration_month">Zero declaration month</string>
     <string name="snapshot_zero_declaration_prepared">Zero declaration prepared</string>

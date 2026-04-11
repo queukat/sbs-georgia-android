@@ -10,6 +10,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveMonthDetailUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import java.math.BigDecimal
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,7 +24,7 @@ import kotlinx.coroutines.launch
 class WorkflowStatusViewModel @Inject constructor(
     private val observeMonthDetailUseCase: ObserveMonthDetailUseCase,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private var initializedYearMonth: YearMonth? = null
 
@@ -49,6 +50,7 @@ class WorkflowStatusViewModel @Inject constructor(
                 declarationFiledDate = snapshot?.record?.declarationFiledDate,
                 paymentSentDate = snapshot?.record?.paymentSentDate,
                 paymentCreditedDate = snapshot?.record?.paymentCreditedDate,
+                paymentAmount = snapshot?.record?.paymentAmountGel?.toPlainString().orEmpty(),
                 notes = snapshot?.record?.notes.orEmpty(),
             )
         }
@@ -72,6 +74,11 @@ class WorkflowStatusViewModel @Inject constructor(
                 current.paymentCreditedDate
             } else {
                 null
+            },
+            paymentAmount = if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
+                current.paymentAmount
+            } else {
+                ""
             },
             errorMessage = null,
         )
@@ -101,6 +108,10 @@ class WorkflowStatusViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(paymentCreditedDate = null, errorMessage = null)
     }
 
+    fun updatePaymentAmount(value: String) {
+        _uiState.value = _uiState.value.copy(paymentAmount = value, errorMessage = null)
+    }
+
     fun updateZeroDeclarationPrepared(value: Boolean) {
         _uiState.value = _uiState.value.copy(zeroDeclarationPrepared = value, errorMessage = null)
     }
@@ -112,6 +123,9 @@ class WorkflowStatusViewModel @Inject constructor(
     fun save() {
         val current = _uiState.value
         val yearMonth = current.yearMonth ?: return
+        val paymentAmount = current.paymentAmount.trim().takeIf { it.isNotBlank() }?.let {
+            runCatching { BigDecimal(it) }.getOrNull()
+        }
         when {
             current.baseStatus in declarationDateRequiredStatuses && current.declarationFiledDate == null -> {
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_declaration_date_required))
@@ -121,6 +135,9 @@ class WorkflowStatusViewModel @Inject constructor(
             }
             current.baseStatus in paymentCreditedDateRequiredStatuses && current.paymentCreditedDate == null -> {
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_payment_credited_date_required))
+            }
+            current.paymentAmount.isNotBlank() && (paymentAmount == null || paymentAmount.signum() != 1) -> {
+                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_payment_amount_invalid))
             }
             else -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
@@ -133,6 +150,7 @@ class WorkflowStatusViewModel @Inject constructor(
                             declarationFiledDate = current.declarationFiledDate,
                             paymentSentDate = current.paymentSentDate,
                             paymentCreditedDate = current.paymentCreditedDate,
+                            paymentAmountGel = paymentAmount,
                             notes = current.notes.trim(),
                         ),
                     )

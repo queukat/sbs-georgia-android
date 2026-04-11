@@ -13,6 +13,7 @@
     <string name="workflow_clear_payment_sent_date">Clear payment sent date</string>
     <string name="workflow_payment_credited_date">Payment credited date</string>
     <string name="workflow_clear_payment_credited_date">Clear payment credited date</string>
+    <string name="workflow_payment_amount">Payment amount</string>
     <string name="workflow_notes">Notes</string>
     <string name="workflow_save">Save workflow</string>
     <string name="workflow_saving">Saving…</string>

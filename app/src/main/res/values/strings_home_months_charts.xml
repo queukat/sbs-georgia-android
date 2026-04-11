@@ -1,5 +1,5 @@
 <resources>
-    <string name="home_title">SBS Georgia</string>
+    <string name="home_title">Georgia Small Biz Tracker</string>
     <string name="home_subtitle">Offline-first accounting, monthly declaration prep, and tax workflow tracking for Georgia small business status.</string>
     <string name="home_section_dashboard">Current dashboard</string>
     <string name="home_section_due_period">Current due period</string>
@@ -9,6 +9,8 @@
     <string name="home_ytd_income">YTD income</string>
     <string name="home_unresolved_fx_entries">Unresolved FX entries</string>
     <string name="home_unsettled_months">Unsettled months</string>
+    <string name="home_paid_taxes">Paid taxes</string>
+    <string name="home_tax_mismatch_months">Months with tax mismatch</string>
     <string name="home_next_reminder">Next reminder</string>
     <string name="home_next_reminder_day">Declaration reminder day %1$d</string>
     <string name="home_no_due_period">No due period is available yet for the current date.</string>
@@ -19,12 +21,13 @@
     <string name="home_open_charts">Charts</string>
     <string name="home_import_pdf">Import PDF</string>
     <string name="home_open_settings_short">Settings</string>
+    <string name="home_support_developer_content_description">Support the developer on Ko-fi</string>
     <string name="months_title">Months</string>
     <string name="months_import_pdf">Import PDF</string>
     <string name="months_add_income">Add income</string>
     <string name="months_open_month">Open month</string>
-    <string name="months_mark_declaration_filed">Mark declaration filed</string>
-    <string name="months_declaration_filed">Declaration filed</string>
+    <string name="months_mark_month_settled">Close month</string>
+    <string name="months_month_settled">Month closed</string>
     <string name="months_filing_opens_on">Filing opens on %1$s</string>
     <string name="months_empty">No declaration months are available yet.</string>
     <string name="charts_title">Charts %1$d</string>

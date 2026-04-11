@@ -87,6 +87,7 @@ class ObserveMonthDetailUseCase @Inject constructor(
 
 class ObserveDashboardSummaryUseCase @Inject constructor(
     private val settingsRepository: SettingsRepository,
+    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
     private val observeCurrentYearSnapshotsUseCase: ObserveCurrentYearSnapshotsUseCase,
     private val planner: MonthlyDeclarationPlanner,
 ) {
@@ -95,9 +96,10 @@ class ObserveDashboardSummaryUseCase @Inject constructor(
             settingsRepository.observeTaxpayerProfile(),
             settingsRepository.observeStatusConfig(),
             settingsRepository.observeReminderConfig(),
+            monthlyDeclarationRepository.observeAll(),
             observeCurrentYearSnapshotsUseCase(),
-        ) { profile: TaxpayerProfile?, config: SmallBusinessStatusConfig?, reminders: ReminderConfig?, snapshots: List<MonthlyDeclarationSnapshot> ->
-            planner.buildDashboardSummary(profile, config, reminders, snapshots)
+        ) { profile: TaxpayerProfile?, config: SmallBusinessStatusConfig?, reminders: ReminderConfig?, records: List<MonthlyDeclarationRecord>, snapshots: List<MonthlyDeclarationSnapshot> ->
+            planner.buildDashboardSummary(profile, config, reminders, snapshots, records)
         }
 }
 

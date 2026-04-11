@@ -74,6 +74,7 @@ data class MonthlyDeclarationRecordPayload(
     val declarationFiledDate: String? = null,
     val paymentSentDate: String? = null,
     val paymentCreditedDate: String? = null,
+    val paymentAmountGel: String? = null,
     val notes: String,
 )
 

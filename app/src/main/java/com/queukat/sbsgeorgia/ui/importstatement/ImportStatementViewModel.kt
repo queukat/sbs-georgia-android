@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 class ImportStatementViewModel @Inject constructor(
     private val loadStatementImportPreviewUseCase: LoadStatementImportPreviewUseCase,
     private val confirmStatementImportUseCase: ConfirmStatementImportUseCase,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ImportStatementUiState())
     val uiState = _uiState.asStateFlow()
@@ -191,8 +191,22 @@ class ImportStatementViewModel @Inject constructor(
                         )
                     else -> null
                 }
+                val taxPaymentMessage = when {
+                    result.appliedTaxPaymentCount > 0 && result.skippedTaxPaymentCount == 0 ->
+                        appContext.getString(
+                            R.string.import_statement_message_tax_payments_applied,
+                            result.appliedTaxPaymentCount,
+                        )
+                    result.appliedTaxPaymentCount > 0 || result.skippedTaxPaymentCount > 0 ->
+                        appContext.getString(
+                            R.string.import_statement_message_tax_payments_partial,
+                            result.appliedTaxPaymentCount,
+                            result.skippedTaxPaymentCount,
+                        )
+                    else -> null
+                }
                 _uiState.value = ImportStatementUiState(
-                    infoMessage = listOfNotNull(summaryMessage, fxMessage).joinToString("\n"),
+                    infoMessage = listOfNotNull(summaryMessage, fxMessage, taxPaymentMessage).joinToString("\n"),
                 )
                 _effects.emit(
                     ImportStatementEffect.Message(

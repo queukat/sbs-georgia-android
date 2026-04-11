@@ -86,6 +86,7 @@ object AppModule {
             .addMigrations(
                 SbsGeorgiaDatabase.MIGRATION_1_2,
                 SbsGeorgiaDatabase.MIGRATION_2_3,
+                SbsGeorgiaDatabase.MIGRATION_3_4,
             )
             .build()
 

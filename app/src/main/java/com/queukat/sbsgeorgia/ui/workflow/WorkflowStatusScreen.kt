@@ -33,6 +33,7 @@ import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
+import com.queukat.sbsgeorgia.ui.common.DecimalField
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
@@ -71,6 +72,7 @@ fun WorkflowStatusRoute(
         onClearPaymentSentDate = viewModel::clearPaymentSentDate,
         onPaymentCreditedDateChanged = viewModel::updatePaymentCreditedDate,
         onClearPaymentCreditedDate = viewModel::clearPaymentCreditedDate,
+        onPaymentAmountChanged = viewModel::updatePaymentAmount,
         onNotesChanged = viewModel::updateNotes,
         onSave = viewModel::save,
     )
@@ -89,6 +91,7 @@ fun WorkflowStatusScreen(
     onClearPaymentSentDate: () -> Unit,
     onPaymentCreditedDateChanged: (java.time.LocalDate) -> Unit,
     onClearPaymentCreditedDate: () -> Unit,
+    onPaymentAmountChanged: (String) -> Unit,
     onNotesChanged: (String) -> Unit,
     onSave: () -> Unit,
 ) {
@@ -183,6 +186,11 @@ fun WorkflowStatusScreen(
                         Text(stringResource(R.string.workflow_clear_payment_credited_date))
                     }
                 }
+                DecimalField(
+                    label = stringResource(R.string.workflow_payment_amount),
+                    value = uiState.paymentAmount,
+                    onValueChange = onPaymentAmountChanged,
+                )
                 OutlinedTextField(
                     value = uiState.notes,
                     onValueChange = onNotesChanged,

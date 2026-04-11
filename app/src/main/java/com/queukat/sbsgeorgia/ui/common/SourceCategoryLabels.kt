@@ -10,7 +10,7 @@ import java.util.Locale
 
 private data class SourceCategoryMapping(
     val rawValue: String,
-    @StringRes val labelResId: Int,
+    @field:StringRes val labelResId: Int,
 )
 
 private val knownSourceCategories = listOf(
@@ -20,6 +20,7 @@ private val knownSourceCategories = listOf(
     SourceCategoryMapping(SourceCategoryPresets.OTHER, R.string.source_category_other),
     SourceCategoryMapping(SourceCategoryPresets.BANK_FEE, R.string.source_category_bank_fee),
     SourceCategoryMapping(SourceCategoryPresets.OWN_ACCOUNT_TRANSFER, R.string.source_category_own_account_transfer),
+    SourceCategoryMapping(SourceCategoryPresets.TAX_PAYMENT, R.string.source_category_tax_payment),
     SourceCategoryMapping(SourceCategoryPresets.IMPORTED_STATEMENT_INCOME, R.string.source_category_imported_statement_income),
     SourceCategoryMapping(SourceCategoryPresets.IMPORTED_STATEMENT_REVIEW, R.string.source_category_imported_statement_review),
 )

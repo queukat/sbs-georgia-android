@@ -18,6 +18,7 @@ import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyCurrencyTotal
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationPeriod
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
@@ -63,15 +64,15 @@ class MonthsFlowTest {
                                     items = listOf(
                                         MonthsMonthItemUiState(
                                             snapshot = snapshot,
-                                            canQuickMarkDeclarationFiled = true,
-                                            declarationAlreadyFiled = false,
+                                            canQuickSettleMonth = true,
+                                            monthAlreadySettled = false,
                                         ),
                                     ),
                                 ),
                             ),
                         ),
                         onMonthClick = { selectedMonth = it },
-                        onMarkDeclarationFiled = {},
+                        onSettleMonth = {},
                         onAddIncome = {},
                         onImportStatement = {},
                     )
@@ -136,7 +137,58 @@ class MonthsFlowTest {
             .assertIsDisplayed()
     }
 
-    private fun sampleSnapshot(): MonthlyDeclarationSnapshot {
+    @Test
+    fun taxPaymentMismatchIsVisibleInMonthsList() {
+        val snapshot = sampleSnapshot(
+            workflowStatus = MonthlyWorkflowStatus.SETTLED,
+            unresolvedFxCount = 0,
+            record = MonthlyDeclarationRecord(
+                yearMonth = YearMonth.of(2026, 3),
+                workflowStatus = MonthlyWorkflowStatus.SETTLED,
+                zeroDeclarationPrepared = false,
+                declarationFiledDate = LocalDate.of(2026, 4, 10),
+                paymentSentDate = LocalDate.of(2026, 4, 10),
+                paymentCreditedDate = LocalDate.of(2026, 4, 10),
+                paymentAmountGel = BigDecimal("1.00"),
+            ),
+        )
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState = MonthsUiState(
+                        sections = listOf(
+                            MonthsYearSection(
+                                year = 2026,
+                                items = listOf(
+                                    MonthsMonthItemUiState(
+                                        snapshot = snapshot,
+                                        canQuickSettleMonth = false,
+                                        monthAlreadySettled = true,
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                    onMonthClick = {},
+                    onSettleMonth = {},
+                    onAddIncome = {},
+                    onImportStatement = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("snapshot-tax-payment-mismatch")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    private fun sampleSnapshot(
+        workflowStatus: MonthlyWorkflowStatus = MonthlyWorkflowStatus.DRAFT,
+        unresolvedFxCount: Int = 1,
+        record: MonthlyDeclarationRecord? = null,
+    ): MonthlyDeclarationSnapshot {
         val month = YearMonth.of(2026, 3)
         return MonthlyDeclarationSnapshot(
             period = MonthlyDeclarationPeriod(
@@ -149,17 +201,17 @@ class MonthsFlowTest {
                 inScope = true,
                 outOfScope = false,
             ),
-            workflowStatus = MonthlyWorkflowStatus.DRAFT,
+            workflowStatus = workflowStatus,
             graph20TotalGel = BigDecimal("350.00"),
             graph15CumulativeGel = BigDecimal("350.00"),
             originalCurrencyTotals = listOf(MonthlyCurrencyTotal("USD", BigDecimal("125.50"))),
             estimatedTaxAmountGel = BigDecimal("3.50"),
-            unresolvedFxCount = 1,
+            unresolvedFxCount = unresolvedFxCount,
             zeroDeclarationSuggested = false,
             zeroDeclarationPrepared = false,
             reviewNeeded = false,
             setupRequired = false,
-            record = null,
+            record = record,
         )
     }
 

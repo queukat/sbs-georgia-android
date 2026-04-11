@@ -7,6 +7,7 @@ object SourceCategoryPresets {
     const val OTHER = "Other"
     const val BANK_FEE = "Bank fee"
     const val OWN_ACCOUNT_TRANSFER = "Own account transfer"
+    const val TAX_PAYMENT = "Tax payment"
     const val IMPORTED_STATEMENT_INCOME = "Imported statement income"
     const val IMPORTED_STATEMENT_REVIEW = "Imported statement review"
 

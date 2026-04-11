@@ -9,10 +9,13 @@ import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
+import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import com.queukat.sbsgeorgia.domain.service.TbcStatementParser
 import java.math.BigDecimal
@@ -86,10 +89,12 @@ class StatementImportUseCasesTest {
     fun confirmImportPreservesManualCorrectionsAndCountsDuplicates() = kotlinx.coroutines.test.runTest {
         val repository = FakeStatementImportRepository()
         val fxIncomeRepository = StatementImportFakeIncomeRepository()
+        val monthlyDeclarationRepository = FakeStatementImportMonthlyDeclarationRepository()
 
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(monthlyDeclarationRepository),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -179,6 +184,7 @@ class StatementImportUseCasesTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository, fxRateRepository),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(FakeStatementImportMonthlyDeclarationRepository()),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -205,6 +211,48 @@ class StatementImportUseCasesTest {
         assertEquals(1, result.autoResolvedFxEntryCount)
         assertEquals(0, result.remainingUnresolvedFxEntryCount)
         assertEquals(BigDecimal("338.85"), fxIncomeRepository.observeAll().first().single().gelEquivalent)
+    }
+
+    @Test
+    fun confirmImportMatchesTreasuryTaxPaymentToPreviousMonthAndClosesIt() = kotlinx.coroutines.test.runTest {
+        val monthlyDeclarationRepository = FakeStatementImportMonthlyDeclarationRepository()
+
+        val result = ConfirmStatementImportUseCase(
+            statementImportRepository = FakeStatementImportRepository(),
+            resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(monthlyDeclarationRepository),
+            clock = fixedClock,
+        ).invoke(
+            sourceFileName = "statement.pdf",
+            sourceFingerprint = "new-statement",
+            rows = listOf(
+                ApprovedImportedStatementRow(
+                    transactionFingerprint = "tax-tx-1",
+                    incomeDate = LocalDate.of(2026, 4, 2),
+                    description = "გადასახადების ერთიანი კოდი ხაზინის ერთიანი ანგარიში. საგადასახადო ინსპექცია",
+                    additionalInformation = "(გადასახადები), TRESGE22, 101001000",
+                    paidOut = StatementMoney(BigDecimal("81.60"), "GEL"),
+                    paidIn = null,
+                    balance = StatementMoney(BigDecimal("674.99"), "GEL"),
+                    suggestedInclusion = DeclarationInclusion.EXCLUDED,
+                    finalInclusion = DeclarationInclusion.EXCLUDED,
+                    amount = BigDecimal("81.60"),
+                    currency = "GEL",
+                    sourceCategory = "Tax payment",
+                    duplicate = false,
+                ),
+            ),
+        )
+
+        val marchRecord = monthlyDeclarationRepository.observeByMonth(YearMonth.of(2026, 3)).first()
+        requireNotNull(marchRecord)
+        assertEquals(MonthlyWorkflowStatus.SETTLED, marchRecord.workflowStatus)
+        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.declarationFiledDate)
+        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.paymentSentDate)
+        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.paymentCreditedDate)
+        assertEquals(BigDecimal("81.60"), marchRecord.paymentAmountGel)
+        assertEquals(1, result.appliedTaxPaymentCount)
+        assertEquals(0, result.skippedTaxPaymentCount)
     }
 
     @Test
@@ -344,6 +392,21 @@ private class StatementImportFakeIncomeRepository(
 
     override suspend fun deleteById(id: Long) {
         entries.removeAll { it.id == id }
+    }
+}
+
+private class FakeStatementImportMonthlyDeclarationRepository(
+    records: List<MonthlyDeclarationRecord> = emptyList(),
+) : MonthlyDeclarationRepository {
+    private val state = kotlinx.coroutines.flow.MutableStateFlow(records)
+
+    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = state
+
+    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> =
+        flowOf(state.value.firstOrNull { it.yearMonth == yearMonth })
+
+    override suspend fun upsert(record: MonthlyDeclarationRecord) {
+        state.value = state.value.filterNot { it.yearMonth == record.yearMonth } + record
     }
 }
 

@@ -121,11 +121,17 @@ class MonthlyDeclarationPlanner @Inject constructor(
         config: SmallBusinessStatusConfig?,
         reminders: ReminderConfig?,
         snapshots: List<MonthlyDeclarationSnapshot>,
+        records: List<MonthlyDeclarationRecord>,
     ): DashboardSummary {
         val now = LocalDate.now(clock)
         val dueIncomeMonth = YearMonth.from(now.minusMonths(1))
         val nextReminderDay = reminders?.declarationReminderDays?.sorted()?.firstOrNull { it >= now.dayOfMonth }
             ?: reminders?.declarationReminderDays?.sorted()?.firstOrNull()
+        val paidTaxAmountGel = records
+            .asSequence()
+            .filter { it.paymentSentDate?.year == now.year }
+            .mapNotNull(MonthlyDeclarationRecord::paymentAmountGel)
+            .fold(BigDecimal.ZERO) { acc, amount -> acc + amount }
 
         return DashboardSummary(
             taxpayerName = profile?.displayName,
@@ -138,6 +144,8 @@ class MonthlyDeclarationPlanner @Inject constructor(
                     it.workflowStatus !in terminalStatuses &&
                     (it.graph20TotalGel > BigDecimal.ZERO || it.zeroDeclarationSuggested || it.zeroDeclarationPrepared)
             },
+            paidTaxAmountGel = paidTaxAmountGel.setScale(2, RoundingMode.HALF_UP),
+            paymentMismatchMonthsCount = snapshots.count { it.taxPaymentMismatch },
             currentDuePeriod = snapshots.firstOrNull { it.period.incomeMonth == dueIncomeMonth },
             nextReminderDay = nextReminderDay,
         )

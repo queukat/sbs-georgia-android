@@ -7,6 +7,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
+import java.math.BigDecimal
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
@@ -42,13 +43,13 @@ class MonthsViewModel @Inject constructor(
                                         period = snapshot.period,
                                         referenceDate = today,
                                     )
-                                    val alreadyFiled = snapshot.workflowStatus in declarationFiledStatuses
+                                    val alreadySettled = snapshot.workflowStatus in settledStatuses
                                     MonthsMonthItemUiState(
                                         snapshot = snapshot,
-                                        canQuickMarkDeclarationFiled = !snapshot.period.outOfScope &&
+                                        canQuickSettleMonth = !snapshot.period.outOfScope &&
                                             filingWindowOpen &&
-                                            !alreadyFiled,
-                                        declarationAlreadyFiled = alreadyFiled,
+                                            !alreadySettled,
+                                        monthAlreadySettled = alreadySettled,
                                         filingOpensOn = if (!snapshot.period.outOfScope && !filingWindowOpen) {
                                             snapshot.period.filingWindow.start
                                         } else {
@@ -66,23 +67,27 @@ class MonthsViewModel @Inject constructor(
             MonthsUiState(),
         )
 
-    fun markDeclarationFiled(yearMonth: YearMonth) {
+    fun settleMonth(yearMonth: YearMonth) {
         val monthItem = uiState.value.sections
             .flatMap(MonthsYearSection::items)
             .firstOrNull { it.snapshot.period.incomeMonth == yearMonth }
             ?: return
-        if (!monthItem.canQuickMarkDeclarationFiled) return
+        if (!monthItem.canQuickSettleMonth) return
         val snapshot = monthItem.snapshot
+        val today = LocalDate.now(clock)
 
         viewModelScope.launch {
             upsertMonthlyDeclarationRecordUseCase(
                 MonthlyDeclarationRecord(
                     yearMonth = yearMonth,
-                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
                     zeroDeclarationPrepared = snapshot.zeroDeclarationPrepared || snapshot.zeroDeclarationSuggested,
-                    declarationFiledDate = snapshot.record?.declarationFiledDate ?: LocalDate.now(clock),
-                    paymentSentDate = snapshot.record?.paymentSentDate,
-                    paymentCreditedDate = snapshot.record?.paymentCreditedDate,
+                    declarationFiledDate = snapshot.record?.declarationFiledDate ?: today,
+                    paymentSentDate = snapshot.record?.paymentSentDate ?: today,
+                    paymentCreditedDate = snapshot.record?.paymentCreditedDate ?: today,
+                    paymentAmountGel = snapshot.record?.paymentAmountGel
+                        ?: snapshot.estimatedTaxAmountGel
+                        ?: BigDecimal.ZERO.setScale(2),
                     notes = snapshot.record?.notes.orEmpty(),
                 ),
             )
@@ -90,9 +95,7 @@ class MonthsViewModel @Inject constructor(
     }
 
     private companion object {
-        val declarationFiledStatuses = setOf(
-            MonthlyWorkflowStatus.FILED,
-            MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
+        val settledStatuses = setOf(
             MonthlyWorkflowStatus.PAYMENT_SENT,
             MonthlyWorkflowStatus.PAYMENT_CREDITED,
             MonthlyWorkflowStatus.SETTLED,

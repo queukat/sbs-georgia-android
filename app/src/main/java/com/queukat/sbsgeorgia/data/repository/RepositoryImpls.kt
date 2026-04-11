@@ -132,6 +132,7 @@ private fun MonthlyDeclarationRecordEntity.toDomain(): MonthlyDeclarationRecord 
     declarationFiledDate = declarationFiledDate,
     paymentSentDate = paymentSentDate,
     paymentCreditedDate = paymentCreditedDate,
+    paymentAmountGel = paymentAmountGel,
     notes = notes,
 )
 
@@ -144,5 +145,6 @@ private fun MonthlyDeclarationRecord.toEntity(): MonthlyDeclarationRecordEntity 
     declarationFiledDate = declarationFiledDate,
     paymentSentDate = paymentSentDate,
     paymentCreditedDate = paymentCreditedDate,
+    paymentAmountGel = paymentAmountGel,
     notes = notes,
 )

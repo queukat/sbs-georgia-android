@@ -1,6 +1,14 @@
 <resources>
-    <string name="onboarding_title">Добро пожаловать в SBS Georgia</string>
+    <string name="onboarding_title">Добро пожаловать в Georgia Small Biz Tracker</string>
     <string name="onboarding_subtitle">Начните с импорта выписки из реестра или грузинского PDF-сертификата малого бизнеса, либо заполните поля вручную.</string>
+    <string name="onboarding_section_intro">Перед началом</string>
+    <string name="onboarding_intro_body">Эта начальная настройка подготавливает профиль налогоплательщика и данные статуса малого бизнеса, которые потом используются в месячных декларациях, пересчёте FX, помощнике оплаты и напоминаниях.</string>
+    <string name="onboarding_intro_step_one_title">Импортируйте документ или заполните всё вручную</string>
+    <string name="onboarding_intro_step_one_body">Можно импортировать выписку из реестра или грузинский сертификат малого бизнеса, а можно пропустить импорт и заполнить поля ниже вручную.</string>
+    <string name="onboarding_intro_step_two_title">Проверьте и при необходимости исправьте все поля</string>
+    <string name="onboarding_intro_step_two_body">Ничего не блокируется. Все распознанные значения остаются редактируемыми до входа в приложение.</string>
+    <string name="onboarding_intro_step_three_title">Позже это можно поменять в настройках</string>
+    <string name="onboarding_intro_step_three_body">Если хочешь просто быстрее начать, сохрани минимальный профиль сейчас, а детали поправишь позже в настройках.</string>
     <string name="onboarding_section_options">Варианты начальной настройки</string>
     <string name="onboarding_section_preview">Предпросмотр импорта</string>
     <string name="onboarding_section_taxpayer">Данные налогоплательщика</string>
@@ -34,6 +42,10 @@
     <string name="snapshot_due_date">Крайний срок подачи</string>
     <string name="snapshot_status">Статус</string>
     <string name="snapshot_estimated_tax">Расчётный налог</string>
+    <string name="snapshot_paid_tax">Оплачено налога</string>
+    <string name="snapshot_tax_mismatch">Расхождение по оплате налога</string>
+    <string name="snapshot_tax_underpaid">Налог оплачен не полностью: не хватает %1$s</string>
+    <string name="snapshot_tax_overpaid">Оплата налога больше расчётной на %1$s</string>
     <string name="snapshot_unresolved_fx_entries">Неразрешённых FX-записей: %1$d</string>
     <string name="snapshot_zero_declaration_month">Месяц нулевой декларации</string>
     <string name="snapshot_zero_declaration_prepared">Нулевая декларация подготовлена</string>

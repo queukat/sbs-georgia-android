@@ -9,6 +9,7 @@
     <string name="workflow_error_declaration_date_required">Declaration filed date is required for the selected status.</string>
     <string name="workflow_error_payment_sent_date_required">Payment sent date is required for the selected status.</string>
     <string name="workflow_error_payment_credited_date_required">Payment credited date is required for the selected status.</string>
+    <string name="workflow_error_payment_amount_invalid">Payment amount must be a positive number when it is filled in.</string>
 
     <string name="fx_resolve_none">No unresolved FX entries were found.</string>
     <string name="fx_resolve_resolved_all">Resolved FX for %1$d entries.</string>
@@ -34,6 +35,8 @@
     <string name="import_statement_message_fx_auto_resolved_all">Official NBG FX rates were applied automatically for %1$d entries.</string>
     <string name="import_statement_message_fx_auto_resolved_partial">Official NBG FX rates were applied for %1$d entries. %2$d still need review.</string>
     <string name="import_statement_message_fx_manual_review_needed">%1$d imported entries still need manual FX review.</string>
+    <string name="import_statement_message_tax_payments_applied">Matched %1$d tax payment transactions and closed the corresponding months automatically.</string>
+    <string name="import_statement_message_tax_payments_partial">Matched %1$d tax payment transactions and skipped %2$d that could not be applied automatically.</string>
     <string name="import_statement_error_no_preview">No preview was produced for the selected PDF.</string>
     <string name="import_statement_error_parse_failed">Failed to parse the selected PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Unsupported PDF. This importer only supports the current TBC statement layout without OCR.</string>
@@ -61,6 +64,7 @@
     <string name="source_category_other">Other</string>
     <string name="source_category_bank_fee">Bank fee</string>
     <string name="source_category_own_account_transfer">Own account transfer</string>
+    <string name="source_category_tax_payment">Tax payment</string>
     <string name="source_category_imported_statement_income">Imported statement income</string>
     <string name="source_category_imported_statement_review">Imported statement review</string>
 </resources>

@@ -37,7 +37,7 @@ Official references:
 
 ### App name
 
-`SBS Georgia`
+`Georgia Small Biz Tracker`
 
 ### Short description
 
@@ -45,7 +45,7 @@ Official references:
 
 ### Full description
 
-`SBS Georgia is an offline-first Android app for Georgian individual entrepreneurs with small business status.
+`Georgia Small Biz Tracker is an independent offline-first Android app for Georgian individual entrepreneurs with small business status.
 
 Track monthly income, convert foreign-currency revenue to GEL using official National Bank of Georgia rates, prepare declaration values for the previous month, and keep your tax workflow in one place.
 
@@ -58,6 +58,8 @@ The app is designed to replace fragile spreadsheet-based tracking with a focused
 - filing and payment status tracking
 - reminders for monthly declaration and payment deadlines
 - local backup and export
+
+This app is independent and is not affiliated with the Revenue Service of Georgia or any government entity.
 
 Your data stays on your device. The first version is single-user and local-only, without banking APIs or automatic submission to rs.ge.`
 
@@ -90,6 +92,47 @@ Before publishing the store listing, prepare:
 - feature graphic `1024 x 500`
 - support email
 - privacy policy URL on a public non-PDF page
+
+## Automated Play screenshots
+
+A lightweight localized screenshot pipeline is available for Play listing captures:
+
+```powershell
+.\scripts\run-play-screenshots.ps1
+```
+
+Default locales:
+
+- `en-US`
+- `ru-RU`
+
+Output is pulled to:
+
+- `artifacts/play-screenshots/<locale>`
+
+Technical notes:
+
+- screenshots are captured from a dedicated debug-only screenshot activity
+- output is deterministic and does not require manual in-app setup
+- this is intentionally only a Play screenshot pipeline, not a golden-regression framework
+
+## Privacy policy page
+
+The repository includes a static English privacy policy page suitable for Play Console:
+
+- site source: `play-privacy-site/index.html`
+- security headers: `play-privacy-site/_headers`
+- deploy script: `scripts/deploy-privacy-policy.ps1`
+
+Suggested Cloudflare Pages project name:
+
+- `sbs-georgia-privacy`
+
+Suggested deploy command:
+
+```powershell
+.\scripts\deploy-privacy-policy.ps1
+```
 
 ## Remaining blockers before upload
 

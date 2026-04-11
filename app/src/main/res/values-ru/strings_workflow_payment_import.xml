@@ -13,6 +13,7 @@
     <string name="workflow_clear_payment_sent_date">Очистить дату отправки оплаты</string>
     <string name="workflow_payment_credited_date">Дата зачисления оплаты</string>
     <string name="workflow_clear_payment_credited_date">Очистить дату зачисления оплаты</string>
+    <string name="workflow_payment_amount">Сумма оплаты</string>
     <string name="workflow_notes">Заметки</string>
     <string name="workflow_save">Сохранить статус процесса</string>
     <string name="workflow_saving">Сохранение…</string>

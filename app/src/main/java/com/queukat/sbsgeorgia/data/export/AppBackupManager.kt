@@ -206,6 +206,7 @@ private fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecord
     declarationFiledDate = declarationFiledDate?.toString(),
     paymentSentDate = paymentSentDate?.toString(),
     paymentCreditedDate = paymentCreditedDate?.toString(),
+    paymentAmountGel = paymentAmountGel?.toPlainString(),
     notes = notes,
 )
 
@@ -218,6 +219,7 @@ private fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecord
     declarationFiledDate = declarationFiledDate?.let(LocalDate::parse),
     paymentSentDate = paymentSentDate?.let(LocalDate::parse),
     paymentCreditedDate = paymentCreditedDate?.let(LocalDate::parse),
+    paymentAmountGel = paymentAmountGel?.let(::BigDecimal),
     notes = notes,
 )
 

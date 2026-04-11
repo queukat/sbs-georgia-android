@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 class FxOverrideViewModel @Inject constructor(
     private val incomeRepository: IncomeRepository,
     private val applyManualFxOverrideUseCase: ApplyManualFxOverrideUseCase,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private var initializedEntryId: Long = Long.MIN_VALUE
 

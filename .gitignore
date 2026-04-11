@@ -26,6 +26,7 @@ local.properties
 /qa_*.xml
 /qa_*.log
 /qa_*.txt
+/artifacts/
 *.class
 /keystore.properties
 /signing/

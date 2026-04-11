@@ -43,7 +43,7 @@ fun MonthsRoute(
         innerPadding = innerPadding,
         uiState = uiState,
         onMonthClick = onMonthClick,
-        onMarkDeclarationFiled = viewModel::markDeclarationFiled,
+        onSettleMonth = viewModel::settleMonth,
         onAddIncome = onAddIncome,
         onImportStatement = onImportStatement,
     )
@@ -54,7 +54,7 @@ fun MonthsScreen(
     innerPadding: PaddingValues,
     uiState: MonthsUiState,
     onMonthClick: (YearMonth) -> Unit,
-    onMarkDeclarationFiled: (YearMonth) -> Unit,
+    onSettleMonth: (YearMonth) -> Unit,
     onAddIncome: () -> Unit,
     onImportStatement: () -> Unit,
 ) {
@@ -112,12 +112,12 @@ fun MonthsScreen(
                             }
                             when {
                                 snapshot.period.outOfScope -> Unit
-                                item.declarationAlreadyFiled -> {
-                                    SimpleChip(stringResource(R.string.months_declaration_filed))
+                                item.monthAlreadySettled -> {
+                                    SimpleChip(stringResource(R.string.months_month_settled))
                                 }
-                                item.canQuickMarkDeclarationFiled -> {
-                                    OutlinedButton(onClick = { onMarkDeclarationFiled(snapshot.period.incomeMonth) }) {
-                                        Text(stringResource(R.string.months_mark_declaration_filed))
+                                item.canQuickSettleMonth -> {
+                                    OutlinedButton(onClick = { onSettleMonth(snapshot.period.incomeMonth) }) {
+                                        Text(stringResource(R.string.months_mark_month_settled))
                                     }
                                 }
                                 else -> {

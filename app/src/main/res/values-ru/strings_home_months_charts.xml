@@ -1,5 +1,5 @@
 <resources>
-    <string name="home_title">SBS Georgia</string>
+    <string name="home_title">Georgia Small Biz Tracker</string>
     <string name="home_subtitle">Офлайн-учёт, подготовка ежемесячной декларации и контроль налогового процесса для малого статуса в Грузии.</string>
     <string name="home_section_dashboard">Текущая сводка</string>
     <string name="home_section_due_period">Текущий отчётный период</string>
@@ -9,6 +9,8 @@
     <string name="home_ytd_income">Доход с начала года</string>
     <string name="home_unresolved_fx_entries">Неразрешённые FX-записи</string>
     <string name="home_unsettled_months">Незакрытые месяцы</string>
+    <string name="home_paid_taxes">Оплачено налогов</string>
+    <string name="home_tax_mismatch_months">Месяцы с расхождением по налогу</string>
     <string name="home_next_reminder">Следующее напоминание</string>
     <string name="home_next_reminder_day">День напоминания о декларации: %1$d</string>
     <string name="home_no_due_period">Для текущей даты пока нет доступного отчётного периода.</string>
@@ -19,12 +21,13 @@
     <string name="home_open_charts">Графики</string>
     <string name="home_import_pdf">Импорт PDF</string>
     <string name="home_open_settings_short">Настройки</string>
+    <string name="home_support_developer_content_description">Поддержать разработчика на Ko-fi</string>
     <string name="months_title">Месяцы</string>
     <string name="months_import_pdf">Импорт PDF</string>
     <string name="months_add_income">Добавить доход</string>
     <string name="months_open_month">Открыть месяц</string>
-    <string name="months_mark_declaration_filed">Отметить декларацию как поданную</string>
-    <string name="months_declaration_filed">Декларация подана</string>
+    <string name="months_mark_month_settled">Закрыть месяц</string>
+    <string name="months_month_settled">Месяц закрыт</string>
     <string name="months_filing_opens_on">Подача откроется %1$s</string>
     <string name="months_empty">Пока нет доступных месяцев декларации.</string>
     <string name="charts_title">Графики %1$d</string>

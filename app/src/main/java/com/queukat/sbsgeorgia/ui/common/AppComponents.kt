@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 
@@ -49,13 +50,17 @@ fun KeyValueRow(label: String, value: String) {
 }
 
 @Composable
-fun SimpleChip(label: String) {
+fun SimpleChip(
+    label: String,
+    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
+    labelColor: Color = MaterialTheme.colorScheme.onSecondaryContainer,
+) {
     AssistChip(
         onClick = {},
         enabled = false,
         colors = AssistChipDefaults.assistChipColors(
-            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+            disabledContainerColor = containerColor,
+            disabledLabelColor = labelColor,
         ),
         label = { Text(label) },
     )

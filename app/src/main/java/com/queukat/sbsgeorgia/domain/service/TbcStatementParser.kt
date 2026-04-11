@@ -198,6 +198,12 @@ class TbcStatementParser @Inject constructor() {
             .lowercase()
         val normalizedOutgoing = paidOut?.takeIf { it.amount > BigDecimal.ZERO }
         val normalizedIncoming = paidIn?.takeIf { it.amount > BigDecimal.ZERO }
+        val isTaxPayment = TaxPaymentDetection.isLikelyTaxPayment(
+            description = description,
+            additionalInformation = additionalInformation,
+            paidOut = normalizedOutgoing,
+            paidIn = normalizedIncoming,
+        )
         val suggestedInclusion = when {
             normalizedIncoming != null && nonTaxableHints.any { it in suggestionText } -> DeclarationInclusion.EXCLUDED
             normalizedIncoming != null && taxableHints.any { it in suggestionText } -> DeclarationInclusion.INCLUDED
@@ -213,6 +219,7 @@ class TbcStatementParser @Inject constructor() {
             else -> BigDecimal.ZERO
         }
         val suggestedSourceCategory = when {
+            isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
             nonTaxableHints.any { it in suggestionText } && bankFeeHints.any { it in suggestionText } ->
                 SourceCategoryPresets.BANK_FEE
             normalizedOutgoing != null && nonTaxableHints.any { it in suggestionText } ->

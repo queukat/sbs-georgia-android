@@ -43,7 +43,7 @@ class SettingsViewModel @Inject constructor(
     private val importBackupJsonUseCase: ImportBackupJsonUseCase,
     private val textDocumentStore: TextDocumentStore,
     private val reminderScheduler: ReminderScheduler,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
     private var persistedProfile: TaxpayerProfile? = null

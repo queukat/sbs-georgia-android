@@ -184,6 +184,45 @@ class TbcStatementParserTest {
         assertEquals("Bank fee", januaryFee.suggestedSourceCategory)
     }
 
+    @Test
+    fun recognizesTreasuryTaxPaymentFromRealGeorgianStatementVariant() {
+        val preview = parser.parse(
+            sourceFileName = "statement-tax-payment.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = """
+                ამონაწერი ანგარიშიდან:
+                GE94TB7209445168200001 01/04/2026- 11/04/2026 11/04/2026 17:18:52
+                Account Statement:
+                ანგარიშის მფლობელი: იაროსლავ რიჩენკოვ
+                Account Holder: Iaroslav Rychenkov
+                საწყისი ნაშთი / Opening Balance 756.59GEL
+                თარიღი
+                Date
+                დანიშნულება
+                Description
+                დამატებითი ინფორმაცია
+                Additional Information
+                გასული
+                თანხა
+                Paid Out
+                შემოსული
+                თანხა
+                Paid In
+                ბალანსი
+                Balance
+                02/04/2026გადასახადების ერთიანი კოდი ხაზინის ერთიანი ანგარიში. საგადასახადო ინსპექცია
+                (გადასახადები), TRESGE22, 101001000
+                81.60 674.99
+            """.trimIndent(),
+        )
+
+        assertEquals(1, preview.rows.size)
+        val row = preview.rows.single()
+        assertEquals("81.60", row.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, row.suggestedInclusion)
+        assertEquals("Tax payment", row.suggestedSourceCategory)
+    }
+
     private fun fixtureText(fileName: String): String =
         requireNotNull(javaClass.getResource("/fixtures/$fileName"))
             .readText()

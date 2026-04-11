@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 class ManualEntryViewModel @Inject constructor(
     private val incomeRepository: IncomeRepository,
     private val upsertManualIncomeEntryUseCase: UpsertManualIncomeEntryUseCase,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
     private var initializedEntryId: Long? = Long.MIN_VALUE

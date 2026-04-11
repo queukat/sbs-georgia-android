@@ -79,6 +79,7 @@ data class MonthlyDeclarationRecordEntity(
     val declarationFiledDate: LocalDate?,
     val paymentSentDate: LocalDate?,
     val paymentCreditedDate: LocalDate?,
+    val paymentAmountGel: BigDecimal?,
     val notes: String,
 )
 

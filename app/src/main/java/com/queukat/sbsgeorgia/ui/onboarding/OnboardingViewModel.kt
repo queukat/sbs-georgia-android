@@ -28,7 +28,7 @@ class OnboardingViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(OnboardingUiState(effectiveDate = LocalDate.now(clock)))

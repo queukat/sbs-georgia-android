@@ -14,6 +14,7 @@ data class WorkflowStatusUiState(
     val declarationFiledDate: LocalDate? = null,
     val paymentSentDate: LocalDate? = null,
     val paymentCreditedDate: LocalDate? = null,
+    val paymentAmount: String = "",
     val notes: String = "",
     val isSaving: Boolean = false,
     val errorMessage: String? = null,

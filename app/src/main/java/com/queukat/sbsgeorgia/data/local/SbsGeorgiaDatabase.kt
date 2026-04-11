@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ImportedTransactionEntity::class,
         FxRateEntity::class,
     ],
-    version = 3,
+    version = 4,
     exportSchema = true,
 )
 @TypeConverters(AppTypeConverters::class)
@@ -79,6 +79,17 @@ abstract class SbsGeorgiaDatabase : RoomDatabase() {
                     """
                     ALTER TABLE small_business_status_config
                     ADD COLUMN certificateIssuedDate TEXT
+                    """.trimIndent(),
+                )
+            }
+        }
+
+        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    ALTER TABLE monthly_declaration_record
+                    ADD COLUMN paymentAmountGel TEXT
                     """.trimIndent(),
                 )
             }

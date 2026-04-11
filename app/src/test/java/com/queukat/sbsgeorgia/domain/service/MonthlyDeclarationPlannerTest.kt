@@ -4,6 +4,7 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -11,6 +12,7 @@ import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -153,6 +155,56 @@ class MonthlyDeclarationPlannerTest {
 
         assertEquals(MonthlyWorkflowStatus.PAYMENT_SENT, status)
         assertFalse(status == MonthlyWorkflowStatus.OVERDUE)
+    }
+
+    @Test
+    fun `snapshot flags tax payment mismatch when paid amount differs from estimate`() {
+        val config = SmallBusinessStatusConfig(
+            effectiveDate = LocalDate.parse("2026-01-01"),
+            defaultTaxRatePercent = BigDecimal("1.0"),
+        )
+        val snapshots = planner.buildYearSnapshots(
+            year = 2026,
+            profile = profile,
+            config = config,
+            entries = listOf(
+                manualEntry("2026-01-05", "5000.00"),
+            ),
+            records = listOf(
+                MonthlyDeclarationRecord(
+                    yearMonth = YearMonth.parse("2026-01"),
+                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
+                    zeroDeclarationPrepared = false,
+                    declarationFiledDate = LocalDate.parse("2026-02-10"),
+                    paymentSentDate = LocalDate.parse("2026-02-10"),
+                    paymentCreditedDate = LocalDate.parse("2026-02-10"),
+                    paymentAmountGel = BigDecimal("10.00"),
+                ),
+            ),
+        )
+        val januarySnapshot = snapshots.first()
+        val summary = planner.buildDashboardSummary(
+            profile = profile,
+            config = config,
+            reminders = null,
+            snapshots = snapshots,
+            records = listOf(
+                MonthlyDeclarationRecord(
+                    yearMonth = YearMonth.parse("2026-01"),
+                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
+                    zeroDeclarationPrepared = false,
+                    declarationFiledDate = LocalDate.parse("2026-02-10"),
+                    paymentSentDate = LocalDate.parse("2026-02-10"),
+                    paymentCreditedDate = LocalDate.parse("2026-02-10"),
+                    paymentAmountGel = BigDecimal("10.00"),
+                ),
+            ),
+        )
+
+        assertTrue(januarySnapshot.taxPaymentMismatch)
+        assertTrue(januarySnapshot.taxPaymentUnderpaid)
+        assertEquals(BigDecimal("-40.00"), januarySnapshot.taxPaymentDifferenceGel)
+        assertEquals(1, summary.paymentMismatchMonthsCount)
     }
 
     private fun manualEntry(

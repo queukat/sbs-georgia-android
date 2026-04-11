@@ -38,7 +38,7 @@ class MonthDetailViewModel @Inject constructor(
     private val incomeRepository: IncomeRepository,
     private val resolveMonthFxUseCase: ResolveMonthFxUseCase,
     private val planner: MonthlyDeclarationPlanner,
-    @ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context,
 ) : ViewModel() {
     private val selectedYearMonth = MutableStateFlow<YearMonth?>(null)
     private val isResolvingFx = MutableStateFlow(false)
@@ -107,6 +107,7 @@ class MonthDetailViewModel @Inject constructor(
                     declarationFiledDate = snapshot.record?.declarationFiledDate,
                     paymentSentDate = snapshot.record?.paymentSentDate,
                     paymentCreditedDate = snapshot.record?.paymentCreditedDate,
+                    paymentAmountGel = snapshot.record?.paymentAmountGel,
                     notes = snapshot.record?.notes.orEmpty(),
                 ),
             )

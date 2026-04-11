@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
@@ -19,6 +21,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -127,6 +130,27 @@ fun OnboardingScreen(
                 text = stringResource(R.string.onboarding_subtitle),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            AppSection(title = stringResource(R.string.onboarding_section_intro)) {
+                Text(
+                    text = stringResource(R.string.onboarding_intro_body),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                IntroStepRow(
+                    number = "1",
+                    title = stringResource(R.string.onboarding_intro_step_one_title),
+                    body = stringResource(R.string.onboarding_intro_step_one_body),
+                )
+                IntroStepRow(
+                    number = "2",
+                    title = stringResource(R.string.onboarding_intro_step_two_title),
+                    body = stringResource(R.string.onboarding_intro_step_two_body),
+                )
+                IntroStepRow(
+                    number = "3",
+                    title = stringResource(R.string.onboarding_intro_step_three_title),
+                    body = stringResource(R.string.onboarding_intro_step_three_body),
+                )
+            }
 
             AppSection(title = stringResource(R.string.onboarding_section_options)) {
                 FlowRow(
@@ -300,6 +324,44 @@ fun OnboardingScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun IntroStepRow(
+    number: String,
+    title: String,
+    body: String,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.padding(top = 2.dp),
+        ) {
+            Text(
+                text = number,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+        }
+        Column(
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleSmall,
+            )
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

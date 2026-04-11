@@ -1,0 +1,540 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "6af028894f00652dc2caf87db9eaece5",
+    "entities": [
+      {
+        "tableName": "taxpayer_profile",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`singletonId` INTEGER NOT NULL, `registrationId` TEXT NOT NULL, `displayName` TEXT NOT NULL, `baseCurrencyView` TEXT NOT NULL, `legalForm` TEXT, `registrationDate` TEXT, `legalAddress` TEXT, `activityType` TEXT, PRIMARY KEY(`singletonId`))",
+        "fields": [
+          {
+            "fieldPath": "singletonId",
+            "columnName": "singletonId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "registrationId",
+            "columnName": "registrationId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "displayName",
+            "columnName": "displayName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "baseCurrencyView",
+            "columnName": "baseCurrencyView",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "legalForm",
+            "columnName": "legalForm",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "registrationDate",
+            "columnName": "registrationDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "legalAddress",
+            "columnName": "legalAddress",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "activityType",
+            "columnName": "activityType",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "singletonId"
+          ]
+        }
+      },
+      {
+        "tableName": "small_business_status_config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`singletonId` INTEGER NOT NULL, `effectiveDate` TEXT NOT NULL, `defaultTaxRatePercent` TEXT NOT NULL, `certificateNumber` TEXT, `certificateIssuedDate` TEXT, PRIMARY KEY(`singletonId`))",
+        "fields": [
+          {
+            "fieldPath": "singletonId",
+            "columnName": "singletonId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "effectiveDate",
+            "columnName": "effectiveDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultTaxRatePercent",
+            "columnName": "defaultTaxRatePercent",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "certificateNumber",
+            "columnName": "certificateNumber",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "certificateIssuedDate",
+            "columnName": "certificateIssuedDate",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "singletonId"
+          ]
+        }
+      },
+      {
+        "tableName": "reminder_config",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`singletonId` INTEGER NOT NULL, `declarationReminderDays` TEXT NOT NULL, `paymentReminderDays` TEXT NOT NULL, `declarationRemindersEnabled` INTEGER NOT NULL, `paymentRemindersEnabled` INTEGER NOT NULL, `defaultReminderTime` TEXT NOT NULL, `themeMode` TEXT NOT NULL, PRIMARY KEY(`singletonId`))",
+        "fields": [
+          {
+            "fieldPath": "singletonId",
+            "columnName": "singletonId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "declarationReminderDays",
+            "columnName": "declarationReminderDays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentReminderDays",
+            "columnName": "paymentReminderDays",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "declarationRemindersEnabled",
+            "columnName": "declarationRemindersEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paymentRemindersEnabled",
+            "columnName": "paymentRemindersEnabled",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "defaultReminderTime",
+            "columnName": "defaultReminderTime",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "themeMode",
+            "columnName": "themeMode",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "singletonId"
+          ]
+        }
+      },
+      {
+        "tableName": "income_entry",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sourceType` TEXT NOT NULL, `incomeDate` TEXT NOT NULL, `originalAmount` TEXT NOT NULL, `originalCurrency` TEXT NOT NULL, `sourceCategory` TEXT NOT NULL, `note` TEXT NOT NULL, `declarationInclusion` TEXT NOT NULL, `gelEquivalent` TEXT, `rateSource` TEXT NOT NULL, `manualFxOverride` INTEGER NOT NULL, `sourceStatementId` INTEGER, `sourceTransactionFingerprint` TEXT, `createdAtEpochMillis` INTEGER NOT NULL, `updatedAtEpochMillis` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceType",
+            "columnName": "sourceType",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "incomeDate",
+            "columnName": "incomeDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalAmount",
+            "columnName": "originalAmount",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "originalCurrency",
+            "columnName": "originalCurrency",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceCategory",
+            "columnName": "sourceCategory",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "note",
+            "columnName": "note",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "declarationInclusion",
+            "columnName": "declarationInclusion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gelEquivalent",
+            "columnName": "gelEquivalent",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "rateSource",
+            "columnName": "rateSource",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "manualFxOverride",
+            "columnName": "manualFxOverride",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceStatementId",
+            "columnName": "sourceStatementId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "sourceTransactionFingerprint",
+            "columnName": "sourceTransactionFingerprint",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "createdAtEpochMillis",
+            "columnName": "createdAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "updatedAtEpochMillis",
+            "columnName": "updatedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "monthly_declaration_record",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`periodKey` TEXT NOT NULL, `year` INTEGER NOT NULL, `month` INTEGER NOT NULL, `workflowStatus` TEXT NOT NULL, `zeroDeclarationPrepared` INTEGER NOT NULL, `declarationFiledDate` TEXT, `paymentSentDate` TEXT, `paymentCreditedDate` TEXT, `paymentAmountGel` TEXT, `notes` TEXT NOT NULL, PRIMARY KEY(`periodKey`))",
+        "fields": [
+          {
+            "fieldPath": "periodKey",
+            "columnName": "periodKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "year",
+            "columnName": "year",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "month",
+            "columnName": "month",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "workflowStatus",
+            "columnName": "workflowStatus",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "zeroDeclarationPrepared",
+            "columnName": "zeroDeclarationPrepared",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "declarationFiledDate",
+            "columnName": "declarationFiledDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentSentDate",
+            "columnName": "paymentSentDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentCreditedDate",
+            "columnName": "paymentCreditedDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paymentAmountGel",
+            "columnName": "paymentAmountGel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "notes",
+            "columnName": "notes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "periodKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_monthly_declaration_record_year_month",
+            "unique": true,
+            "columnNames": [
+              "year",
+              "month"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_monthly_declaration_record_year_month` ON `${TABLE_NAME}` (`year`, `month`)"
+          }
+        ]
+      },
+      {
+        "tableName": "imported_statement",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `sourceFileName` TEXT NOT NULL, `sourceFingerprint` TEXT NOT NULL, `importedAtEpochMillis` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceFileName",
+            "columnName": "sourceFileName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sourceFingerprint",
+            "columnName": "sourceFingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "importedAtEpochMillis",
+            "columnName": "importedAtEpochMillis",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_imported_statement_sourceFingerprint",
+            "unique": true,
+            "columnNames": [
+              "sourceFingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_imported_statement_sourceFingerprint` ON `${TABLE_NAME}` (`sourceFingerprint`)"
+          }
+        ]
+      },
+      {
+        "tableName": "imported_transaction",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `statementId` INTEGER NOT NULL, `transactionFingerprint` TEXT NOT NULL, `incomeDate` TEXT, `description` TEXT NOT NULL, `additionalInformation` TEXT, `paidOut` TEXT, `paidIn` TEXT, `balance` TEXT, `suggestedInclusion` TEXT NOT NULL, `finalInclusion` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "statementId",
+            "columnName": "statementId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transactionFingerprint",
+            "columnName": "transactionFingerprint",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "incomeDate",
+            "columnName": "incomeDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "description",
+            "columnName": "description",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "additionalInformation",
+            "columnName": "additionalInformation",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paidOut",
+            "columnName": "paidOut",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "paidIn",
+            "columnName": "paidIn",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "balance",
+            "columnName": "balance",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "suggestedInclusion",
+            "columnName": "suggestedInclusion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "finalInclusion",
+            "columnName": "finalInclusion",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_imported_transaction_transactionFingerprint",
+            "unique": true,
+            "columnNames": [
+              "transactionFingerprint"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_imported_transaction_transactionFingerprint` ON `${TABLE_NAME}` (`transactionFingerprint`)"
+          }
+        ]
+      },
+      {
+        "tableName": "fx_rate",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `rateDate` TEXT NOT NULL, `currencyCode` TEXT NOT NULL, `units` INTEGER NOT NULL, `rateToGel` TEXT NOT NULL, `source` TEXT NOT NULL, `manualOverride` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rateDate",
+            "columnName": "rateDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currencyCode",
+            "columnName": "currencyCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "units",
+            "columnName": "units",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rateToGel",
+            "columnName": "rateToGel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "manualOverride",
+            "columnName": "manualOverride",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_fx_rate_rateDate_currencyCode_manualOverride",
+            "unique": true,
+            "columnNames": [
+              "rateDate",
+              "currencyCode",
+              "manualOverride"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_fx_rate_rateDate_currencyCode_manualOverride` ON `${TABLE_NAME}` (`rateDate`, `currencyCode`, `manualOverride`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '6af028894f00652dc2caf87db9eaece5')"
+    ]
+  }
+}

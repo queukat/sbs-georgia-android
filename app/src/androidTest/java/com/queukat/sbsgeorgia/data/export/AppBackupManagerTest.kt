@@ -111,6 +111,7 @@ class AppBackupManagerTest {
                     declarationFiledDate = LocalDate.of(2026, 4, 5),
                     paymentSentDate = null,
                     paymentCreditedDate = null,
+                    paymentAmountGel = BigDecimal("81.60"),
                     notes = "Filed on time",
                 ),
             )
