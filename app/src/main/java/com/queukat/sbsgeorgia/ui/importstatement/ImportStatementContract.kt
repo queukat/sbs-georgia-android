@@ -8,6 +8,8 @@ data class ImportStatementUiState(
     val sourceFingerprint: String? = null,
     val rows: List<ImportStatementRowUiState> = emptyList(),
     val selectedIncomeCount: Int = 0,
+    val detectedTaxPaymentCount: Int = 0,
+    val recognizedOutgoingCount: Int = 0,
     val isLoading: Boolean = false,
     val isImporting: Boolean = false,
     val infoMessage: String? = null,
@@ -27,6 +29,7 @@ data class ImportStatementRowUiState(
     val amount: String,
     val currency: String,
     val sourceCategory: String,
+    val isTaxPaymentCandidate: Boolean = false,
     val duplicate: Boolean,
 )
 

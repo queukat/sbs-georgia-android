@@ -87,6 +87,63 @@ class OnboardingDocumentParsersTest {
     }
 
     @Test
+    fun recoversRegistryAddressWhenFirstLineLeaksIntoPreviousField() {
+        val preview = coordinator.parse(
+            sourceFileName = "registry-address-leak.pdf",
+            sourceFingerprint = "fingerprint",
+            extractedText = """
+                Extract from Registry of
+                Subject
+                Firm Name: Individual Entrepreneur Iaroslav Rychenkov
+                Legal Form:Individual Entrepreneur
+                Identification Number:306449082
+                Registration Number and
+                Date: 24/11/2023
+                Registering Authority:LEPL National Agency of Public Registry Georgia, Tbilisi, Samgori District, Police Street I Dead
+                Legal Address:
+                End N5, Floor 2, N4a
+                Person: Iaroslav Rychenkov, 51№7540587
+                Seizure/Injunction
+                Not registered
+            """.trimIndent(),
+            expectedDocumentType = OnboardingDocumentType.REGISTRY_EXTRACT,
+        )
+
+        assertEquals(
+            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            preview.legalAddress.value,
+        )
+    }
+
+    @Test
+    fun skipsAuthorityLineWhenRegistryAddressStartsOnFollowingLine() {
+        val preview = coordinator.parse(
+            sourceFileName = "registry-address-authority-noise.pdf",
+            sourceFingerprint = "fingerprint",
+            extractedText = """
+                Extract from Registry of
+                Subject
+                Firm Name: Individual Entrepreneur Iaroslav Rychenkov
+                Legal Form:Individual Entrepreneur
+                Identification Number:306449082
+                Registration Number and
+                Date: 24/11/2023
+                Legal Address:
+                LEPL National Agency of Public Registry
+                Georgia, Tbilisi, Samgori District, Police Street I Dead
+                End N5, Floor 2, N4a
+                Person: Iaroslav Rychenkov, 51№7540587
+            """.trimIndent(),
+            expectedDocumentType = OnboardingDocumentType.REGISTRY_EXTRACT,
+        )
+
+        assertEquals(
+            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            preview.legalAddress.value,
+        )
+    }
+
+    @Test
     fun parsesGeorgianRegistryExtractWithReviewConfidenceForNextLineValues() {
         val preview = coordinator.parse(
             sourceFileName = "registry-ka.pdf",

@@ -1,11 +1,14 @@
 package com.queukat.sbsgeorgia.ui.settings
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
+import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException
+import com.queukat.sbsgeorgia.domain.model.OnboardingParseError
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -15,6 +18,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportMonthlySummariesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ImportBackupJsonUseCase
+import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
 import com.queukat.sbsgeorgia.worker.ReminderScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -37,6 +41,7 @@ private val defaultReminderDays = listOf(10, 13, 15)
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val upsertSettingsUseCase: UpsertSettingsUseCase,
+    private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val exportIncomeEntriesCsvUseCase: ExportIncomeEntriesCsvUseCase,
     private val exportMonthlySummariesCsvUseCase: ExportMonthlySummariesCsvUseCase,
     private val exportBackupJsonUseCase: ExportBackupJsonUseCase,
@@ -71,6 +76,30 @@ class SettingsViewModel @Inject constructor(
 
     fun updateDisplayName(value: String) {
         _uiState.value = _uiState.value.copy(displayName = value, errorMessage = null)
+    }
+
+    fun updateLegalForm(value: String) {
+        _uiState.value = _uiState.value.copy(legalForm = value, errorMessage = null)
+    }
+
+    fun updateRegistrationDate(value: String) {
+        _uiState.value = _uiState.value.copy(registrationDate = value, errorMessage = null)
+    }
+
+    fun updateLegalAddress(value: String) {
+        _uiState.value = _uiState.value.copy(legalAddress = value, errorMessage = null)
+    }
+
+    fun updateActivityType(value: String) {
+        _uiState.value = _uiState.value.copy(activityType = value, errorMessage = null)
+    }
+
+    fun updateCertificateNumber(value: String) {
+        _uiState.value = _uiState.value.copy(certificateNumber = value, errorMessage = null)
+    }
+
+    fun updateCertificateIssuedDate(value: String) {
+        _uiState.value = _uiState.value.copy(certificateIssuedDate = value, errorMessage = null)
     }
 
     fun updateEffectiveDate(value: LocalDate) {
@@ -118,10 +147,71 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun loadDocument(uri: Uri, action: SettingsDocumentImportAction) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isDocumentLoading = true,
+                documentInfoMessage = null,
+                documentErrorMessage = null,
+            )
+            runCatching {
+                loadOnboardingDocumentPreviewUseCase(
+                    uriString = uri.toString(),
+                    expectedDocumentType = action.expectedDocumentType(),
+                )
+            }.onSuccess { preview ->
+                _uiState.value = _uiState.value.copy(
+                    isDocumentLoading = false,
+                    preview = preview,
+                    documentInfoMessage = when (preview.documentType) {
+                        com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType.REGISTRY_EXTRACT ->
+                            appContext.getString(R.string.onboarding_registry_recognized)
+                        com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE ->
+                            appContext.getString(R.string.onboarding_certificate_recognized)
+                    },
+                )
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    isDocumentLoading = false,
+                    preview = null,
+                    documentErrorMessage = when ((error as? OnboardingDocumentParseException)?.reason) {
+                        OnboardingParseError.UNSUPPORTED_DOCUMENT ->
+                            appContext.getString(R.string.onboarding_error_unsupported_document)
+                        OnboardingParseError.EXPECTED_REGISTRY_EXTRACT ->
+                            appContext.getString(R.string.onboarding_error_expected_registry_extract)
+                        OnboardingParseError.EXPECTED_SMALL_BUSINESS_CERTIFICATE ->
+                            appContext.getString(R.string.onboarding_error_expected_sbs_certificate)
+                        null -> appContext.getString(R.string.onboarding_error_parse_failed)
+                    },
+                )
+            }
+        }
+    }
+
+    fun applyPreview() {
+        val preview = _uiState.value.preview ?: return
+        _uiState.value = _uiState.value.copy(
+            displayName = preview.displayName.value ?: _uiState.value.displayName,
+            legalForm = preview.legalForm.value ?: _uiState.value.legalForm,
+            registrationId = preview.registrationId.value ?: _uiState.value.registrationId,
+            registrationDate = preview.registrationDate.value?.toString() ?: _uiState.value.registrationDate,
+            legalAddress = preview.legalAddress.value ?: _uiState.value.legalAddress,
+            activityType = preview.activityType.value ?: _uiState.value.activityType,
+            certificateNumber = preview.certificateNumber.value ?: _uiState.value.certificateNumber,
+            certificateIssuedDate = preview.certificateIssuedDate.value?.toString() ?: _uiState.value.certificateIssuedDate,
+            effectiveDate = preview.effectiveDate.value ?: _uiState.value.effectiveDate,
+            documentInfoMessage = appContext.getString(R.string.onboarding_preview_applied),
+            documentErrorMessage = null,
+            errorMessage = null,
+        )
+    }
+
     fun save() {
         val current = _uiState.value
         val taxRate = runCatching { BigDecimal(current.taxRatePercent) }.getOrNull()
         val defaultReminderTime = runCatching { LocalTime.parse(current.defaultReminderTime) }.getOrNull()
+        val registrationDate = current.registrationDate.parseOptionalDate()
+        val certificateIssuedDate = current.certificateIssuedDate.parseOptionalDate()
         val declarationReminderDays = parseReminderDays(current.declarationReminderDays)
         val paymentReminderDays = parseReminderDays(current.paymentReminderDays)
         when {
@@ -133,6 +223,12 @@ class SettingsViewModel @Inject constructor(
             }
             taxRate == null || taxRate < BigDecimal.ZERO -> {
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.settings_error_tax_rate_invalid))
+            }
+            current.registrationDate.isNotBlank() && registrationDate == null -> {
+                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_registration_date_invalid))
+            }
+            current.certificateIssuedDate.isNotBlank() && certificateIssuedDate == null -> {
+                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_certificate_issued_date_invalid))
             }
             defaultReminderTime == null -> {
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.settings_error_reminder_time_invalid))
@@ -165,6 +261,10 @@ class SettingsViewModel @Inject constructor(
                         )).copy(
                             registrationId = current.registrationId.trim(),
                             displayName = current.displayName.trim(),
+                            legalForm = current.legalForm.trim().ifBlank { null },
+                            registrationDate = registrationDate,
+                            legalAddress = current.legalAddress.trim().ifBlank { null },
+                            activityType = current.activityType.trim().ifBlank { null },
                         ),
                         config = (persistedStatusConfig ?: SmallBusinessStatusConfig(
                             effectiveDate = current.effectiveDate,
@@ -172,6 +272,8 @@ class SettingsViewModel @Inject constructor(
                         )).copy(
                             effectiveDate = current.effectiveDate,
                             defaultTaxRatePercent = taxRate,
+                            certificateNumber = current.certificateNumber.trim().ifBlank { null },
+                            certificateIssuedDate = certificateIssuedDate,
                         ),
                         reminders = reminders,
                     )
@@ -251,8 +353,15 @@ class SettingsViewModel @Inject constructor(
         persistedProfile = profile
         persistedStatusConfig = config
         _uiState.value = _uiState.value.copy(
+            preview = null,
             registrationId = profile?.registrationId.orEmpty(),
             displayName = profile?.displayName.orEmpty(),
+            legalForm = profile?.legalForm.orEmpty(),
+            registrationDate = profile?.registrationDate?.toString().orEmpty(),
+            legalAddress = profile?.legalAddress.orEmpty(),
+            activityType = profile?.activityType.orEmpty(),
+            certificateNumber = config?.certificateNumber.orEmpty(),
+            certificateIssuedDate = config?.certificateIssuedDate?.toString().orEmpty(),
             effectiveDate = config?.effectiveDate ?: LocalDate.now(clock),
             taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
             defaultReminderTime = reminderConfig?.defaultReminderTime?.toString() ?: "09:00",
@@ -263,6 +372,9 @@ class SettingsViewModel @Inject constructor(
             declarationRemindersEnabled = reminderConfig?.declarationRemindersEnabled ?: true,
             paymentRemindersEnabled = reminderConfig?.paymentRemindersEnabled ?: true,
             themeMode = reminderConfig?.themeMode ?: ThemeMode.SYSTEM,
+            isDocumentLoading = false,
+            documentInfoMessage = null,
+            documentErrorMessage = null,
             errorMessage = null,
         )
     }
@@ -275,3 +387,8 @@ private fun BackupRestoreResult.toSummaryMessage(context: Context): String = con
     importedStatementCount,
     importedTransactionCount,
 )
+
+private fun String.parseOptionalDate(): LocalDate? =
+    trim().takeIf { it.isNotBlank() }?.let { value ->
+        runCatching { LocalDate.parse(value) }.getOrNull()
+    }

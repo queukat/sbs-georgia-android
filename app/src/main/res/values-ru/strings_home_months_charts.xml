@@ -19,11 +19,11 @@
     <string name="home_add_income">Добавить доход</string>
     <string name="home_open_months">Открыть месяцы</string>
     <string name="home_open_charts">Графики</string>
-    <string name="home_import_pdf">Импорт PDF</string>
+    <string name="home_import_pdf">Импорт выписки</string>
     <string name="home_open_settings_short">Настройки</string>
     <string name="home_support_developer_content_description">Поддержать разработчика на Ko-fi</string>
     <string name="months_title">Месяцы</string>
-    <string name="months_import_pdf">Импорт PDF</string>
+    <string name="months_import_pdf">Импорт выписки</string>
     <string name="months_add_income">Добавить доход</string>
     <string name="months_open_month">Открыть месяц</string>
     <string name="months_mark_month_settled">Закрыть месяц</string>

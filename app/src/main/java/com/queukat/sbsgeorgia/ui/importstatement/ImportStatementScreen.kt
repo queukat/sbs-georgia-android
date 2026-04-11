@@ -158,6 +158,13 @@ fun ImportStatementScreen(
                         Text(stringResource(R.string.import_statement_pick_hint))
                     } else {
                         Text(stringResource(R.string.import_statement_rows_recognized, uiState.rows.size, uiState.selectedIncomeCount))
+                        Text(
+                            stringResource(
+                                R.string.import_statement_tax_payment_rows_recognized,
+                                uiState.detectedTaxPaymentCount,
+                                uiState.recognizedOutgoingCount,
+                            ),
+                        )
                     }
                 }
             }
@@ -195,6 +202,7 @@ fun ImportStatementScreen(
                     Text(
                         when {
                             row.duplicate -> stringResource(R.string.import_statement_duplicate_hint)
+                            row.isTaxPaymentCandidate -> stringResource(R.string.import_statement_tax_payment_hint)
                             row.suggestedInclusion == DeclarationInclusion.INCLUDED -> stringResource(R.string.import_statement_taxable_hint)
                             row.suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED -> stringResource(R.string.import_statement_review_hint)
                             else -> stringResource(R.string.import_statement_excluded_hint)

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.usecase.ConfirmStatementImportUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadStatementImportPreviewUseCase
@@ -80,6 +81,7 @@ class ImportStatementViewModel @Inject constructor(
                         amount = row.suggestedAmount.toPlainString(),
                         currency = row.suggestedCurrency.orEmpty(),
                         sourceCategory = displaySourceCategory(appContext, row.suggestedSourceCategory),
+                        isTaxPaymentCandidate = row.suggestedSourceCategory == SourceCategoryPresets.TAX_PAYMENT,
                         duplicate = row.duplicate,
                     )
                 }
@@ -88,6 +90,10 @@ class ImportStatementViewModel @Inject constructor(
                     sourceFingerprint = preview.sourceFingerprint,
                     rows = rows,
                     selectedIncomeCount = rows.count { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate },
+                    detectedTaxPaymentCount = rows.count { it.isTaxPaymentCandidate && !it.duplicate },
+                    recognizedOutgoingCount = preview.rows.count {
+                        it.paidOut?.amount?.signum() == 1
+                    },
                     infoMessage = if (preview.skippedLineCount > 0) {
                         appContext.getString(R.string.import_statement_message_skipped_lines, preview.skippedLineCount)
                     } else {

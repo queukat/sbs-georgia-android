@@ -19,11 +19,11 @@
     <string name="home_add_income">Add income</string>
     <string name="home_open_months">Open months</string>
     <string name="home_open_charts">Charts</string>
-    <string name="home_import_pdf">Import PDF</string>
+    <string name="home_import_pdf">Import statement</string>
     <string name="home_open_settings_short">Settings</string>
     <string name="home_support_developer_content_description">Support the developer on Ko-fi</string>
     <string name="months_title">Months</string>
-    <string name="months_import_pdf">Import PDF</string>
+    <string name="months_import_pdf">Import statement</string>
     <string name="months_add_income">Add income</string>
     <string name="months_open_month">Open month</string>
     <string name="months_mark_month_settled">Close month</string>

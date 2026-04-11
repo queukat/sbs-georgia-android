@@ -1,7 +1,10 @@
 <resources>
     <string name="settings_title">Настройки</string>
     <string name="settings_saved">Настройки сохранены локально.</string>
+    <string name="settings_section_document_imports">Импорт документов</string>
+    <string name="settings_document_imports_body">Здесь можно повторно импортировать выписку из реестра или сертификат малого бизнеса и применить распознанные поля. Банковская выписка импортируется отдельно на экране импорта выписки.</string>
     <string name="settings_section_taxpayer_profile">Профиль налогоплательщика</string>
+    <string name="settings_section_small_business_status">Статус малого бизнеса</string>
     <string name="settings_section_reminder_preferences">Настройки напоминаний</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_data_management">Данные</string>

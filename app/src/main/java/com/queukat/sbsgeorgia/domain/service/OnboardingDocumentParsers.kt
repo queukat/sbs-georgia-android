@@ -48,7 +48,7 @@ class RegistryExtractParser @Inject constructor() {
                     Regex("^Date\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE),
                 ),
             ),
-            legalAddress = lines.extractTextFieldWithContinuation(
+            legalAddress = lines.extractRegistryAddressField(
                 primaryLabels = listOf("Legal address", "იურიდიული მისამართი"),
                 inlineStopLabels = registryAddressStopLabels,
             ),
@@ -229,6 +229,19 @@ private fun List<String>.extractTextFieldWithContinuation(
     return ParsedTextField()
 }
 
+private fun List<String>.extractRegistryAddressField(
+    primaryLabels: List<String>,
+    inlineStopLabels: List<String> = emptyList(),
+): ParsedTextField {
+    extractInlineRegistryAddress(primaryLabels, inlineStopLabels)?.let { value ->
+        return ParsedTextField(value = value, confidence = ExtractionConfidence.CONFIDENT)
+    }
+    extractNextLineRegistryAddress(primaryLabels, inlineStopLabels)?.let { value ->
+        return ParsedTextField(value = value, confidence = ExtractionConfidence.REVIEW_REQUIRED)
+    }
+    return ParsedTextField()
+}
+
 private fun List<String>.extractDateField(
     primaryLabels: List<String>,
     fallbackPatterns: List<Regex> = emptyList(),
@@ -280,7 +293,7 @@ private fun List<String>.extractInlineValue(labels: List<String>): String? =
 
 private fun List<String>.extractNextLineValue(labels: List<String>): String? {
     forEachIndexed { index, line ->
-        if (labels.any { label -> line.equals(label, ignoreCase = true) }) {
+        if (labels.any { label -> line.matchesStandaloneLabel(label) }) {
             return getOrNull(index + 1)?.takeIf { it.isNotBlank() }
         }
     }
@@ -296,11 +309,14 @@ private fun List<String>.extractInlineValueWithContinuation(
             val match = Regex("^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE).find(line)
             if (match != null) {
                 val initialValue = match.groupValues.getOrNull(1)?.trim().orEmpty()
-                return collectContinuationValue(
+                return collectContinuationSegments(
                     startIndex = index + 1,
                     initialValue = initialValue,
                     inlineStopLabels = inlineStopLabels,
                 )
+                    .joinToString(" ")
+                    .replace(Regex("\\s+"), " ")
+                    .trim()
             }
         }
     }
@@ -312,23 +328,69 @@ private fun List<String>.extractNextLineValueWithContinuation(
     inlineStopLabels: List<String>,
 ): String? {
     forEachIndexed { index, line ->
-        if (labels.any { label -> line.equals(label, ignoreCase = true) }) {
+        if (labels.any { label -> line.matchesStandaloneLabel(label) }) {
             val nextLine = getOrNull(index + 1)?.takeIf { it.isNotBlank() } ?: return null
-            return collectContinuationValue(
+            return collectContinuationSegments(
                 startIndex = index + 2,
                 initialValue = nextLine,
                 inlineStopLabels = inlineStopLabels,
+            )
+                .joinToString(" ")
+                .replace(Regex("\\s+"), " ")
+                .trim()
+        }
+    }
+    return null
+}
+
+private fun List<String>.extractInlineRegistryAddress(
+    labels: List<String>,
+    inlineStopLabels: List<String>,
+): String? {
+    forEachIndexed { index, line ->
+        labels.forEach { label ->
+            val match = Regex("^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE).find(line)
+            if (match != null) {
+                val initialValue = match.groupValues.getOrNull(1)?.trim().orEmpty()
+                return repairRegistryAddress(
+                    labelIndex = index,
+                    segments = collectContinuationSegments(
+                        startIndex = index + 1,
+                        initialValue = initialValue,
+                        inlineStopLabels = inlineStopLabels,
+                    ),
+                )
+            }
+        }
+    }
+    return null
+}
+
+private fun List<String>.extractNextLineRegistryAddress(
+    labels: List<String>,
+    inlineStopLabels: List<String>,
+): String? {
+    forEachIndexed { index, line ->
+        if (labels.any { label -> line.matchesStandaloneLabel(label) }) {
+            val nextLine = getOrNull(index + 1)?.takeIf { it.isNotBlank() } ?: return null
+            return repairRegistryAddress(
+                labelIndex = index,
+                segments = collectContinuationSegments(
+                    startIndex = index + 2,
+                    initialValue = nextLine,
+                    inlineStopLabels = inlineStopLabels,
+                ),
             )
         }
     }
     return null
 }
 
-private fun List<String>.collectContinuationValue(
+private fun List<String>.collectContinuationSegments(
     startIndex: Int,
     initialValue: String,
     inlineStopLabels: List<String>,
-): String {
+): List<String> {
     val segments = mutableListOf<String>()
     val sanitizedInitialValue = initialValue.trimAtInlineStopLabel(inlineStopLabels)
     if (sanitizedInitialValue.isNotBlank()) {
@@ -345,7 +407,52 @@ private fun List<String>.collectContinuationValue(
         if (sanitizedCandidate != candidate) break
         index += 1
     }
-    return segments.joinToString(" ").replace(Regex("\\s+"), " ").trim()
+    return segments
+}
+
+private fun List<String>.repairRegistryAddress(
+    labelIndex: Int,
+    segments: List<String>,
+): String? {
+    if (segments.isEmpty()) return null
+
+    val cleanedSegments = segments
+        .map { segment -> segment.replace(Regex("\\s+"), " ").trim() }
+        .filter { it.isNotBlank() }
+        .toMutableList()
+    if (cleanedSegments.isEmpty()) return null
+
+    val firstAddressSegmentIndex = cleanedSegments.indexOfFirst { registryAddressAnchorRegex.containsMatchIn(it) }
+    if (firstAddressSegmentIndex > 0) {
+        repeat(firstAddressSegmentIndex) { cleanedSegments.removeAt(0) }
+    }
+    if (cleanedSegments.isNotEmpty()) {
+        cleanedSegments[0] = cleanedSegments[0].trimToRegistryAddressAnchor()
+    }
+
+    var value = cleanedSegments.joinToString(" ").replace(Regex("\\s+"), " ").trim()
+    if (!registryAddressAnchorRegex.containsMatchIn(value)) {
+        val prefix = findRegistryAddressPrefixNearLabel(labelIndex)
+        if (!prefix.isNullOrBlank()) {
+            value = "$prefix $value".replace(Regex("\\s+"), " ").trim()
+        }
+    }
+    value = value.replace(Regex("\\s+:\\s+"), " ").trim()
+
+    return value.ifBlank { null }
+}
+
+private fun List<String>.findRegistryAddressPrefixNearLabel(labelIndex: Int): String? {
+    val startIndex = maxOf(0, labelIndex - 2)
+    for (index in labelIndex - 1 downTo startIndex) {
+        val line = this[index]
+        val anchor = registryAddressAnchorRegex.find(line) ?: continue
+        val suffix = line.substring(anchor.range.first).replace(Regex("\\s+"), " ").trim()
+        if (suffix.isNotBlank()) {
+            return suffix
+        }
+    }
+    return null
 }
 
 private fun String.looksLikeNextFieldOrSection(): Boolean {
@@ -367,6 +474,14 @@ private fun String.trimAtInlineStopLabel(stopLabels: List<String>): String {
         .minOrNull()
         ?: return trim()
     return substring(0, stopIndex).trim()
+}
+
+private fun String.matchesStandaloneLabel(label: String): Boolean =
+    Regex("^${Regex.escape(label)}\\s*[:\\-]?\\s*$", RegexOption.IGNORE_CASE).matches(trim())
+
+private fun String.trimToRegistryAddressAnchor(): String {
+    val anchor = registryAddressAnchorRegex.find(this) ?: return trim()
+    return substring(anchor.range.first).trim()
 }
 
 private fun List<String>.extractPreviousLineValue(labels: List<String>): String? {
@@ -422,6 +537,7 @@ private val knownDateFormatters = listOf(
 
 private val numericDateRegex = Regex("\\d{2}[./]\\d{2}[./]\\d{4}|\\d{4}-\\d{2}-\\d{2}")
 private val textualDateRegex = Regex("(\\d{1,2})\\s+([\\p{L}]+)\\s+(\\d{4})(?:\\s*წელი)?", RegexOption.IGNORE_CASE)
+private val registryAddressAnchorRegex = Regex("(Georgia\\s*,|საქართველო\\s*,|Tbilisi\\s*,|თბილისი\\s*,)", RegexOption.IGNORE_CASE)
 private val continuationStopHeadings = setOf(
     "subject",
     "person",

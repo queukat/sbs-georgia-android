@@ -1,7 +1,10 @@
 <resources>
     <string name="settings_title">Settings</string>
     <string name="settings_saved">Settings saved locally.</string>
+    <string name="settings_section_document_imports">Document imports</string>
+    <string name="settings_document_imports_body">You can re-import a registry extract or small business certificate here and apply the parsed fields. Bank statement import stays separate on the statement import screen.</string>
     <string name="settings_section_taxpayer_profile">Taxpayer profile</string>
+    <string name="settings_section_small_business_status">Small business status</string>
     <string name="settings_section_reminder_preferences">Reminder preferences</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_data_management">Data management</string>
