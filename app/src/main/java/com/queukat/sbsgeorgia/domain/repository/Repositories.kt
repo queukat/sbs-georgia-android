@@ -8,6 +8,7 @@ import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.ConfirmImportedStatementResult
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import java.time.YearMonth
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
@@ -54,6 +55,7 @@ sealed interface FxRateFetchResult {
 
 interface StatementImportRepository {
     suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean
+    suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo?
     suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean
     suspend fun confirmImport(
         sourceFileName: String,

@@ -161,6 +161,9 @@ interface ImportedStatementDao {
     @Query("SELECT * FROM imported_statement ORDER BY importedAtEpochMillis ASC, id ASC")
     suspend fun getAll(): List<ImportedStatementEntity>
 
+    @Query("SELECT * FROM imported_statement WHERE sourceFingerprint = :sourceFingerprint LIMIT 1")
+    suspend fun getBySourceFingerprint(sourceFingerprint: String): ImportedStatementEntity?
+
     @Query(
         """
         SELECT EXISTS(

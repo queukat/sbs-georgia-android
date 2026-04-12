@@ -2,28 +2,46 @@
 
 ## Current status
 
-Verified on 2026-04-05:
+Verified on 2026-04-12:
 
 - the Play service account authenticates successfully
+- the package is `com.queukat.sbsgeorgia`
 - the Play Console app exists at developer id `7248127183478825243` / app id `4975825611506087226`
-- Android Publisher API still returns `404 Package not found: com.queukat.sbsgeorgia`
-- practical inference: either the package is not yet linked to the Play app shell in Console UI, or the service account does not yet have app-level access to this app
-- `bundleRelease` now builds successfully
-- the produced bundle is now signed with a locally generated upload key
+- the repository now publishes with Gradle Play Publisher (`com.github.triplet.play`)
+- `bundleRelease` builds successfully and Play uploads work for testing tracks
+- the produced bundle is signed with the local upload key from `keystore.properties`
 
-## Remaining manual Play Console work
+## Publishing with Gradle Play Publisher
 
-The missing piece is no longer local signing. The remaining blocker is Play-side visibility of package:
+The `app` module is configured with Gradle Play Publisher and defaults to publishing the release bundle to `internal`.
 
-- `com.queukat.sbsgeorgia`
+Authentication options:
 
-Practical path:
+- set `PLAY_KEY_FILE` to the service account JSON path
+- or use GPP's native `ANDROID_PUBLISHER_CREDENTIALS` environment variable with the JSON contents
 
-1. Open Play Console.
-2. Open the existing app dashboard.
-3. Confirm the service account has access to this app in `Users and permissions`.
-4. Confirm the first app setup is fully saved in Console UI and the package `com.queukat.sbsgeorgia` is the package intended for first upload.
-5. If Play Console still does not expose the package to the Publishing API, perform the first upload manually in Console UI once; after package linkage exists, follow-up edits and releases can be automated through API.
+Common commands:
+
+```powershell
+./gradlew.bat publishReleaseBundle --track internal --console=plain
+./gradlew.bat publishReleaseBundle --track closed --console=plain
+./gradlew.bat publishReleaseListing --console=plain
+./gradlew.bat bootstrapListing --console=plain
+```
+
+Notes:
+
+- `internal` is the default configured track, so `--track internal` is optional
+- `--track closed` overrides the default for closed testing
+- the first Play upload still has to exist in Console before any publisher automation can work
+- version codes still need to increase between releases
+
+## Required Play-side setup
+
+1. Open the existing Play Console app for `com.queukat.sbsgeorgia`.
+2. Confirm the service account has app access in `Users and permissions`.
+3. Keep testing-track permissions enabled for the service account if you want CI/local publishing to work.
+4. Ensure the first app setup remains complete in Console UI.
 
 Official references:
 
@@ -160,4 +178,6 @@ These files are intentionally not committed. Back them up securely, because futu
 ./gradlew.bat assembleDebug --console=plain
 ./gradlew.bat bundleRelease --console=plain
 ./gradlew.bat lintDebug --console=plain
+./gradlew.bat help --task publishReleaseBundle --console=plain
+./gradlew.bat tasks --group publishing --console=plain
 ```

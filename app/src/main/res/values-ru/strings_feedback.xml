@@ -28,7 +28,8 @@
     <string name="settings_message_backup_imported_summary">Резервная копия импортирована. Восстановлено %1$d записей дохода, %2$d месячных записей, %3$d выписок и %4$d импортированных транзакций.</string>
     <string name="settings_message_data_operation_failed">Операция с данными завершилась ошибкой.</string>
 
-    <string name="import_statement_message_duplicate_file">Этот PDF уже импортирован. Fingerprint источника совпадает с существующей выпиской.</string>
+    <string name="import_statement_message_duplicate_file">Содержимое этого PDF уже импортировалось раньше.</string>
+    <string name="import_statement_message_reimport_existing">Содержимое этого PDF уже было импортировано как %1$s от %2$s. Импорт можно запустить повторно: будут добавлены только те транзакции, которых ещё нет в базе.</string>
     <string name="import_statement_message_skipped_lines">%1$d строк выписки не удалось разобрать, они были пропущены.</string>
     <string name="import_statement_message_import_summary">Импортировано %1$d строк дохода. Сохранено %2$d разобранных транзакций. Пропущено %3$d дубликатов, ещё %4$d строк оставлены исключёнными.</string>
     <string name="import_statement_message_import_snackbar">Импортировано %1$d строк дохода из %2$s.</string>

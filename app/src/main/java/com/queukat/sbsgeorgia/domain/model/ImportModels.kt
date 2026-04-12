@@ -46,11 +46,19 @@ data class ApprovedImportedStatementRow(
     val duplicate: Boolean,
 )
 
+data class ImportedStatementImportInfo(
+    val sourceFileName: String,
+    val sourceFingerprint: String,
+    val importedAtEpochMillis: Long,
+)
+
 data class LoadImportPreviewResult(
     val preview: ImportedStatementPreview? = null,
-    val alreadyImported: Boolean = false,
+    val existingImport: ImportedStatementImportInfo? = null,
     val message: String? = null,
-)
+) {
+    val alreadyImported: Boolean get() = existingImport != null
+}
 
 data class ConfirmImportedStatementResult(
     val importedIncomeCount: Int,

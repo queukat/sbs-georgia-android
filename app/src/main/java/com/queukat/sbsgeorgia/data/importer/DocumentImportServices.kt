@@ -25,6 +25,8 @@ interface StatementDocumentReader {
 
 interface StatementTextExtractor {
     suspend fun extractText(documentBytes: ByteArray): String
+
+    suspend fun extractTextCandidates(documentBytes: ByteArray): List<String> = listOf(extractText(documentBytes))
 }
 
 @Singleton
@@ -62,12 +64,22 @@ class PdfBoxStatementTextExtractor @Inject constructor(
     private val pdfBoxInitializer: PdfBoxInitializer,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : StatementTextExtractor {
-    override suspend fun extractText(documentBytes: ByteArray): String = withContext(ioDispatcher) {
+    override suspend fun extractText(documentBytes: ByteArray): String =
+        extractTextCandidates(documentBytes).first()
+
+    override suspend fun extractTextCandidates(documentBytes: ByteArray): List<String> = withContext(ioDispatcher) {
         pdfBoxInitializer.ensureInitialized()
         PDDocument.load(documentBytes).use { document ->
-            PDFTextStripper().apply {
-                sortByPosition = true
-            }.getText(document)
+            listOf(false, true)
+                .map { sortByPosition -> extractText(document, sortByPosition) }
+                .distinct()
         }
     }
+
+    private fun extractText(
+        document: PDDocument,
+        sortByPosition: Boolean,
+    ): String = PDFTextStripper().apply {
+        this.sortByPosition = sortByPosition
+    }.getText(document)
 }

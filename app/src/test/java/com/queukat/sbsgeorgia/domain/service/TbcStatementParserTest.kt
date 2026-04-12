@@ -223,6 +223,26 @@ class TbcStatementParserTest {
         assertEquals("Tax payment", row.suggestedSourceCategory)
     }
 
+    @Test
+    fun trimsInlinePageHeaderArtifactsAfterBalance() {
+        val preview = parser.parse(
+            sourceFileName = "statement-inline-artifacts.pdf",
+            sourceFingerprint = "fixture-fingerprint",
+            extractedText = """
+                ამონაწერი ანგარიშიდან:
+                Account Statement:
+                საწყისი ნაშთი / Opening Balance 1199.12GEL
+                01/01/2026POS wallet - Euro Brand LTD, 30.00 GEL, Dec 31 2025 5:01PM, საყიდლები, MCC: 5611, MC, 515881******3677 30.00 1169.12 1 - 77 Account Statement: GE94TB7209445168200001 01/01/2026- 31/01/2026 01/02/2026 00:00:00 Account Holder: Iaroslav Rychenkov
+                01/01/2026POS wallet - TSERTI 4, 11.00 GEL, Dec 31 2025 5:06PM, სასურსათო მაღაზიები, MCC: 5499, MC, 515881******3677 11.00 1158.12
+            """.trimIndent(),
+        )
+
+        assertEquals(2, preview.rows.size)
+        assertEquals(0, preview.skippedLineCount)
+        assertEquals("30.00", preview.rows.first().suggestedAmount.toPlainString())
+        assertEquals("11.00", preview.rows.last().suggestedAmount.toPlainString())
+    }
+
     private fun fixtureText(fileName: String): String =
         requireNotNull(javaClass.getResource("/fixtures/$fileName"))
             .readText()

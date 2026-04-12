@@ -13,10 +13,13 @@ import com.queukat.sbsgeorgia.domain.usecase.ConfirmStatementImportUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadStatementImportPreviewUseCase
 import com.queukat.sbsgeorgia.ui.common.canonicalSourceCategory
 import com.queukat.sbsgeorgia.ui.common.displaySourceCategory
+import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -46,13 +49,6 @@ class ImportStatementViewModel @Inject constructor(
             runCatching {
                 loadStatementImportPreviewUseCase(uri.toString())
             }.onSuccess { result ->
-                if (result.alreadyImported) {
-                    _uiState.value = ImportStatementUiState(
-                        errorMessage = appContext.getString(R.string.import_statement_message_duplicate_file),
-                    )
-                    return@onSuccess
-                }
-
                 val preview = result.preview
                 if (preview == null) {
                     _uiState.value = ImportStatementUiState(
@@ -94,11 +90,14 @@ class ImportStatementViewModel @Inject constructor(
                     recognizedOutgoingCount = preview.rows.count {
                         it.paidOut?.amount?.signum() == 1
                     },
-                    infoMessage = if (preview.skippedLineCount > 0) {
-                        appContext.getString(R.string.import_statement_message_skipped_lines, preview.skippedLineCount)
-                    } else {
-                        null
-                    },
+                    infoMessage = listOfNotNull(
+                        result.existingImport?.let(::formatExistingImportMessage),
+                        if (preview.skippedLineCount > 0) {
+                            appContext.getString(R.string.import_statement_message_skipped_lines, preview.skippedLineCount)
+                        } else {
+                            null
+                        },
+                    ).joinToString("\n").ifBlank { null },
                 )
             }.onFailure { error ->
                 _uiState.value = ImportStatementUiState(
@@ -288,4 +287,16 @@ class ImportStatementViewModel @Inject constructor(
         listOf(amount.stripTrailingZeros().toPlainString(), currency.orEmpty())
             .filter { it.isNotBlank() }
             .joinToString(" ")
+
+    private fun formatExistingImportMessage(info: com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo): String {
+        val importDate = Instant.ofEpochMilli(info.importedAtEpochMillis)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
+            .formatIsoDate()
+        return appContext.getString(
+            R.string.import_statement_message_reimport_existing,
+            info.sourceFileName,
+            importDate,
+        )
+    }
 }

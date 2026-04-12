@@ -25,19 +25,26 @@ class LoadStatementImportPreviewUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(uriString: String): LoadImportPreviewResult {
         val document = statementDocumentReader.read(uriString)
-        if (statementImportRepository.hasStatementFingerprint(document.sourceFingerprint)) {
-            return LoadImportPreviewResult(
-                alreadyImported = true,
-                message = "This PDF has already been imported. The source fingerprint matches an existing statement.",
-            )
-        }
+        val existingImport = statementImportRepository.getStatementImportInfo(document.sourceFingerprint)
 
-        val extractedText = statementTextExtractor.extractText(document.bytes)
-        val preview = tbcStatementParser.parse(
-            sourceFileName = document.fileName,
-            sourceFingerprint = document.sourceFingerprint,
-            extractedText = extractedText,
-        )
+        var firstParsingFailure: Throwable? = null
+        val preview = statementTextExtractor.extractTextCandidates(document.bytes)
+            .mapNotNull { extractedText ->
+                runCatching {
+                    tbcStatementParser.parse(
+                        sourceFileName = document.fileName,
+                        sourceFingerprint = document.sourceFingerprint,
+                        extractedText = extractedText,
+                    )
+                }.getOrElse { error ->
+                    if (firstParsingFailure == null) {
+                        firstParsingFailure = error
+                    }
+                    null
+                }
+            }
+            .maxByOrNull(::previewQualityScore)
+            ?: throw (firstParsingFailure ?: IllegalStateException("Unable to parse the selected TBC statement PDF."))
         val duplicateAwareRows = preview.rows.map { row ->
             row.copy(
                 duplicate = statementImportRepository.hasTransactionFingerprint(row.transactionFingerprint),
@@ -46,6 +53,7 @@ class LoadStatementImportPreviewUseCase @Inject constructor(
 
         return LoadImportPreviewResult(
             preview = preview.copy(rows = duplicateAwareRows),
+            existingImport = existingImport,
             message = if (preview.skippedLineCount > 0) {
                 "${preview.skippedLineCount} statement lines could not be parsed and were skipped."
             } else {
@@ -53,6 +61,9 @@ class LoadStatementImportPreviewUseCase @Inject constructor(
             },
         )
     }
+
+    private fun previewQualityScore(preview: com.queukat.sbsgeorgia.domain.model.ImportedStatementPreview): Int =
+        preview.rows.size * 1_000 - preview.skippedLineCount
 }
 
 class ConfirmStatementImportUseCase @Inject constructor(

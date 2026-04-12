@@ -28,7 +28,8 @@
     <string name="settings_message_backup_imported_summary">Backup imported. Restored %1$d income entries, %2$d month records, %3$d statements, and %4$d imported transactions.</string>
     <string name="settings_message_data_operation_failed">Data operation failed.</string>
 
-    <string name="import_statement_message_duplicate_file">This PDF has already been imported. The source fingerprint matches an existing statement.</string>
+    <string name="import_statement_message_duplicate_file">This PDF content has already been imported.</string>
+    <string name="import_statement_message_reimport_existing">This PDF content was already imported as %1$s on %2$s. You can retry the import; only transactions that are still missing will be added.</string>
     <string name="import_statement_message_skipped_lines">%1$d statement lines could not be parsed and were skipped.</string>
     <string name="import_statement_message_import_summary">Imported %1$d income rows. Stored %2$d parsed transactions. Skipped %3$d duplicates and left %4$d rows excluded.</string>
     <string name="import_statement_message_import_snackbar">Imported %1$d income rows from %2$s.</string>

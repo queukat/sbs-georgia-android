@@ -9,6 +9,7 @@ import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
@@ -35,9 +36,16 @@ class StatementImportUseCasesTest {
     private val fixedClock: Clock = Clock.fixed(Instant.parse("2026-04-02T10:00:00Z"), ZoneOffset.UTC)
 
     @Test
-    fun loadPreviewStopsWhenStatementFingerprintAlreadyExists() = kotlinx.coroutines.test.runTest {
+    fun loadPreviewKeepsPreviewAvailableWhenStatementFingerprintAlreadyExists() = kotlinx.coroutines.test.runTest {
         val repository = FakeStatementImportRepository(
             existingStatementFingerprints = mutableSetOf("known-statement"),
+            existingStatementImports = mutableMapOf(
+                "known-statement" to ImportedStatementImportInfo(
+                    sourceFileName = "statement.pdf",
+                    sourceFingerprint = "known-statement",
+                    importedAtEpochMillis = 1_775_126_400_000L,
+                ),
+            ),
         )
 
         val result = LoadStatementImportPreviewUseCase(
@@ -54,7 +62,8 @@ class StatementImportUseCasesTest {
         ).invoke("content://statement")
 
         assertTrue(result.alreadyImported)
-        assertEquals(null, result.preview)
+        assertEquals("statement.pdf", result.existingImport?.sourceFileName)
+        assertEquals(4, requireNotNull(result.preview).rows.size)
     }
 
     @Test
@@ -309,6 +318,32 @@ class StatementImportUseCasesTest {
         assertEquals(0, preview.skippedLineCount)
     }
 
+    @Test
+    fun loadPreviewFallsBackToAlternativeExtractionWhenPrimaryTextLooksBroken() = kotlinx.coroutines.test.runTest {
+        val result = LoadStatementImportPreviewUseCase(
+            statementDocumentReader = FakeStatementDocumentReader(
+                ImportedPdfDocument(
+                    fileName = "statement.pdf",
+                    sourceFingerprint = "fallback-statement",
+                    bytes = ByteArray(0),
+                ),
+            ),
+            statementTextExtractor = FakeStatementTextExtractor(
+                text = "unsupported extraction",
+                candidates = listOf(
+                    "unsupported extraction",
+                    fixtureText("tbc_statement_v1_extracted.txt"),
+                ),
+            ),
+            tbcStatementParser = TbcStatementParser(),
+            statementImportRepository = FakeStatementImportRepository(),
+        ).invoke("content://statement")
+
+        val preview = requireNotNull(result.preview)
+        assertEquals(4, preview.rows.size)
+        assertEquals(0, preview.skippedLineCount)
+    }
+
     private fun fixtureText(fileName: String): String =
         requireNotNull(javaClass.getResource("/fixtures/$fileName"))
             .readText()
@@ -334,12 +369,16 @@ private class FakeStatementDocumentReader(
 
 private class FakeStatementTextExtractor(
     private val text: String,
+    private val candidates: List<String> = listOf(text),
 ) : StatementTextExtractor {
     override suspend fun extractText(documentBytes: ByteArray): String = text
+
+    override suspend fun extractTextCandidates(documentBytes: ByteArray): List<String> = candidates
 }
 
 private class FakeStatementImportRepository(
     val existingStatementFingerprints: MutableSet<String> = mutableSetOf(),
+    val existingStatementImports: MutableMap<String, ImportedStatementImportInfo> = mutableMapOf(),
     val existingTransactionFingerprints: MutableSet<String> = mutableSetOf(),
     val onConfirm: (suspend (List<ApprovedImportedStatementRow>, Long) -> Unit)? = null,
 ) : StatementImportRepository {
@@ -347,6 +386,9 @@ private class FakeStatementImportRepository(
 
     override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean =
         sourceFingerprint in existingStatementFingerprints
+
+    override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? =
+        existingStatementImports[sourceFingerprint]
 
     override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean =
         transactionFingerprint in existingTransactionFingerprints
@@ -357,6 +399,15 @@ private class FakeStatementImportRepository(
         rows: List<ApprovedImportedStatementRow>,
         importedAtEpochMillis: Long,
     ): ConfirmImportedStatementResult {
+        existingStatementFingerprints += sourceFingerprint
+        existingStatementImports.putIfAbsent(
+            sourceFingerprint,
+            ImportedStatementImportInfo(
+                sourceFileName = sourceFileName,
+                sourceFingerprint = sourceFingerprint,
+                importedAtEpochMillis = importedAtEpochMillis,
+            ),
+        )
         confirmedRows += rows.filterNot { it.duplicate || it.finalInclusion != DeclarationInclusion.INCLUDED }
         onConfirm?.invoke(rows, importedAtEpochMillis)
         return ConfirmImportedStatementResult(

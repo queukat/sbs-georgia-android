@@ -1,3 +1,4 @@
+import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -10,6 +11,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.play.publisher)
 }
 
 val releaseSigningProperties = Properties().apply {
@@ -18,6 +20,7 @@ val releaseSigningProperties = Properties().apply {
         signingFile.inputStream().use(::load)
     }
 }
+val playKeyFileProvider = providers.environmentVariable("PLAY_KEY_FILE")
 
 android {
     namespace = "com.queukat.sbsgeorgia"
@@ -27,8 +30,8 @@ android {
         applicationId = "com.queukat.sbsgeorgia"
         minSdk = 24
         targetSdk = 36
-        versionCode = 4
-        versionName = "1.0.3"
+        versionCode = 5
+        versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -83,6 +86,16 @@ android {
             isIncludeAndroidResources = true
         }
     }
+}
+
+play {
+    defaultToAppBundles.set(true)
+    track.set("internal")
+    releaseStatus.set(ReleaseStatus.COMPLETED)
+
+    playKeyFileProvider.orNull
+        ?.takeIf { it.isNotBlank() }
+        ?.let { serviceAccountCredentials.set(file(it)) }
 }
 
 baselineProfile {

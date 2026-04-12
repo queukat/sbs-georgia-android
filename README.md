@@ -31,6 +31,7 @@ The app is focused on replacing manual spreadsheets for:
 - [Assumptions](docs/assumptions.md)
 - [Open questions](docs/open_questions.md)
 - [Startup performance](docs/startup_performance.md)
+- [Play Console setup](docs/play_console_setup.md)
 
 ## Local checks
 
@@ -39,6 +40,26 @@ The app is focused on replacing manual spreadsheets for:
 ./gradlew.bat assembleDebug --console=plain
 ./gradlew.bat lintDebug --console=plain
 ```
+
+## Play publishing
+
+The repository publishes to Google Play via Gradle Play Publisher.
+
+Authentication:
+
+- preferred: set `PLAY_KEY_FILE` to the service account JSON path
+- supported by GPP directly: set `ANDROID_PUBLISHER_CREDENTIALS` to the JSON file contents
+
+Common commands:
+
+```powershell
+./gradlew.bat publishReleaseBundle --track internal --console=plain
+./gradlew.bat publishReleaseBundle --track closed --console=plain
+./gradlew.bat publishReleaseListing --console=plain
+./gradlew.bat bootstrapListing --console=plain
+```
+
+`internal` is the default track in the build, so `--track internal` is optional. `--track closed` overrides it for closed testing.
 
 ## Commit policy
 

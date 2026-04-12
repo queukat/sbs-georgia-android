@@ -12,6 +12,7 @@ import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmImportedStatementResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import javax.inject.Inject
@@ -27,6 +28,15 @@ class StatementImportRepositoryImpl @Inject constructor(
     override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean =
         importedStatementDao.existsBySourceFingerprint(sourceFingerprint)
 
+    override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? =
+        importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.let { entity ->
+            ImportedStatementImportInfo(
+                sourceFileName = entity.sourceFileName,
+                sourceFingerprint = entity.sourceFingerprint,
+                importedAtEpochMillis = entity.importedAtEpochMillis,
+            )
+        }
+
     override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean =
         importedTransactionDao.existsByFingerprint(transactionFingerprint) ||
             incomeEntryDao.existsBySourceTransactionFingerprint(transactionFingerprint)
@@ -37,22 +47,14 @@ class StatementImportRepositoryImpl @Inject constructor(
         rows: List<ApprovedImportedStatementRow>,
         importedAtEpochMillis: Long,
     ): ConfirmImportedStatementResult = database.withTransaction {
-        if (importedStatementDao.existsBySourceFingerprint(sourceFingerprint)) {
-            return@withTransaction ConfirmImportedStatementResult(
-                importedIncomeCount = 0,
-                storedTransactionCount = 0,
-                skippedDuplicateCount = rows.size,
-                excludedCount = rows.count { it.finalInclusion != DeclarationInclusion.INCLUDED },
+        val statementId = importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.id
+            ?: importedStatementDao.insert(
+                ImportedStatementEntity(
+                    sourceFileName = sourceFileName,
+                    sourceFingerprint = sourceFingerprint,
+                    importedAtEpochMillis = importedAtEpochMillis,
+                ),
             )
-        }
-
-        val statementId = importedStatementDao.insert(
-            ImportedStatementEntity(
-                sourceFileName = sourceFileName,
-                sourceFingerprint = sourceFingerprint,
-                importedAtEpochMillis = importedAtEpochMillis,
-            ),
-        )
 
         val nonPreviewDuplicates = rows.filterNot { it.duplicate }
         val insertResults = importedTransactionDao.insertAll(
