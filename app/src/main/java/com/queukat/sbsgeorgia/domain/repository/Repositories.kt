@@ -13,6 +13,17 @@ import java.time.YearMonth
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
+data class QuickStartGuideState(
+    val initialized: Boolean = false,
+    val dismissed: Boolean = false,
+)
+
+interface AppPreferencesRepository {
+    fun observeQuickStartGuideState(): Flow<QuickStartGuideState>
+    suspend fun initializeQuickStartGuide(hasCompletedSetup: Boolean)
+    suspend fun markQuickStartGuideDismissed()
+}
+
 interface SettingsRepository {
     fun observeTaxpayerProfile(): Flow<TaxpayerProfile?>
     fun observeStatusConfig(): Flow<SmallBusinessStatusConfig?>

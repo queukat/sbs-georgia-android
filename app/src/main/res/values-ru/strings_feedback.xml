@@ -26,7 +26,7 @@
     <string name="settings_message_monthly_csv_exported">CSV с месячными сводками экспортирован.</string>
     <string name="settings_message_backup_exported">JSON-резервная копия экспортирована.</string>
     <string name="settings_message_backup_imported_summary">Резервная копия импортирована. Восстановлено %1$d записей дохода, %2$d месячных записей, %3$d выписок и %4$d импортированных транзакций.</string>
-    <string name="settings_message_data_operation_failed">Операция с данными завершилась ошибкой.</string>
+    <string name="settings_message_data_operation_failed">Операция с данными завершилась ошибкой. Проверьте выбранный файл или место сохранения и повторите попытку.</string>
 
     <string name="import_statement_message_duplicate_file">Содержимое этого PDF уже импортировалось раньше.</string>
     <string name="import_statement_message_reimport_existing">Содержимое этого PDF уже было импортировано как %1$s от %2$s. Импорт можно запустить повторно: будут добавлены только те транзакции, которых ещё нет в базе.</string>

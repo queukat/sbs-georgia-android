@@ -52,6 +52,7 @@ import com.queukat.sbsgeorgia.ui.navigation.WorkflowStatusDestination
 import com.queukat.sbsgeorgia.ui.navigation.rememberAppNavigationState
 import com.queukat.sbsgeorgia.ui.common.BrandLaunchSplash
 import com.queukat.sbsgeorgia.ui.common.sbsNavigationBarItemColors
+import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
 import com.queukat.sbsgeorgia.ui.onboarding.OnboardingRoute
 import com.queukat.sbsgeorgia.ui.settings.SettingsRoute
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
@@ -233,6 +234,11 @@ fun SbsGeorgiaApp() {
             NavDisplay(
                 entries = currentEntries,
                 onBack = navigationState::pop,
+            )
+        }
+        if (appSetupUiState.shouldShowQuickStartGuide) {
+            QuickStartGuideDialog(
+                onDismiss = appSetupViewModel::dismissQuickStartGuide,
             )
         }
     }

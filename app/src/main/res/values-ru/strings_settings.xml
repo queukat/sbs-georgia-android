@@ -8,6 +8,7 @@
     <string name="settings_section_reminder_preferences">Настройки напоминаний</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_data_management">Данные</string>
+    <string name="settings_section_help_feedback">Помощь и обратная связь</string>
     <string name="settings_section_save">Сохранение</string>
     <string name="settings_registration_id">Регистрационный ID ИП</string>
     <string name="settings_display_name">Имя налогоплательщика</string>
@@ -22,12 +23,25 @@
     <string name="settings_reminder_days_hint">Дни с 1 по 15 через запятую, например 10,13,15</string>
     <string name="settings_enable_declaration_reminders">Включить напоминания о декларации</string>
     <string name="settings_enable_payment_reminders">Включить напоминания об оплате</string>
-    <string name="settings_data_management_body">В локальном режиме резервное копирование и экспорт являются частью основного продукта. JSON-резервная копия сохраняет настройки приложения, месячные записи, кэш FX и сырые метаданные импортированных выписок.</string>
-    <string name="settings_data_management_warning">Импорт JSON-резервной копии заменяет текущую локальную базу данных выбранной резервной копией.</string>
+    <string name="settings_data_management_body">Все данные остаются на устройстве, поэтому backup/export нужен, когда вам нужна внешняя копия.</string>
+    <string name="settings_data_management_warning">Импорт JSON-резервной копии заменяет текущую локальную базу данных выбранной резервной копией. Используйте его только для восстановления полного локального состояния.</string>
     <string name="settings_export_income_csv">Экспорт CSV доходов</string>
+    <string name="settings_export_income_csv_body">Экспортирует по одной строке на каждую запись дохода для таблиц, бухгалтера или личного архива.</string>
     <string name="settings_export_monthly_csv">Экспорт CSV месячных сводок</string>
+    <string name="settings_export_monthly_csv_body">Экспортирует месячные итоги декларации и статусы процесса, когда нужна компактная сводка по периодам.</string>
     <string name="settings_export_backup_json">Экспорт JSON-резервной копии</string>
+    <string name="settings_export_backup_json_body">Создаёт полный восстанавливаемый backup локального состояния приложения, включая настройки налогоплательщика, записи, декларации, кэш FX и метаданные импортированных выписок.</string>
     <string name="settings_import_backup_json">Импорт JSON-резервной копии</string>
+    <string name="settings_import_backup_json_body">Восстанавливает ранее экспортированный полный backup приложения при переносе на новое устройство или после переустановки. Это заменяет текущие локальные данные.</string>
+    <string name="settings_help_feedback_body">Используйте эти действия, когда нужно быстро освежить основные сценарии, оценить приложение или сообщить о проблеме.</string>
+    <string name="settings_open_help_faq">Открыть помощь и FAQ</string>
+    <string name="settings_open_help_faq_body">Короткие практические ответы про учёт доходов, FX, месячные декларации, напоминания, backup/export и обратную связь.</string>
+    <string name="settings_view_quick_start">Открыть краткий гид снова</string>
+    <string name="settings_view_quick_start_body">Повторно откройте лёгкий гид по приложению без сброса данных.</string>
+    <string name="settings_rate_app">Оценить приложение</string>
+    <string name="settings_rate_app_body">Открывает страницу приложения в Google Play, где можно оставить отзыв.</string>
+    <string name="settings_send_feedback">Отправить отзыв</string>
+    <string name="settings_send_feedback_body">Открывает публичную форму в браузере для отзывов и сообщений о проблемах с предзаполненной версией приложения и данными устройства. Всё, что вы напишете, может быть видно другим, поэтому не добавляйте налоговые ID, PDF и backup/export-файлы.</string>
     <string name="settings_data_operation_in_progress">Идёт работа с локальной резервной копией и экспортом…</string>
     <string name="settings_save">Сохранить настройки</string>
 </resources>

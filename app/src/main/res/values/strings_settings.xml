@@ -8,6 +8,7 @@
     <string name="settings_section_reminder_preferences">Reminder preferences</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_data_management">Data management</string>
+    <string name="settings_section_help_feedback">Help &amp; feedback</string>
     <string name="settings_section_save">Save</string>
     <string name="settings_registration_id">IE registration ID</string>
     <string name="settings_display_name">Taxpayer display name</string>
@@ -22,12 +23,25 @@
     <string name="settings_reminder_days_hint">Comma-separated days from 1 to 15, for example 10,13,15</string>
     <string name="settings_enable_declaration_reminders">Enable declaration reminders</string>
     <string name="settings_enable_payment_reminders">Enable payment reminders</string>
-    <string name="settings_data_management_body">Local-only mode means backup/export is part of the core product flow. JSON backup preserves app settings, monthly records, FX cache, and raw imported statement metadata.</string>
-    <string name="settings_data_management_warning">Importing a JSON backup replaces the current local database with the selected backup.</string>
+    <string name="settings_data_management_body">All data stays local on the device, so backup/export is how you keep an external copy when you need one.</string>
+    <string name="settings_data_management_warning">Importing a JSON backup replaces the current local database with the selected backup. Use it only when you want to restore the full local state.</string>
     <string name="settings_export_income_csv">Export income entries CSV</string>
+    <string name="settings_export_income_csv_body">Export one row per income entry for spreadsheets, accountant review, or personal archiving.</string>
     <string name="settings_export_monthly_csv">Export monthly summaries CSV</string>
+    <string name="settings_export_monthly_csv_body">Export month-level declaration totals and workflow statuses when you want a compact period summary.</string>
     <string name="settings_export_backup_json">Export JSON backup</string>
+    <string name="settings_export_backup_json_body">Create a full restoreable backup of the local app state, including taxpayer settings, entries, declarations, FX cache, and imported statement metadata.</string>
     <string name="settings_import_backup_json">Import JSON backup</string>
+    <string name="settings_import_backup_json_body">Restore a previously exported full-app backup when moving devices or recovering after reinstall. This replaces the current local data.</string>
+    <string name="settings_help_feedback_body">Use these actions when you want a refresher, want to rate the app, or want to report a product issue.</string>
+    <string name="settings_open_help_faq">Open help &amp; FAQ</string>
+    <string name="settings_open_help_faq_body">Read short practical answers about income tracking, FX conversion, monthly declarations, reminders, backup/export, and feedback.</string>
+    <string name="settings_view_quick_start">View quick start guide again</string>
+    <string name="settings_view_quick_start_body">Reopen the lightweight product walkthrough without resetting your data.</string>
+    <string name="settings_rate_app">Rate this app</string>
+    <string name="settings_rate_app_body">Open the Google Play listing and leave a review if the app is helping you.</string>
+    <string name="settings_send_feedback">Send feedback</string>
+    <string name="settings_send_feedback_body">Open a public browser form for feedback or bug reports with app and device context prefilled. Anything you write can be visible to others, so do not include taxpayer IDs, PDFs, or backup/export files.</string>
     <string name="settings_data_operation_in_progress">Working with local backup/export data…</string>
     <string name="settings_save">Save settings</string>
 </resources>

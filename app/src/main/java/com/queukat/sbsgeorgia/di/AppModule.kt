@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.di
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.room.Room
 import com.queukat.sbsgeorgia.data.importer.AndroidStatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.PdfBoxStatementTextExtractor
@@ -19,11 +20,13 @@ import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigDao
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.remote.NbgFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteDataSource
+import com.queukat.sbsgeorgia.data.repository.AppPreferencesRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.FxRateRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.IncomeRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.MonthlyDeclarationRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.SettingsRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.StatementImportRepositoryImpl
+import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
@@ -54,6 +57,9 @@ abstract class RepositoryBindingsModule {
     abstract fun bindTextDocumentStore(impl: AndroidTextDocumentStore): TextDocumentStore
 
     @Binds
+    abstract fun bindAppPreferencesRepository(impl: AppPreferencesRepositoryImpl): AppPreferencesRepository
+
+    @Binds
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
 
     @Binds
@@ -75,6 +81,11 @@ abstract class RepositoryBindingsModule {
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+    @Provides
+    @Singleton
+    fun provideSharedPreferences(@ApplicationContext context: Context): SharedPreferences =
+        context.getSharedPreferences("sbs_georgia_prefs", Context.MODE_PRIVATE)
+
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): SbsGeorgiaDatabase =

@@ -35,6 +35,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -58,7 +60,12 @@ import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
 import com.queukat.sbsgeorgia.ui.common.DecimalField
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
+import com.queukat.sbsgeorgia.ui.help.HelpFaqDialog
+import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
+import com.queukat.sbsgeorgia.ui.help.openFeedbackPage
+import com.queukat.sbsgeorgia.ui.help.openPlayStoreListing
 import java.time.LocalDate
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsRoute(
@@ -68,7 +75,10 @@ fun SettingsRoute(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.settings_saved)
+    val openStoreFailedMessage = stringResource(R.string.help_open_store_failed)
+    val openFeedbackFailedMessage = stringResource(R.string.help_open_feedback_failed)
     var notificationPermissionGranted by remember {
         mutableStateOf(isNotificationPermissionGranted(context))
     }
@@ -168,6 +178,20 @@ fun SettingsRoute(
         onImportBackupJson = {
             importBackupJsonLauncher.launch(arrayOf("application/json", "text/plain"))
         },
+        onRateApp = {
+            if (!openPlayStoreListing(context)) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(openStoreFailedMessage)
+                }
+            }
+        },
+        onSendFeedback = {
+            if (!openFeedbackPage(context)) {
+                scope.launch {
+                    snackbarHostState.showSnackbar(openFeedbackFailedMessage)
+                }
+            }
+        },
         onSave = viewModel::save,
     )
 }
@@ -202,8 +226,13 @@ fun SettingsScreen(
     onExportMonthlySummariesCsv: () -> Unit = {},
     onExportBackupJson: () -> Unit = {},
     onImportBackupJson: () -> Unit = {},
+    onRateApp: () -> Unit = {},
+    onSendFeedback: () -> Unit = {},
     onSave: () -> Unit,
 ) {
+    var showHelpFaq by rememberSaveable { mutableStateOf(false) }
+    var showQuickStartGuide by rememberSaveable { mutableStateOf(false) }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -213,6 +242,22 @@ fun SettingsScreen(
             SnackbarHost(hostState = snackbarHostState)
         },
     ) { contentPadding ->
+        if (showHelpFaq) {
+            HelpFaqDialog(
+                onDismiss = { showHelpFaq = false },
+                onViewQuickStartGuide = {
+                    showHelpFaq = false
+                    showQuickStartGuide = true
+                },
+                onRateApp = onRateApp,
+                onSendFeedback = onSendFeedback,
+            )
+        }
+        if (showQuickStartGuide) {
+            QuickStartGuideDialog(
+                onDismiss = { showQuickStartGuide = false },
+            )
+        }
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -468,45 +513,72 @@ fun SettingsScreen(
                     stringResource(R.string.settings_data_management_warning),
                     color = MaterialTheme.colorScheme.error,
                 )
-                Button(
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_export_income_csv),
+                    body = stringResource(R.string.settings_export_income_csv_body),
                     onClick = onExportIncomeEntriesCsv,
                     enabled = !uiState.isDataOperationInProgress && !uiState.isSaving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("settings-export-income-csv-button"),
-                ) {
-                    Text(stringResource(R.string.settings_export_income_csv))
-                }
-                Button(
+                    testTag = "settings-export-income-csv-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_export_monthly_csv),
+                    body = stringResource(R.string.settings_export_monthly_csv_body),
                     onClick = onExportMonthlySummariesCsv,
                     enabled = !uiState.isDataOperationInProgress && !uiState.isSaving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("settings-export-monthly-csv-button"),
-                ) {
-                    Text(stringResource(R.string.settings_export_monthly_csv))
-                }
-                Button(
+                    testTag = "settings-export-monthly-csv-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_export_backup_json),
+                    body = stringResource(R.string.settings_export_backup_json_body),
                     onClick = onExportBackupJson,
                     enabled = !uiState.isDataOperationInProgress && !uiState.isSaving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("settings-export-backup-button"),
-                ) {
-                    Text(stringResource(R.string.settings_export_backup_json))
-                }
-                Button(
+                    testTag = "settings-export-backup-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_import_backup_json),
+                    body = stringResource(R.string.settings_import_backup_json_body),
                     onClick = onImportBackupJson,
                     enabled = !uiState.isDataOperationInProgress && !uiState.isSaving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("settings-import-backup-button"),
-                ) {
-                    Text(stringResource(R.string.settings_import_backup_json))
-                }
+                    testTag = "settings-import-backup-button",
+                )
                 if (uiState.isDataOperationInProgress) {
                     Text(stringResource(R.string.settings_data_operation_in_progress))
                 }
+            }
+
+            AppSection(title = stringResource(R.string.settings_section_help_feedback)) {
+                Text(
+                    stringResource(R.string.settings_help_feedback_body),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_open_help_faq),
+                    body = stringResource(R.string.settings_open_help_faq_body),
+                    onClick = { showHelpFaq = true },
+                    enabled = true,
+                    testTag = "settings-open-help-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_view_quick_start),
+                    body = stringResource(R.string.settings_view_quick_start_body),
+                    onClick = { showQuickStartGuide = true },
+                    enabled = true,
+                    testTag = "settings-view-quick-start-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_rate_app),
+                    body = stringResource(R.string.settings_rate_app_body),
+                    onClick = onRateApp,
+                    enabled = true,
+                    testTag = "settings-rate-app-button",
+                )
+                SettingsActionButton(
+                    label = stringResource(R.string.settings_send_feedback),
+                    body = stringResource(R.string.settings_send_feedback_body),
+                    onClick = onSendFeedback,
+                    enabled = true,
+                    testTag = "settings-send-feedback-button",
+                )
             }
 
             AppSection(title = stringResource(R.string.settings_section_save)) {
@@ -522,6 +594,34 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SettingsActionButton(
+    label: String,
+    body: String,
+    onClick: () -> Unit,
+    enabled: Boolean,
+    testTag: String,
+) {
+    Column(
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Button(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag(testTag),
+        ) {
+            Text(label)
+        }
+        Text(
+            text = body,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+        )
     }
 }
 

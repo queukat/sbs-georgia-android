@@ -1,0 +1,50 @@
+<resources>
+    <string name="quick_start_title">Quick start guide</string>
+    <string name="quick_start_skip">Skip</string>
+    <string name="quick_start_back">Back</string>
+    <string name="quick_start_next">Next</string>
+    <string name="quick_start_done">Done</string>
+    <string name="quick_start_progress">%1$d of %2$d</string>
+
+    <string name="quick_start_step_income_title">Track income as it happens</string>
+    <string name="quick_start_step_income_body">Add income manually or import a supported bank statement when you want a faster starting point.</string>
+    <string name="quick_start_step_income_bullet_one">Use the date, source category, and notes to keep each declaration month clean.</string>
+    <string name="quick_start_step_income_bullet_two">Non-GEL income stays explicit instead of being silently converted.</string>
+
+    <string name="quick_start_step_fx_title">Resolve GEL amounts with confidence</string>
+    <string name="quick_start_step_fx_body">The app uses official NBG rates when they are available and keeps unresolved FX visible until you review it.</string>
+    <string name="quick_start_step_fx_bullet_one">Resolve month FX from the month screen or add a manual FX override when needed.</string>
+    <string name="quick_start_step_fx_bullet_two">Declaration totals only become fully ready after the needed FX is resolved.</string>
+
+    <string name="quick_start_step_workflow_title">Stay on top of monthly declarations</string>
+    <string name="quick_start_step_workflow_body">Each month shows readiness, filing and payment status, reminders, and local backup/export tools in Settings.</string>
+    <string name="quick_start_step_workflow_bullet_one">Use month status updates to move work from draft through filing and payment to settled.</string>
+    <string name="quick_start_step_workflow_bullet_two">If you need a refresher later, open Help &amp; feedback in Settings.</string>
+
+    <string name="help_title">Help &amp; FAQ</string>
+    <string name="help_section_intro">How this app works</string>
+    <string name="help_intro_body">Short practical answers for the main product flows. The app is local-first, so avoid sharing taxpayer IDs, imported PDFs, or backup/export files in public feedback.</string>
+    <string name="help_section_quick_actions">Quick actions</string>
+    <string name="help_view_quick_start_again">View quick start guide again</string>
+    <string name="help_rate_app">Rate this app</string>
+    <string name="help_send_feedback">Send feedback</string>
+    <string name="help_feedback_public_note">Feedback opens a public browser page. Anything you write can be visible to others, so do not include taxpayer IDs, PDFs, or backup/export files.</string>
+
+    <string name="help_faq_add_income_question">How do I add income?</string>
+    <string name="help_faq_add_income_answer">Use Add income for manual entry, or Import statement for a supported bank PDF. Each entry needs a date, amount, currency, and source category, and you can edit entries later from the month screen.</string>
+    <string name="help_faq_gel_conversion_question">How is GEL conversion calculated?</string>
+    <string name="help_faq_gel_conversion_answer">GEL income uses the original amount directly. For other currencies, the app uses official NBG rates when available or keeps the entry unresolved so totals are never silently guessed.</string>
+    <string name="help_faq_missing_rate_question">What if there is no FX rate for the date?</string>
+    <string name="help_faq_missing_rate_answer">If no official rate is available for that date, the entry stays unresolved and the month remains not fully ready. You can retry official resolution later or set a manual FX override for that entry.</string>
+    <string name="help_faq_monthly_declarations_question">How do monthly declarations work?</string>
+    <string name="help_faq_monthly_declarations_answer">Each income month maps to the next month’s filing window. The month screen shows Graph 20, cumulative Graph 15, estimated tax, zero-declaration guidance, and copy tools when the month is ready.</string>
+    <string name="help_faq_reminders_question">How do reminders and statuses work?</string>
+    <string name="help_faq_reminders_answer">Reminder days and time are configured in Settings. Month statuses move from draft through filed and payment states to settled, and overdue is derived automatically from the due date.</string>
+    <string name="help_faq_backup_question">When should I use backup or export?</string>
+    <string name="help_faq_backup_answer">Use CSV export when you want spreadsheet-style data outside the app. Use JSON backup when moving to a new device, before reinstalling, or when you want to restore the full local app state later.</string>
+    <string name="help_faq_feedback_question">Where can I leave feedback?</string>
+    <string name="help_faq_feedback_answer">Open Send feedback from Settings or Help. It opens a public issue form in your browser with app version and device context prefilled. Keep tax IDs, PDFs, and backup/export files out of the report.</string>
+
+    <string name="help_open_store_failed">Could not open Google Play.</string>
+    <string name="help_open_feedback_failed">Could not open the feedback page.</string>
+</resources>

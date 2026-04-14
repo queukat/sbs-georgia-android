@@ -1,0 +1,50 @@
+<resources>
+    <string name="quick_start_title">Краткий гид</string>
+    <string name="quick_start_skip">Пропустить</string>
+    <string name="quick_start_back">Назад</string>
+    <string name="quick_start_next">Далее</string>
+    <string name="quick_start_done">Готово</string>
+    <string name="quick_start_progress">%1$d из %2$d</string>
+
+    <string name="quick_start_step_income_title">Фиксируйте доход по мере поступления</string>
+    <string name="quick_start_step_income_body">Доход можно добавить вручную или начать быстрее через импорт поддерживаемой банковской выписки.</string>
+    <string name="quick_start_step_income_bullet_one">Используйте дату, категорию источника и заметки, чтобы каждый месяц декларации оставался чистым.</string>
+    <string name="quick_start_step_income_bullet_two">Доход не в GEL остаётся явным и не пересчитывается молча.</string>
+
+    <string name="quick_start_step_fx_title">Разрешайте суммы в GEL осознанно</string>
+    <string name="quick_start_step_fx_body">Когда официальный курс NBG доступен, приложение использует его. Если курс не найден, FX остаётся видимым и требует проверки.</string>
+    <string name="quick_start_step_fx_bullet_one">Разрешайте FX с экрана месяца или задавайте ручное FX-переопределение при необходимости.</string>
+    <string name="quick_start_step_fx_bullet_two">Итоги декларации считаются полностью готовыми только после разрешения нужного FX.</string>
+
+    <string name="quick_start_step_workflow_title">Держите под контролем месячные декларации</string>
+    <string name="quick_start_step_workflow_body">Каждый месяц показывает готовность, статусы подачи и оплаты, напоминания, а также локальные backup/export-инструменты в Settings.</string>
+    <string name="quick_start_step_workflow_bullet_one">Обновляйте статус месяца от draft через подачу и оплату до settled.</string>
+    <string name="quick_start_step_workflow_bullet_two">Если позже понадобится напоминание, откройте Help &amp; feedback в Settings.</string>
+
+    <string name="help_title">Помощь и FAQ</string>
+    <string name="help_section_intro">Как работает приложение</string>
+    <string name="help_intro_body">Короткие практические ответы по основным сценариям. Приложение локальное, поэтому не отправляйте налоговые ID, импортированные PDF или backup/export-файлы в публичную обратную связь.</string>
+    <string name="help_section_quick_actions">Быстрые действия</string>
+    <string name="help_view_quick_start_again">Открыть краткий гид снова</string>
+    <string name="help_rate_app">Оценить приложение</string>
+    <string name="help_send_feedback">Отправить отзыв</string>
+    <string name="help_feedback_public_note">Откроется публичная страница в браузере. Всё, что вы напишете, может быть видно другим, поэтому не включайте налоговые ID, PDF и backup/export-файлы.</string>
+
+    <string name="help_faq_add_income_question">Как добавить доход?</string>
+    <string name="help_faq_add_income_answer">Используйте Add income для ручного ввода или Import statement для поддерживаемого PDF банковской выписки. Для записи нужны дата, сумма, валюта и категория источника, а позже её можно отредактировать с экрана месяца.</string>
+    <string name="help_faq_gel_conversion_question">Как считается конвертация в GEL?</string>
+    <string name="help_faq_gel_conversion_answer">Доход в GEL берётся как есть. Для других валют приложение использует официальный курс NBG, если он доступен, или оставляет запись неразрешённой, чтобы итоги не строились на догадках.</string>
+    <string name="help_faq_missing_rate_question">Что делать, если на дату нет FX-курса?</string>
+    <string name="help_faq_missing_rate_answer">Если официальный курс на эту дату не найден, запись остаётся неразрешённой, а месяц не считается полностью готовым. Позже можно повторить автоматическое разрешение или задать ручное FX-переопределение для записи.</string>
+    <string name="help_faq_monthly_declarations_question">Как работают monthly declarations?</string>
+    <string name="help_faq_monthly_declarations_answer">Каждый месяц дохода связан с окном подачи в следующем месяце. Экран месяца показывает Graph 20, накопительный Graph 15, оценку налога, подсказки по нулевой декларации и copy-инструменты, когда месяц готов.</string>
+    <string name="help_faq_reminders_question">Как работают reminders и statuses?</string>
+    <string name="help_faq_reminders_answer">Дни и время напоминаний настраиваются в Settings. Статусы месяца проходят путь от draft через filed и payment-состояния к settled, а overdue выводится автоматически по due date.</string>
+    <string name="help_faq_backup_question">Когда использовать backup или export?</string>
+    <string name="help_faq_backup_answer">CSV export подходит, когда данные нужны вне приложения в табличном виде. JSON backup нужен при переносе на новое устройство, перед переустановкой или когда позже нужно восстановить полное локальное состояние приложения.</string>
+    <string name="help_faq_feedback_question">Где оставить отзыв?</string>
+    <string name="help_faq_feedback_answer">Откройте действие «Отправить отзыв» из Settings или Help. Откроется публичная issue-форма в браузере с предзаполненной версией приложения и данными устройства. Не добавляйте налоговые ID, PDF и backup/export-файлы.</string>
+
+    <string name="help_open_store_failed">Не удалось открыть Google Play.</string>
+    <string name="help_open_feedback_failed">Не удалось открыть страницу обратной связи.</string>
+</resources>

@@ -78,4 +78,40 @@ class SettingsScreenTest {
         assertTrue(saveClicked)
         composeRule.onNodeWithTag("settings-display-name-field").assertTextContains("Jane Doe")
     }
+
+    @Test
+    fun helpAndFaqCanBeOpenedFromSettings() {
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                SettingsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState = SettingsUiState(),
+                    snackbarHostState = SnackbarHostState(),
+                    notificationPermissionGranted = true,
+                    onSave = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("settings-open-help-button").performScrollTo().performClick()
+        composeRule.onNodeWithTag("help-faq-root").assertIsDisplayed()
+    }
+
+    @Test
+    fun quickStartGuideCanBeOpenedAgainFromSettings() {
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                SettingsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState = SettingsUiState(),
+                    snackbarHostState = SnackbarHostState(),
+                    notificationPermissionGranted = true,
+                    onSave = {},
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("settings-view-quick-start-button").performScrollTo().performClick()
+        composeRule.onNodeWithTag("quick-start-progress").assertIsDisplayed()
+    }
 }

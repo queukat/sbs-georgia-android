@@ -26,7 +26,7 @@
     <string name="settings_message_monthly_csv_exported">Monthly summaries CSV exported.</string>
     <string name="settings_message_backup_exported">JSON backup exported.</string>
     <string name="settings_message_backup_imported_summary">Backup imported. Restored %1$d income entries, %2$d month records, %3$d statements, and %4$d imported transactions.</string>
-    <string name="settings_message_data_operation_failed">Data operation failed.</string>
+    <string name="settings_message_data_operation_failed">Data operation failed. Check the selected file or destination and try again.</string>
 
     <string name="import_statement_message_duplicate_file">This PDF content has already been imported.</string>
     <string name="import_statement_message_reimport_existing">This PDF content was already imported as %1$s on %2$s. You can retry the import; only transactions that are still missing will be added.</string>
