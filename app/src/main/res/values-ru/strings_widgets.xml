@@ -1,0 +1,18 @@
+<resources>
+    <string name="widget_overview_title">Сводка</string>
+    <string name="widget_due_period_title">Период подачи</string>
+    <string name="widget_focus_title">Фокус</string>
+    <string name="widget_setup_required">Заполните настройки профиля</string>
+    <string name="widget_paid_tax_value">Оплачено налогов: %1$s</string>
+    <string name="widget_due_period_status_value">Статус: %1$s</string>
+    <string name="widget_due_period_due_value">Срок: %1$s</string>
+    <string name="widget_due_period_tax_value">Налог: %1$s</string>
+    <string name="widget_due_period_tax_pending">Налог ещё не рассчитан</string>
+    <string name="widget_due_period_ready">Месяц готов к проверке перед подачей</string>
+    <string name="widget_no_due_period">Пока нет периода к подаче</string>
+    <string name="widget_review_needed">Нужна проверка</string>
+    <string name="widget_unresolved_fx_value">FX не разрешён: %1$d</string>
+    <string name="widget_zero_declaration">Нулевая декларация</string>
+    <string name="widget_next_reminder_value">День напоминания: %1$d</string>
+    <string name="widget_no_reminder">День напоминания не задан</string>
+</resources>

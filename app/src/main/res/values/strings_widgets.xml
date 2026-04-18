@@ -1,0 +1,18 @@
+<resources>
+    <string name="widget_overview_title">Overview</string>
+    <string name="widget_due_period_title">Due period</string>
+    <string name="widget_focus_title">Focus</string>
+    <string name="widget_setup_required">Complete setup in Settings</string>
+    <string name="widget_paid_tax_value">Paid taxes: %1$s</string>
+    <string name="widget_due_period_status_value">Status: %1$s</string>
+    <string name="widget_due_period_due_value">Due: %1$s</string>
+    <string name="widget_due_period_tax_value">Estimated tax: %1$s</string>
+    <string name="widget_due_period_tax_pending">Estimated tax pending</string>
+    <string name="widget_due_period_ready">Ready for filing review</string>
+    <string name="widget_no_due_period">No due period yet</string>
+    <string name="widget_review_needed">Needs review</string>
+    <string name="widget_unresolved_fx_value">FX unresolved: %1$d</string>
+    <string name="widget_zero_declaration">Zero declaration month</string>
+    <string name="widget_next_reminder_value">Reminder day: %1$d</string>
+    <string name="widget_no_reminder">No reminder day configured</string>
+</resources>

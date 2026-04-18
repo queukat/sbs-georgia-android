@@ -7,6 +7,8 @@ import androidx.activity.enableEdgeToEdge
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.startup.StartupTiming
 import com.queukat.sbsgeorgia.ui.SbsGeorgiaApp
+import com.queukat.sbsgeorgia.widget.HomeWidgetRefreshObserver
+import com.queukat.sbsgeorgia.widget.requestHomeWidgetsUpdate
 import com.queukat.sbsgeorgia.worker.ReminderBootstrapper
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -15,6 +17,9 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var reminderBootstrapper: ReminderBootstrapper
+
+    @Inject
+    lateinit var homeWidgetRefreshObserver: HomeWidgetRefreshObserver
 
     override fun onCreate(savedInstanceState: Bundle?) {
         StartupTiming.mark("MainActivity.onCreate.start")
@@ -29,6 +34,8 @@ class MainActivity : ComponentActivity() {
         window.decorView.post {
             StartupTiming.mark("MainActivity.post.firstFrameQueue")
             reminderBootstrapper.scheduleStoredConfigIfPresent()
+            homeWidgetRefreshObserver.ensureStarted()
+            requestHomeWidgetsUpdate(this)
             StartupTiming.mark("Reminder bootstrap queued")
         }
     }
