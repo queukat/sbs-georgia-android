@@ -95,6 +95,35 @@ class StatementImportUseCasesTest {
     }
 
     @Test
+    fun loadPreviewMarksLaterInternalFingerprintCollisionsAsDuplicates() = kotlinx.coroutines.test.runTest {
+        val result = LoadStatementImportPreviewUseCase(
+            statementDocumentReader = FakeStatementDocumentReader(
+                ImportedPdfDocument(
+                    fileName = "statement.pdf",
+                    sourceFingerprint = "new-statement",
+                    bytes = ByteArray(0),
+                ),
+            ),
+            statementTextExtractor = FakeStatementTextExtractor(
+                """
+                    Account Statement
+                    Statement currency: USD
+                    Date  Description  Additional Information  Paid Out  Paid In  Balance
+                    15/03/2026  FOR SOFTWARE SERVICES  Invoice 001  0.00 USD  125.50 USD  1240.75 USD
+                    15/03/2026  FOR SOFTWARE SERVICES  Invoice 001  0.00 USD  125.50 USD  1240.75 USD
+                """.trimIndent(),
+            ),
+            tbcStatementParser = TbcStatementParser(),
+            statementImportRepository = FakeStatementImportRepository(),
+        ).invoke("content://statement")
+
+        val rows = requireNotNull(result.preview).rows
+        assertEquals(2, rows.size)
+        assertTrue(rows.first().duplicate.not())
+        assertTrue(rows.last().duplicate)
+    }
+
+    @Test
     fun confirmImportPreservesManualCorrectionsAndCountsDuplicates() = kotlinx.coroutines.test.runTest {
         val repository = FakeStatementImportRepository()
         val fxIncomeRepository = StatementImportFakeIncomeRepository()
@@ -342,6 +371,45 @@ class StatementImportUseCasesTest {
         val preview = requireNotNull(result.preview)
         assertEquals(4, preview.rows.size)
         assertEquals(0, preview.skippedLineCount)
+    }
+
+    @Test
+    fun loadPreviewPrefersCandidateWithoutEmbeddedTransactionDateArtifacts() = kotlinx.coroutines.test.runTest {
+        val badCandidate = """
+            Account Statement
+            Statement currency: USD
+            Date  Description  Additional Information  Paid Out  Paid In  Balance
+            12/01/2026  FOR SOFTWARE SERVICES 29/01/2026 WAVEACCESS USA  0.00 USD  3031.00 USD  3031.00 USD
+            29/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  6062.00 USD
+        """.trimIndent()
+        val goodCandidate = """
+            Account Statement
+            Statement currency: USD
+            Date  Description  Additional Information  Paid Out  Paid In  Balance
+            12/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  3031.00 USD
+            29/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  6062.00 USD
+        """.trimIndent()
+
+        val result = LoadStatementImportPreviewUseCase(
+            statementDocumentReader = FakeStatementDocumentReader(
+                ImportedPdfDocument(
+                    fileName = "statement.pdf",
+                    sourceFingerprint = "candidate-selection",
+                    bytes = ByteArray(0),
+                ),
+            ),
+            statementTextExtractor = FakeStatementTextExtractor(
+                text = badCandidate,
+                candidates = listOf(badCandidate, goodCandidate),
+            ),
+            tbcStatementParser = TbcStatementParser(),
+            statementImportRepository = FakeStatementImportRepository(),
+        ).invoke("content://statement")
+
+        val preview = requireNotNull(result.preview)
+        assertEquals(2, preview.rows.size)
+        assertTrue(preview.rows.none { row -> row.description.contains("29/01/2026") })
+        assertTrue(preview.rows.none { row -> row.duplicate })
     }
 
     private fun fixtureText(fileName: String): String =

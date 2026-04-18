@@ -207,6 +207,37 @@ class MonthlyDeclarationPlannerTest {
         assertEquals(1, summary.paymentMismatchMonthsCount)
     }
 
+    @Test
+    fun `dashboard summary does not count current income month before filing window opens`() {
+        val preWindowPlanner = MonthlyDeclarationPlanner(
+            Clock.fixed(Instant.parse("2026-03-20T00:00:00Z"), ZoneOffset.UTC),
+            GeorgiaTaxBusinessCalendar(),
+        )
+        val config = SmallBusinessStatusConfig(
+            effectiveDate = LocalDate.parse("2026-03-01"),
+            defaultTaxRatePercent = BigDecimal("1.0"),
+        )
+        val snapshots = preWindowPlanner.buildYearSnapshots(
+            year = 2026,
+            profile = profile,
+            config = config,
+            entries = listOf(
+                manualEntry("2026-03-10", "250.00"),
+            ),
+            records = emptyList(),
+        )
+
+        val summary = preWindowPlanner.buildDashboardSummary(
+            profile = profile,
+            config = config,
+            reminders = null,
+            snapshots = snapshots,
+            records = emptyList(),
+        )
+
+        assertEquals(0, summary.unsettledMonthsCount)
+    }
+
     private fun manualEntry(
         date: String,
         amount: String,

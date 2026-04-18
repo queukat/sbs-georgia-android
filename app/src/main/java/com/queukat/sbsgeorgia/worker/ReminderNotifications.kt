@@ -68,6 +68,9 @@ object ReminderNotifications {
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
 
-        NotificationManagerCompat.from(context).notify(notificationId, notification)
+        NotificationManagerCompat.from(context).notify(
+            reminderNotification.notificationId ?: notificationId,
+            notification,
+        )
     }
 }

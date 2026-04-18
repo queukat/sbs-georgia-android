@@ -141,6 +141,7 @@ class MonthlyDeclarationPlanner @Inject constructor(
             unresolvedFxCount = snapshots.sumOf { it.unresolvedFxCount },
             unsettledMonthsCount = snapshots.count {
                 !it.period.outOfScope &&
+                    !now.isBefore(it.period.filingWindow.start) &&
                     it.workflowStatus !in terminalStatuses &&
                     (it.graph20TotalGel > BigDecimal.ZERO || it.zeroDeclarationSuggested || it.zeroDeclarationPrepared)
             },

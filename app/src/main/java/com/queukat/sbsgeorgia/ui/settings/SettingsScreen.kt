@@ -55,6 +55,7 @@ import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
 import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
 import com.queukat.sbsgeorgia.domain.model.OnboardingPreviewNote
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
@@ -152,6 +153,7 @@ fun SettingsRoute(
         onDeclarationEnabledChanged = viewModel::updateDeclarationEnabled,
         onPaymentEnabledChanged = viewModel::updatePaymentEnabled,
         onThemeModeChanged = viewModel::updateThemeMode,
+        onScheduleTestReminder = viewModel::scheduleTestReminder,
         onImportRegistryExtract = {
             pendingDocumentImportAction = SettingsDocumentImportAction.IMPORT_REGISTRY_EXTRACT
             importDocumentLauncher.launch(arrayOf("application/pdf"))
@@ -218,6 +220,7 @@ fun SettingsScreen(
     onDeclarationEnabledChanged: (Boolean) -> Unit = {},
     onPaymentEnabledChanged: (Boolean) -> Unit = {},
     onThemeModeChanged: (ThemeMode) -> Unit = {},
+    onScheduleTestReminder: (ReminderType, Long) -> Unit = { _, _ -> },
     onImportRegistryExtract: () -> Unit = {},
     onImportCertificate: () -> Unit = {},
     onApplyPreview: () -> Unit = {},
@@ -232,6 +235,10 @@ fun SettingsScreen(
 ) {
     var showHelpFaq by rememberSaveable { mutableStateOf(false) }
     var showQuickStartGuide by rememberSaveable { mutableStateOf(false) }
+    var testReminderTypeName by rememberSaveable { mutableStateOf(ReminderType.DECLARATION.name) }
+    var testReminderDelaySeconds by rememberSaveable { mutableStateOf(5L) }
+    val testReminderType = ReminderType.valueOf(testReminderTypeName)
+    val reminderDelayOptions = listOf(5L, 15L, 30L)
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -481,6 +488,68 @@ fun SettingsScreen(
                         checked = uiState.paymentRemindersEnabled,
                         onCheckedChange = onPaymentEnabledChanged,
                     )
+                }
+                HorizontalDivider()
+                Text(
+                    stringResource(R.string.settings_test_notifications_body),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    stringResource(R.string.settings_test_notification_type),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    ReminderType.entries.forEach { type ->
+                        FilterChip(
+                            selected = testReminderTypeName == type.name,
+                            onClick = { testReminderTypeName = type.name },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        when (type) {
+                                            ReminderType.DECLARATION ->
+                                                R.string.settings_test_notification_type_declaration
+                                            ReminderType.PAYMENT ->
+                                                R.string.settings_test_notification_type_payment
+                                        },
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+                Text(
+                    stringResource(R.string.settings_test_notification_delay),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    reminderDelayOptions.forEach { delaySeconds ->
+                        FilterChip(
+                            selected = testReminderDelaySeconds == delaySeconds,
+                            onClick = { testReminderDelaySeconds = delaySeconds },
+                            label = {
+                                Text(
+                                    stringResource(
+                                        R.string.settings_test_notification_delay_seconds,
+                                        delaySeconds,
+                                    ),
+                                )
+                            },
+                        )
+                    }
+                }
+                Button(
+                    onClick = { onScheduleTestReminder(testReminderType, testReminderDelaySeconds) },
+                    enabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
+                    modifier = Modifier.testTag("settings-test-notification-button"),
+                ) {
+                    Text(stringResource(R.string.settings_send_test_notification))
                 }
             }
 

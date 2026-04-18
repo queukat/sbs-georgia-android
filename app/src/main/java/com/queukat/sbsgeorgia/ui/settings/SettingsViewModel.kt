@@ -9,11 +9,15 @@ import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException
 import com.queukat.sbsgeorgia.domain.model.OnboardingParseError
+import com.queukat.sbsgeorgia.domain.service.ReminderNotification
+import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
+import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
+import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportMonthlySummariesCsvUseCase
@@ -21,6 +25,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ImportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
 import com.queukat.sbsgeorgia.worker.ReminderScheduler
+import com.queukat.sbsgeorgia.worker.ReminderTestScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
@@ -47,7 +52,10 @@ class SettingsViewModel @Inject constructor(
     private val exportBackupJsonUseCase: ExportBackupJsonUseCase,
     private val importBackupJsonUseCase: ImportBackupJsonUseCase,
     private val textDocumentStore: TextDocumentStore,
+    private val observeDashboardSummaryUseCase: ObserveDashboardSummaryUseCase,
+    private val reminderPlanner: ReminderPlanner,
     private val reminderScheduler: ReminderScheduler,
+    private val reminderTestScheduler: ReminderTestScheduler,
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
@@ -321,6 +329,32 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
+    fun scheduleTestReminder(
+        type: ReminderType,
+        delaySeconds: Long,
+    ) {
+        viewModelScope.launch {
+            val dueSnapshot = observeDashboardSummaryUseCase().first().currentDuePeriod
+            val notification = reminderPlanner.buildPreviewNotification(type, dueSnapshot)
+                ?: fallbackTestNotification(type)
+            reminderTestScheduler.schedule(
+                reminderNotification = notification.copy(
+                    notificationId = notification.notificationId ?: defaultNotificationId(type),
+                ),
+                delaySeconds = delaySeconds,
+            )
+            _effects.emit(
+                SettingsEffect.Message(
+                    appContext.getString(
+                        R.string.settings_message_test_notification_scheduled,
+                        type.label(appContext),
+                        delaySeconds,
+                    ),
+                ),
+            )
+        }
+    }
+
     private fun runDataOperation(block: suspend () -> Unit) {
         if (_uiState.value.isDataOperationInProgress) return
         viewModelScope.launch {
@@ -378,6 +412,22 @@ class SettingsViewModel @Inject constructor(
             errorMessage = null,
         )
     }
+
+    private fun fallbackTestNotification(type: ReminderType): ReminderNotification = when (type) {
+        ReminderType.DECLARATION -> ReminderNotification(
+            type = type,
+            title = appContext.getString(R.string.settings_test_notification_generic_declaration_title),
+            body = appContext.getString(R.string.settings_test_notification_generic_declaration_body),
+        )
+        ReminderType.PAYMENT -> ReminderNotification(
+            type = type,
+            title = appContext.getString(R.string.settings_test_notification_generic_payment_title),
+            body = appContext.getString(R.string.settings_test_notification_generic_payment_body),
+        )
+    }
+
+    private fun defaultNotificationId(type: ReminderType): Int =
+        ((clock.millis() + type.ordinal) and 0x7fffffff).toInt()
 }
 
 private fun BackupRestoreResult.toSummaryMessage(context: Context): String = context.getString(
@@ -386,6 +436,13 @@ private fun BackupRestoreResult.toSummaryMessage(context: Context): String = con
     monthlyRecordCount,
     importedStatementCount,
     importedTransactionCount,
+)
+
+private fun ReminderType.label(context: Context): String = context.getString(
+    when (this) {
+        ReminderType.DECLARATION -> R.string.settings_test_notification_type_declaration
+        ReminderType.PAYMENT -> R.string.settings_test_notification_type_payment
+    },
 )
 
 private fun String.parseOptionalDate(): LocalDate? =

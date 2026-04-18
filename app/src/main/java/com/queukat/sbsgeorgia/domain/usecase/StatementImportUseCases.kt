@@ -2,6 +2,8 @@ package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreview
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreviewRow
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmStatementImportWorkflowResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
@@ -45,10 +47,17 @@ class LoadStatementImportPreviewUseCase @Inject constructor(
             }
             .maxByOrNull(::previewQualityScore)
             ?: throw (firstParsingFailure ?: IllegalStateException("Unable to parse the selected TBC statement PDF."))
+        val previewDuplicateFingerprints = preview.rows
+            .groupingBy(ImportedStatementPreviewRow::transactionFingerprint)
+            .eachCount()
+            .filterValues { it > 1 }
+            .keys
+        val seenFingerprints = mutableSetOf<String>()
         val duplicateAwareRows = preview.rows.map { row ->
-            row.copy(
-                duplicate = statementImportRepository.hasTransactionFingerprint(row.transactionFingerprint),
-            )
+            val alreadyImported = statementImportRepository.hasTransactionFingerprint(row.transactionFingerprint)
+            val duplicateInsidePreview = row.transactionFingerprint in previewDuplicateFingerprints &&
+                !seenFingerprints.add(row.transactionFingerprint)
+            row.copy(duplicate = alreadyImported || duplicateInsidePreview)
         }
 
         return LoadImportPreviewResult(
@@ -62,9 +71,37 @@ class LoadStatementImportPreviewUseCase @Inject constructor(
         )
     }
 
-    private fun previewQualityScore(preview: com.queukat.sbsgeorgia.domain.model.ImportedStatementPreview): Int =
-        preview.rows.size * 1_000 - preview.skippedLineCount
+    private fun previewQualityScore(preview: ImportedStatementPreview): Int {
+        val uniqueFingerprintCount = preview.rows
+            .map(ImportedStatementPreviewRow::transactionFingerprint)
+            .distinct()
+            .size
+        val duplicateFingerprintCount = preview.rows.size - uniqueFingerprintCount
+        val embeddedDateArtifactCount = preview.rows.count { row ->
+            row.description.hasEmbeddedTransactionDate() || row.additionalInformation.hasEmbeddedTransactionDate()
+        }
+        val incomingCount = preview.rows.count { row ->
+            row.paidIn?.amount?.signum() == 1
+        }
+        val balanceCount = preview.rows.count { row ->
+            row.balance?.amount?.signum() != null
+        }
+        return uniqueFingerprintCount * 10_000 +
+            incomingCount * 150 +
+            balanceCount * 10 -
+            duplicateFingerprintCount * 5_000 -
+            embeddedDateArtifactCount * 2_000 -
+            preview.skippedLineCount * 250
+    }
 }
+
+private fun String?.hasEmbeddedTransactionDate(): Boolean {
+    val value = this?.trim().orEmpty()
+    if (value.isBlank()) return false
+    return transactionDateRegex.containsMatchIn(value)
+}
+
+private val transactionDateRegex = Regex("\\b\\d{2}/\\d{2}/\\d{4}\\b")
 
 class ConfirmStatementImportUseCase @Inject constructor(
     private val statementImportRepository: StatementImportRepository,
