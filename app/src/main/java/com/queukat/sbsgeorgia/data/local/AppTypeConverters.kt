@@ -43,32 +43,32 @@ class AppTypeConverters {
         value?.let { json.decodeFromString(ListSerializer(Int.serializer()), it) }
 
     @TypeConverter
-    fun fromThemeMode(value: ThemeMode?): String? = value?.name
+    fun fromThemeMode(value: ThemeMode?): String? = value?.dbCode
 
     @TypeConverter
-    fun toThemeMode(value: String?): ThemeMode? = value?.let(ThemeMode::valueOf)
+    fun toThemeMode(value: String?): ThemeMode? = value?.let(ThemeMode::fromPersisted)
 
     @TypeConverter
-    fun fromBaseCurrencyView(value: BaseCurrencyView?): String? = value?.name
+    fun fromBaseCurrencyView(value: BaseCurrencyView?): String? = value?.dbCode
 
     @TypeConverter
-    fun toBaseCurrencyView(value: String?): BaseCurrencyView? = value?.let(BaseCurrencyView::valueOf)
+    fun toBaseCurrencyView(value: String?): BaseCurrencyView? = value?.let(BaseCurrencyView::fromPersisted)
 
     @TypeConverter
-    fun fromIncomeSourceType(value: IncomeSourceType?): String? = value?.name
+    fun fromIncomeSourceType(value: IncomeSourceType?): String? = value?.dbCode
 
     @TypeConverter
-    fun toIncomeSourceType(value: String?): IncomeSourceType? = value?.let(IncomeSourceType::valueOf)
+    fun toIncomeSourceType(value: String?): IncomeSourceType? = value?.let(IncomeSourceType::fromPersisted)
 
     @TypeConverter
-    fun fromDeclarationInclusion(value: DeclarationInclusion?): String? = value?.name
+    fun fromDeclarationInclusion(value: DeclarationInclusion?): String? = value?.dbCode
 
     @TypeConverter
-    fun toDeclarationInclusion(value: String?): DeclarationInclusion? = value?.let(DeclarationInclusion::valueOf)
+    fun toDeclarationInclusion(value: String?): DeclarationInclusion? = value?.let(DeclarationInclusion::fromPersisted)
 
     @TypeConverter
-    fun fromFxRateSource(value: FxRateSource?): String? = value?.name
+    fun fromFxRateSource(value: FxRateSource?): String? = value?.dbCode
 
     @TypeConverter
-    fun toFxRateSource(value: String?): FxRateSource? = value?.let(FxRateSource::valueOf)
+    fun toFxRateSource(value: String?): FxRateSource? = value?.let(FxRateSource::fromPersisted)
 }

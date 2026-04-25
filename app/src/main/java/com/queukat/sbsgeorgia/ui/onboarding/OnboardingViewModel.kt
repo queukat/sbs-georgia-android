@@ -5,13 +5,19 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
-import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException
-import com.queukat.sbsgeorgia.domain.model.OnboardingParseError
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.CompleteOnboardingUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
+import com.queukat.sbsgeorgia.ui.common.DateInputParser
+import com.queukat.sbsgeorgia.ui.common.DateParseResult
+import com.queukat.sbsgeorgia.ui.common.dateOrNull
+import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
+import com.queukat.sbsgeorgia.ui.common.document.DocumentImportLoadResult
+import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
+import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
+import com.queukat.sbsgeorgia.ui.common.document.toDocumentImportFormPatch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
@@ -40,56 +46,49 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    fun loadDocument(uri: Uri, action: OnboardingImportAction) {
+    fun loadDocument(uri: Uri, action: DocumentImportAction) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, infoMessage = null)
-            runCatching {
-                loadOnboardingDocumentPreviewUseCase(
+            when (
+                val result = loadDocumentImportPreview(
                     uriString = uri.toString(),
-                    expectedDocumentType = action.expectedDocumentType(),
+                    action = action,
+                    strings = appContext.documentImportStrings(),
+                    loadPreview = loadOnboardingDocumentPreviewUseCase::invoke,
                 )
-            }.onSuccess { preview ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    preview = preview,
-                    infoMessage = when (preview.documentType) {
-                        com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType.REGISTRY_EXTRACT ->
-                            appContext.getString(R.string.onboarding_registry_recognized)
-                        com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE ->
-                            appContext.getString(R.string.onboarding_certificate_recognized)
-                    },
-                )
-            }.onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    preview = null,
-                    errorMessage = when ((error as? OnboardingDocumentParseException)?.reason) {
-                        OnboardingParseError.UNSUPPORTED_DOCUMENT ->
-                            appContext.getString(R.string.onboarding_error_unsupported_document)
-                        OnboardingParseError.EXPECTED_REGISTRY_EXTRACT ->
-                            appContext.getString(R.string.onboarding_error_expected_registry_extract)
-                        OnboardingParseError.EXPECTED_SMALL_BUSINESS_CERTIFICATE ->
-                            appContext.getString(R.string.onboarding_error_expected_sbs_certificate)
-                        null -> appContext.getString(R.string.onboarding_error_parse_failed)
-                    },
-                )
+            ) {
+                is DocumentImportLoadResult.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        preview = result.preview,
+                        infoMessage = result.infoMessage,
+                    )
+                }
+                is DocumentImportLoadResult.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        preview = null,
+                        errorMessage = result.errorMessage,
+                    )
+                }
             }
         }
     }
 
     fun applyPreview() {
         val preview = _uiState.value.preview ?: return
+        val patch = preview.toDocumentImportFormPatch()
         _uiState.value = _uiState.value.copy(
-            displayName = preview.displayName.value ?: _uiState.value.displayName,
-            legalForm = preview.legalForm.value ?: _uiState.value.legalForm,
-            registrationId = preview.registrationId.value ?: _uiState.value.registrationId,
-            registrationDate = preview.registrationDate.value?.toString() ?: _uiState.value.registrationDate,
-            legalAddress = preview.legalAddress.value ?: _uiState.value.legalAddress,
-            activityType = preview.activityType.value ?: _uiState.value.activityType,
-            certificateNumber = preview.certificateNumber.value ?: _uiState.value.certificateNumber,
-            certificateIssuedDate = preview.certificateIssuedDate.value?.toString() ?: _uiState.value.certificateIssuedDate,
-            effectiveDate = preview.effectiveDate.value ?: _uiState.value.effectiveDate,
-            infoMessage = appContext.getString(R.string.onboarding_preview_applied),
+            displayName = patch.displayName ?: _uiState.value.displayName,
+            legalForm = patch.legalForm ?: _uiState.value.legalForm,
+            registrationId = patch.registrationId ?: _uiState.value.registrationId,
+            registrationDate = patch.registrationDate ?: _uiState.value.registrationDate,
+            legalAddress = patch.legalAddress ?: _uiState.value.legalAddress,
+            activityType = patch.activityType ?: _uiState.value.activityType,
+            certificateNumber = patch.certificateNumber ?: _uiState.value.certificateNumber,
+            certificateIssuedDate = patch.certificateIssuedDate ?: _uiState.value.certificateIssuedDate,
+            effectiveDate = patch.effectiveDate ?: _uiState.value.effectiveDate,
+            infoMessage = appContext.documentImportStrings().previewApplied,
             errorMessage = null,
         )
     }
@@ -137,8 +136,10 @@ class OnboardingViewModel @Inject constructor(
     fun completeOnboarding() {
         val current = _uiState.value
         val taxRate = current.taxRatePercent.toBigDecimalOrNull()
-        val registrationDate = current.registrationDate.parseOptionalDate()
-        val certificateIssuedDate = current.certificateIssuedDate.parseOptionalDate()
+        val registrationDateResult = DateInputParser.parseOptionalIsoDate(current.registrationDate)
+        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(current.certificateIssuedDate)
+        val registrationDate = registrationDateResult.dateOrNull()
+        val certificateIssuedDate = certificateIssuedDateResult.dateOrNull()
         when {
             current.displayName.isBlank() ->
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_display_name_required))
@@ -146,9 +147,9 @@ class OnboardingViewModel @Inject constructor(
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_registration_id_required))
             taxRate == null || taxRate < BigDecimal.ZERO ->
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_tax_rate_invalid))
-            current.registrationDate.isNotBlank() && registrationDate == null ->
+            registrationDateResult is DateParseResult.Invalid ->
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_registration_date_invalid))
-            current.certificateIssuedDate.isNotBlank() && certificateIssuedDate == null ->
+            certificateIssuedDateResult is DateParseResult.Invalid ->
                 _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_certificate_issued_date_invalid))
             else -> {
                 viewModelScope.launch {
@@ -204,8 +205,3 @@ class OnboardingViewModel @Inject constructor(
         )
     }
 }
-
-private fun String.parseOptionalDate(): LocalDate? =
-    trim().takeIf { it.isNotBlank() }?.let { value ->
-        runCatching { LocalDate.parse(value) }.getOrNull()
-    }

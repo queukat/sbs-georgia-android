@@ -12,6 +12,7 @@
     <string name="common_copy_comment">Скопировать комментарий</string>
     <string name="common_copy_amount">Скопировать сумму</string>
     <string name="common_copied_template">Скопировано: %1$s</string>
+    <string name="common_select_date">Выберите дату</string>
     <string name="nav_home">Главная</string>
     <string name="nav_months">Месяцы</string>
     <string name="nav_settings">Настройки</string>

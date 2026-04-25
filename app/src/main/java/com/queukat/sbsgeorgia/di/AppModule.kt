@@ -98,6 +98,7 @@ object AppModule {
                 SbsGeorgiaDatabase.MIGRATION_1_2,
                 SbsGeorgiaDatabase.MIGRATION_2_3,
                 SbsGeorgiaDatabase.MIGRATION_3_4,
+                SbsGeorgiaDatabase.MIGRATION_4_5,
             )
             .build()
 

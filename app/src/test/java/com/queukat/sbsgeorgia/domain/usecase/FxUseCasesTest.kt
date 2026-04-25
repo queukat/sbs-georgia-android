@@ -5,6 +5,7 @@ import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
@@ -19,7 +20,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class FxUseCasesTest {
@@ -113,6 +116,34 @@ class FxUseCasesTest {
         assertEquals("250.00", updatedEntry.gelEquivalent?.toPlainString())
         assertEquals(FxRateSource.MANUAL_OVERRIDE, updatedEntry.rateSource)
         assertEquals(true, updatedEntry.manualFxOverride)
+    }
+
+    @Test
+    fun requiresFxResolutionReturnsTrueForUnresolvedNonGelEntry() {
+        assertTrue(
+            sampleEntry(
+                id = 4L,
+                amount = "10.00",
+                currency = "USD",
+            ).requiresFxResolution(),
+        )
+    }
+
+    @Test
+    fun requiresFxResolutionReturnsFalseForGelOrResolvedEntry() {
+        val gelEntry = sampleEntry(
+            id = 5L,
+            amount = "10.00",
+            currency = "GEL",
+        )
+        val resolvedEntry = sampleEntry(
+            id = 6L,
+            amount = "10.00",
+            currency = "USD",
+        ).copy(gelEquivalent = BigDecimal("27.00"))
+
+        assertFalse(gelEntry.requiresFxResolution())
+        assertFalse(resolvedEntry.requiresFxResolution())
     }
 
     private fun sampleEntry(

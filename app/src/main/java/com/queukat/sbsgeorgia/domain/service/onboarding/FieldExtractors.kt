@@ -1,202 +1,12 @@
 package com.queukat.sbsgeorgia.domain.service
 
 import com.queukat.sbsgeorgia.domain.model.ExtractionConfidence
-import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
-import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException
-import com.queukat.sbsgeorgia.domain.model.OnboardingParseError
-import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
-import com.queukat.sbsgeorgia.domain.model.OnboardingPreviewNote
 import com.queukat.sbsgeorgia.domain.model.ParsedDateField
 import com.queukat.sbsgeorgia.domain.model.ParsedTextField
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import javax.inject.Inject
-import javax.inject.Singleton
 
-@Singleton
-class RegistryExtractParser @Inject constructor() {
-    fun canParse(extractedText: String): Boolean {
-        val normalized = extractedText.normalizedText()
-        if (SmallBusinessStatusCertificateParser.certificateMarkers.any { it in normalized }) {
-            return false
-        }
-        return registryMarkers.any { it in normalized } || registryFieldMatchCount(normalized) >= 2
-    }
-
-    fun parse(
-        sourceFileName: String,
-        sourceFingerprint: String,
-        extractedText: String,
-    ): OnboardingImportPreview {
-        val lines = extractedText.normalizedLines()
-        return OnboardingImportPreview(
-            sourceFileName = sourceFileName,
-            sourceFingerprint = sourceFingerprint,
-            documentType = OnboardingDocumentType.REGISTRY_EXTRACT,
-            displayName = lines.extractTextField(
-                primaryLabels = listOf("Firm / display name", "Firm name", "Firm Name", "Name", "Display name", "საფირმო სახელწოდება", "დასახელება"),
-            ),
-            legalForm = lines.extractTextField(
-                primaryLabels = listOf("Legal form", "სამართლებრივი ფორმა"),
-            ),
-            registrationId = lines.extractTextField(
-                primaryLabels = listOf("Identification number", "Identification code", "ID number", "საიდენტიფიკაციო ნომერი"),
-            ),
-            registrationDate = lines.extractDateField(
-                primaryLabels = listOf("Registration date", "Registration Number and Date", "რეგისტრაციის თარიღი"),
-                fallbackPatterns = listOf(
-                    Regex("^Date\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE),
-                ),
-            ),
-            legalAddress = lines.extractRegistryAddressField(
-                primaryLabels = listOf("Legal address", "იურიდიული მისამართი"),
-                inlineStopLabels = registryAddressStopLabels,
-            ),
-            notes = listOf(
-                OnboardingPreviewNote.REGISTRY_EFFECTIVE_DATE_MANUAL,
-                OnboardingPreviewNote.REVIEW_BEFORE_APPLY,
-            ),
-        )
-    }
-
-    private fun registryFieldMatchCount(normalized: String): Int = listOf(
-        "legal form",
-        "identification number",
-        "registration date",
-        "საიდენტიფიკაციო ნომერი",
-        "რეგისტრაციის თარიღი",
-    ).count { it in normalized }
-
-    private companion object {
-        val registryMarkers = listOf(
-            "extract from registry",
-            "entrepreneurial and non-entrepreneurial",
-            "ამონაწერი",
-            "რეესტრიდან",
-        )
-        val registryAddressStopLabels = listOf(
-            "Person",
-            "პირი",
-            "Subject",
-            "სუბიექტი",
-            "Registering Authority",
-            "მარეგისტრირებელი ორგანო",
-            "Seizure/Injunction",
-            "ყადაღა/აკრძალვა",
-            "Tax Lien/Mortgage",
-            "საგადასახადო გირავნობა/იპოთეკა",
-            "Pledge/Leasing on Intangible or Movable Property",
-            "გირავნობა/ლიზინგი არამატერიალურ ან მოძრავ ქონებაზე",
-            "Debtor Registry",
-            "მოვალეთა რეესტრი",
-        )
-    }
-}
-
-@Singleton
-class SmallBusinessStatusCertificateParser @Inject constructor() {
-    fun canParse(extractedText: String): Boolean {
-        val normalized = extractedText.normalizedText()
-        return certificateMarkers.count { it in normalized } >= 2
-    }
-
-    fun parse(
-        sourceFileName: String,
-        sourceFingerprint: String,
-        extractedText: String,
-    ): OnboardingImportPreview {
-        val lines = extractedText.normalizedLines()
-        return OnboardingImportPreview(
-            sourceFileName = sourceFileName,
-            sourceFingerprint = sourceFingerprint,
-            documentType = OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE,
-            displayName = lines.extractTextField(
-                primaryLabels = listOf("სახელი, გვარი / დასახელება", "დასახელება", "სახელი, გვარი", "ფიზიკურ პირს", "იურიდიულ პირს"),
-            ),
-            registrationId = lines.extractTextField(
-                primaryLabels = listOf("პირადი ნომერი / საიდენტიფიკაციო ნომერი", "საიდენტიფიკაციო ნომერი", "პირადი ნომერი"),
-            ),
-            activityType = lines.extractTextField(
-                primaryLabels = listOf("საქმიანობის სახე", "ეკონომიკური საქმიანობის სახე"),
-                previousLineLabels = listOf("(საქმიანობის სახე)", "(ეკონომიკური საქმიანობის სახე)"),
-            ),
-            certificateNumber = lines.extractTextField(
-                primaryLabels = listOf("სერტიფიკატის ნომერი", "სერტიფიკატის N", "სერტიფიკატი N"),
-                fallbackPatterns = listOf(
-                    Regex("^(?:N|№)\\s*[:.]?\\s*(.+)$", RegexOption.IGNORE_CASE),
-                ),
-            ),
-            certificateIssuedDate = lines.extractDateField(
-                primaryLabels = listOf("გაცემის თარიღი", "გაცემულია", "სერტიფიკატის გაცემის თარიღი", "სერთიფიკატის გაცემის თარიღი"),
-            ),
-            effectiveDate = lines.extractDateFromSentence(
-                sentenceMarkers = listOf("მცირე ბიზნესის სტატუსი მინიჭებულია"),
-            ),
-            notes = listOf(
-                OnboardingPreviewNote.CERTIFICATE_EFFECTIVE_DATE_AUTOFILLED,
-                OnboardingPreviewNote.REVIEW_BEFORE_APPLY,
-            ),
-        )
-    }
-
-    companion object {
-        val certificateMarkers = listOf(
-            "მცირე ბიზნესის სტატუსის",
-            "სერტიფიკატი",
-            "მცირე ბიზნესის სტატუსი მინიჭებულია",
-        )
-    }
-}
-
-@Singleton
-class OnboardingDocumentParser @Inject constructor(
-    private val registryExtractParser: RegistryExtractParser,
-    private val smallBusinessStatusCertificateParser: SmallBusinessStatusCertificateParser,
-) {
-    fun parse(
-        sourceFileName: String,
-        sourceFingerprint: String,
-        extractedText: String,
-        expectedDocumentType: OnboardingDocumentType,
-    ): OnboardingImportPreview {
-        val detectedDocumentType = when {
-            smallBusinessStatusCertificateParser.canParse(extractedText) ->
-                OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE
-            registryExtractParser.canParse(extractedText) ->
-                OnboardingDocumentType.REGISTRY_EXTRACT
-            else -> null
-        }
-        if (detectedDocumentType == null) {
-            throw OnboardingDocumentParseException(OnboardingParseError.UNSUPPORTED_DOCUMENT)
-        }
-        if (detectedDocumentType != expectedDocumentType) {
-            throw OnboardingDocumentParseException(
-                when (detectedDocumentType) {
-                    OnboardingDocumentType.REGISTRY_EXTRACT ->
-                        OnboardingParseError.EXPECTED_SMALL_BUSINESS_CERTIFICATE
-                    OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE ->
-                        OnboardingParseError.EXPECTED_REGISTRY_EXTRACT
-                },
-            )
-        }
-
-        return when (detectedDocumentType) {
-            OnboardingDocumentType.REGISTRY_EXTRACT ->
-                registryExtractParser.parse(sourceFileName, sourceFingerprint, extractedText)
-            OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE ->
-                smallBusinessStatusCertificateParser.parse(sourceFileName, sourceFingerprint, extractedText)
-        }
-    }
-}
-
-private fun String.normalizedLines(): List<String> = lineSequence()
-    .map { line -> line.replace(Regex("\\s+"), " ").trim() }
-    .filter { it.isNotBlank() }
-    .toList()
-
-private fun String.normalizedText(): String = normalizedLines().joinToString("\n").lowercase()
-
-private fun List<String>.extractTextField(
+internal fun List<String>.extractTextField(
     primaryLabels: List<String>,
     previousLineLabels: List<String> = emptyList(),
     fallbackPatterns: List<Regex> = emptyList(),
@@ -216,7 +26,7 @@ private fun List<String>.extractTextField(
     return ParsedTextField()
 }
 
-private fun List<String>.extractTextFieldWithContinuation(
+internal fun List<String>.extractTextFieldWithContinuation(
     primaryLabels: List<String>,
     inlineStopLabels: List<String> = emptyList(),
 ): ParsedTextField {
@@ -229,7 +39,7 @@ private fun List<String>.extractTextFieldWithContinuation(
     return ParsedTextField()
 }
 
-private fun List<String>.extractRegistryAddressField(
+internal fun List<String>.extractRegistryAddressField(
     primaryLabels: List<String>,
     inlineStopLabels: List<String> = emptyList(),
 ): ParsedTextField {
@@ -242,7 +52,7 @@ private fun List<String>.extractRegistryAddressField(
     return ParsedTextField()
 }
 
-private fun List<String>.extractDateField(
+internal fun List<String>.extractDateField(
     primaryLabels: List<String>,
     fallbackPatterns: List<Regex> = emptyList(),
 ): ParsedDateField {
@@ -258,7 +68,7 @@ private fun List<String>.extractDateField(
     return ParsedDateField()
 }
 
-private fun List<String>.extractDateFromSentence(
+internal fun List<String>.extractDateFromSentence(
     sentenceMarkers: List<String>,
 ): ParsedDateField {
     firstOrNull { line ->

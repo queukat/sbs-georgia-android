@@ -18,7 +18,7 @@ data class ImportStatementUiState(
 
 data class ImportStatementRowUiState(
     val transactionFingerprint: String,
-    val incomeDate: LocalDate,
+    val incomeDate: LocalDate?,
     val description: String,
     val additionalInformation: String?,
     val paidOutLabel: String?,
@@ -36,3 +36,11 @@ data class ImportStatementRowUiState(
 sealed interface ImportStatementEffect {
     data class Message(val text: String) : ImportStatementEffect
 }
+
+internal fun ImportStatementRowUiState.isInvalidForIncludedImport(): Boolean =
+    finalInclusion == DeclarationInclusion.INCLUDED && (
+        incomeDate == null ||
+            amount.toBigDecimalOrNull()?.signum() != 1 ||
+            currency.isBlank() ||
+            sourceCategory.isBlank()
+        )

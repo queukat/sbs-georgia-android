@@ -32,3 +32,4 @@ local.properties
 /signing/
 *.jks
 *.keystore
+/app/src/main/play/

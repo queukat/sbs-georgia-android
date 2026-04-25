@@ -86,10 +86,13 @@ class StatementImportRepositoryImpl @Inject constructor(
 
             storedTransactionCount += 1
             if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
+                val incomeDate = requireNotNull(row.incomeDate) {
+                    "Included imported income rows must have an income date."
+                }
                 incomeEntryDao.upsert(
                     IncomeEntryEntity(
                         sourceType = IncomeSourceType.IMPORTED_STATEMENT,
-                        incomeDate = row.incomeDate,
+                        incomeDate = incomeDate,
                         originalAmount = row.amount,
                         originalCurrency = row.currency.uppercase(),
                         sourceCategory = row.sourceCategory.trim(),

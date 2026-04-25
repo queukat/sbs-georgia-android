@@ -1,4 +1,5 @@
 package com.queukat.sbsgeorgia.domain.usecase
+
 import com.queukat.sbsgeorgia.data.importer.ImportedPdfDocument
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
@@ -10,13 +11,10 @@ import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
-import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
-import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import com.queukat.sbsgeorgia.domain.service.TbcStatementParser
 import java.math.BigDecimal
@@ -127,12 +125,11 @@ class StatementImportUseCasesTest {
     fun confirmImportPreservesManualCorrectionsAndCountsDuplicates() = kotlinx.coroutines.test.runTest {
         val repository = FakeStatementImportRepository()
         val fxIncomeRepository = StatementImportFakeIncomeRepository()
-        val monthlyDeclarationRepository = FakeStatementImportMonthlyDeclarationRepository()
 
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(monthlyDeclarationRepository),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -190,7 +187,7 @@ class StatementImportUseCasesTest {
                             IncomeEntry(
                                 id = index + 1L,
                                 sourceType = IncomeSourceType.IMPORTED_STATEMENT,
-                                incomeDate = row.incomeDate,
+                                incomeDate = requireNotNull(row.incomeDate),
                                 originalAmount = row.amount,
                                 originalCurrency = row.currency,
                                 sourceCategory = row.sourceCategory,
@@ -222,7 +219,7 @@ class StatementImportUseCasesTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository, fxRateRepository),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(FakeStatementImportMonthlyDeclarationRepository()),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -252,13 +249,11 @@ class StatementImportUseCasesTest {
     }
 
     @Test
-    fun confirmImportMatchesTreasuryTaxPaymentToPreviousMonthAndClosesIt() = kotlinx.coroutines.test.runTest {
-        val monthlyDeclarationRepository = FakeStatementImportMonthlyDeclarationRepository()
-
+    fun confirmImportFlagsTreasuryTaxPaymentForManualReview() = kotlinx.coroutines.test.runTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = FakeStatementImportRepository(),
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(monthlyDeclarationRepository),
+            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -282,15 +277,46 @@ class StatementImportUseCasesTest {
             ),
         )
 
-        val marchRecord = monthlyDeclarationRepository.observeByMonth(YearMonth.of(2026, 3)).first()
-        requireNotNull(marchRecord)
-        assertEquals(MonthlyWorkflowStatus.SETTLED, marchRecord.workflowStatus)
-        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.declarationFiledDate)
-        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.paymentSentDate)
-        assertEquals(LocalDate.of(2026, 4, 2), marchRecord.paymentCreditedDate)
-        assertEquals(BigDecimal("81.60"), marchRecord.paymentAmountGel)
-        assertEquals(1, result.appliedTaxPaymentCount)
-        assertEquals(0, result.skippedTaxPaymentCount)
+        assertEquals(0, result.appliedTaxPaymentCount)
+        assertEquals(1, result.reviewRequiredTaxPaymentCount)
+    }
+
+    @Test
+    fun confirmImportRejectsIncludedRowWithoutDate() = kotlinx.coroutines.test.runTest {
+        var error: IllegalArgumentException? = null
+
+        try {
+            ConfirmStatementImportUseCase(
+                statementImportRepository = FakeStatementImportRepository(),
+                resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
+                applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
+                clock = fixedClock,
+            ).invoke(
+                sourceFileName = "statement.pdf",
+                sourceFingerprint = "new-statement",
+                rows = listOf(
+                    ApprovedImportedStatementRow(
+                        transactionFingerprint = "tx-missing-date",
+                        incomeDate = null,
+                        description = "FOR SOFTWARE SERVICES",
+                        additionalInformation = "Invoice 404",
+                        paidOut = null,
+                        paidIn = StatementMoney(BigDecimal("125.50"), "USD"),
+                        balance = StatementMoney(BigDecimal("1240.75"), "USD"),
+                        suggestedInclusion = DeclarationInclusion.INCLUDED,
+                        finalInclusion = DeclarationInclusion.INCLUDED,
+                        amount = BigDecimal("125.50"),
+                        currency = "USD",
+                        sourceCategory = "Software services",
+                        duplicate = false,
+                    ),
+                ),
+            )
+        } catch (caught: IllegalArgumentException) {
+            error = caught
+        }
+
+        assertTrue(error?.message.orEmpty().contains("income date"))
     }
 
     @Test
@@ -511,21 +537,6 @@ private class StatementImportFakeIncomeRepository(
 
     override suspend fun deleteById(id: Long) {
         entries.removeAll { it.id == id }
-    }
-}
-
-private class FakeStatementImportMonthlyDeclarationRepository(
-    records: List<MonthlyDeclarationRecord> = emptyList(),
-) : MonthlyDeclarationRepository {
-    private val state = kotlinx.coroutines.flow.MutableStateFlow(records)
-
-    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = state
-
-    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> =
-        flowOf(state.value.firstOrNull { it.yearMonth == yearMonth })
-
-    override suspend fun upsert(record: MonthlyDeclarationRecord) {
-        state.value = state.value.filterNot { it.yearMonth == record.yearMonth } + record
     }
 }
 

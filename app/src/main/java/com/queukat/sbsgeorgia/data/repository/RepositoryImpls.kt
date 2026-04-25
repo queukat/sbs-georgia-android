@@ -127,7 +127,7 @@ private fun IncomeEntry.toEntity(): IncomeEntryEntity = IncomeEntryEntity(
 
 private fun MonthlyDeclarationRecordEntity.toDomain(): MonthlyDeclarationRecord = MonthlyDeclarationRecord(
     yearMonth = YearMonth.of(year, month),
-    workflowStatus = MonthlyWorkflowStatus.valueOf(workflowStatus),
+    workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus),
     zeroDeclarationPrepared = zeroDeclarationPrepared,
     declarationFiledDate = declarationFiledDate,
     paymentSentDate = paymentSentDate,
@@ -140,7 +140,7 @@ private fun MonthlyDeclarationRecord.toEntity(): MonthlyDeclarationRecordEntity 
     periodKey = yearMonth.toString(),
     year = yearMonth.year,
     month = yearMonth.monthValue,
-    workflowStatus = workflowStatus.name,
+    workflowStatus = workflowStatus.dbCode,
     zeroDeclarationPrepared = zeroDeclarationPrepared,
     declarationFiledDate = declarationFiledDate,
     paymentSentDate = paymentSentDate,

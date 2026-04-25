@@ -43,6 +43,7 @@ import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
 import com.queukat.sbsgeorgia.ui.common.DecimalField
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
+import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 
 @Composable
 fun OnboardingRoute(
@@ -50,7 +51,7 @@ fun OnboardingRoute(
 ) {
     val viewModel: OnboardingViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    var pendingImportAction by remember { mutableStateOf<OnboardingImportAction?>(null) }
+    var pendingImportAction by remember { mutableStateOf<DocumentImportAction?>(null) }
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
@@ -65,11 +66,11 @@ fun OnboardingRoute(
         innerPadding = innerPadding,
         uiState = uiState,
         onImportRegistryExtract = {
-            pendingImportAction = OnboardingImportAction.IMPORT_REGISTRY_EXTRACT
+            pendingImportAction = DocumentImportAction.IMPORT_REGISTRY_EXTRACT
             pickerLauncher.launch(arrayOf("application/pdf"))
         },
         onImportCertificate = {
-            pendingImportAction = OnboardingImportAction.IMPORT_SMALL_BUSINESS_CERTIFICATE
+            pendingImportAction = DocumentImportAction.IMPORT_SMALL_BUSINESS_CERTIFICATE
             pickerLauncher.launch(arrayOf("application/pdf"))
         },
         onApplyPreview = viewModel::applyPreview,

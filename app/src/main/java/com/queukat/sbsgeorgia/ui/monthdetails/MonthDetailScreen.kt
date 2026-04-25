@@ -33,6 +33,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
@@ -351,7 +352,7 @@ fun MonthDetailScreen(
                         KeyValueRow(stringResource(R.string.month_detail_gel_equivalent), formatAmount(gelEquivalent, "GEL"))
                         KeyValueRow(stringResource(R.string.month_detail_fx_source), fxRateSourceLabel(entry.rateSource))
                     }
-                    if (!entry.originalCurrency.equals("GEL", ignoreCase = true) && entry.gelEquivalent == null) {
+                    if (entry.requiresFxResolution()) {
                         Text(
                             stringResource(R.string.month_detail_unresolved_fx_hint),
                             modifier = Modifier.testTag("month-detail-unresolved-fx-message"),

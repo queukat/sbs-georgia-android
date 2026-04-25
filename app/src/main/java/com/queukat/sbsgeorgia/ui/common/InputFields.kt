@@ -28,22 +28,25 @@ import java.time.ZoneId
 @Composable
 fun DatePickerField(
     label: String,
-    value: LocalDate,
+    value: LocalDate?,
     onValueChange: (LocalDate) -> Unit,
     modifier: Modifier = Modifier,
+    placeholderText: String? = null,
     testTag: String? = null,
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val zoneId = remember { ZoneId.systemDefault() }
     val initialMillis = remember(value) {
-        value.atStartOfDay(zoneId).toInstant().toEpochMilli()
+        value?.atStartOfDay(zoneId)?.toInstant()?.toEpochMilli()
     }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
 
     OutlinedTextField(
-        value = value.formatIsoDate(),
+        value = value?.formatIsoDate().orEmpty(),
         onValueChange = {},
         label = { Text(label) },
+        placeholder = placeholderText?.let { placeholder ->
+            { Text(placeholder) }
+        },
         readOnly = true,
         modifier = modifier
             .fillMaxWidth()
@@ -52,6 +55,7 @@ fun DatePickerField(
     )
 
     if (showPicker) {
+        val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialMillis)
         DatePickerDialog(
             onDismissRequest = { showPicker = false },
             confirmButton = {

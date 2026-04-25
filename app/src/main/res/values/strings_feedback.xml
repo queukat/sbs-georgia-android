@@ -37,12 +37,13 @@
     <string name="import_statement_message_fx_auto_resolved_partial">Official NBG FX rates were applied for %1$d entries. %2$d still need review.</string>
     <string name="import_statement_message_fx_manual_review_needed">%1$d imported entries still need manual FX review.</string>
     <string name="import_statement_message_tax_payments_applied">Matched %1$d tax payment transactions and closed the corresponding months automatically.</string>
-    <string name="import_statement_message_tax_payments_partial">Matched %1$d tax payment transactions and skipped %2$d that could not be applied automatically.</string>
+    <string name="import_statement_message_tax_payments_partial">Applied %1$d tax payment transactions automatically and left %2$d for manual review.</string>
+    <string name="import_statement_message_tax_payments_review_required">Detected %1$d tax payment candidates. Review and record them manually in Workflow status.</string>
     <string name="import_statement_error_no_preview">No preview was produced for the selected PDF.</string>
     <string name="import_statement_error_parse_failed">Failed to parse the selected PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Unsupported PDF. This importer only supports the current TBC statement layout without OCR.</string>
     <string name="import_statement_error_pick_pdf_first">Pick and parse a PDF before importing.</string>
-    <string name="import_statement_error_invalid_rows">Included taxable rows must have a positive amount, currency, and source category.</string>
+    <string name="import_statement_error_invalid_rows">Included taxable rows must have a transaction date, positive amount, currency, and source category.</string>
     <string name="import_statement_error_import_failed">Import failed.</string>
 
     <string name="onboarding_error_unsupported_document">Unsupported PDF. Only text-based registry extracts and Georgian small business status certificates are supported in onboarding.</string>

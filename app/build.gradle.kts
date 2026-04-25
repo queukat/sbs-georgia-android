@@ -1,4 +1,5 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import org.gradle.api.GradleException
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
@@ -21,6 +22,11 @@ val releaseSigningProperties = Properties().apply {
     }
 }
 val playKeyFileProvider = providers.environmentVariable("PLAY_KEY_FILE")
+val requiresOfficialReleaseSigning = gradle.startParameter.taskNames.any(::requiresOfficialReleaseSigning)
+
+if (releaseSigningProperties.isEmpty() && requiresOfficialReleaseSigning) {
+    throw GradleException("Release signing config is missing. Provide keystore.properties.")
+}
 
 android {
     namespace = "com.queukat.sbsgeorgia"
@@ -49,7 +55,7 @@ android {
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
@@ -160,4 +166,17 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
     baselineProfile(project(":baselineprofile"))
+}
+
+private fun requiresOfficialReleaseSigning(taskName: String): Boolean {
+    val simpleTaskName = taskName.substringAfterLast(':')
+    if (simpleTaskName.contains("benchmarkRelease", ignoreCase = true)) return false
+    if (simpleTaskName.contains("nonMinifiedRelease", ignoreCase = true)) return false
+
+    val touchesReleaseArtifact = simpleTaskName.contains("assemble", ignoreCase = true) ||
+        simpleTaskName.contains("bundle", ignoreCase = true) ||
+        simpleTaskName.contains("package", ignoreCase = true) ||
+        simpleTaskName.contains("publish", ignoreCase = true)
+
+    return touchesReleaseArtifact && simpleTaskName.contains("Release", ignoreCase = true)
 }

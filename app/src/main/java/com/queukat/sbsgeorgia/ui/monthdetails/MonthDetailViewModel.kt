@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
+import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
@@ -124,7 +126,7 @@ class MonthDetailViewModel @Inject constructor(
         if (!autoResolvedMonths.add(yearMonth)) return
         viewModelScope.launch {
             val monthEntries = incomeRepository.observeByMonth(yearMonth).first()
-            if (monthEntries.none(::requiresFxResolution)) return@launch
+            if (monthEntries.none(IncomeEntry::requiresFxResolution)) return@launch
             resolveOfficialRatesInternal(
                 entries = monthEntries,
                 emitFeedback = false,
@@ -161,6 +163,3 @@ class MonthDetailViewModel @Inject constructor(
         }
     }
 }
-
-private fun requiresFxResolution(entry: com.queukat.sbsgeorgia.domain.model.IncomeEntry): Boolean =
-    !entry.originalCurrency.equals("GEL", ignoreCase = true) && entry.gelEquivalent == null

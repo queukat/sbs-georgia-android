@@ -2,6 +2,7 @@ package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
@@ -103,9 +104,6 @@ class ApplyManualFxOverrideUseCase @Inject constructor(
         return updatedEntry
     }
 }
-
-private fun IncomeEntry.requiresFxResolution(): Boolean =
-    !originalCurrency.equals("GEL", ignoreCase = true) && gelEquivalent == null
 
 private fun IncomeEntry.applyFxRate(
     units: Int,

@@ -110,13 +110,19 @@ class ManualEntryViewModel @Inject constructor(
         _uiState.value = current.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
             val existing = current.entryId?.let { incomeRepository.getById(it) }
+            val fxPersistence = resolveManualEntryFxPersistence(
+                currency = current.currency,
+                amount = amount,
+                incomeDate = current.incomeDate,
+                existing = existing,
+            )
             upsertManualIncomeEntryUseCase(
                 IncomeEntry(
                     id = current.entryId ?: 0L,
                     sourceType = IncomeSourceType.MANUAL,
                     incomeDate = current.incomeDate,
                     originalAmount = amount,
-                    originalCurrency = current.currency,
+                    originalCurrency = fxPersistence.normalizedCurrency,
                     sourceCategory = canonicalSourceCategory(appContext, current.sourceCategory),
                     note = current.note.trim(),
                     declarationInclusion = if (current.declarationIncluded) {
@@ -124,13 +130,9 @@ class ManualEntryViewModel @Inject constructor(
                     } else {
                         DeclarationInclusion.EXCLUDED
                     },
-                    gelEquivalent = if (current.currency.equals("GEL", ignoreCase = true)) {
-                        amount
-                    } else {
-                        existing?.gelEquivalent
-                    },
-                    rateSource = existing?.rateSource ?: FxRateSource.NONE,
-                    manualFxOverride = existing?.manualFxOverride ?: false,
+                    gelEquivalent = fxPersistence.gelEquivalent,
+                    rateSource = fxPersistence.rateSource,
+                    manualFxOverride = fxPersistence.manualFxOverride,
                     sourceStatementId = existing?.sourceStatementId,
                     sourceTransactionFingerprint = existing?.sourceTransactionFingerprint,
                     createdAtEpochMillis = existing?.createdAtEpochMillis ?: clock.millis(),
@@ -141,4 +143,43 @@ class ManualEntryViewModel @Inject constructor(
             _effects.emit(ManualEntryEffect.Saved)
         }
     }
+}
+
+internal data class ManualEntryFxPersistence(
+    val normalizedCurrency: String,
+    val gelEquivalent: BigDecimal?,
+    val rateSource: FxRateSource,
+    val manualFxOverride: Boolean,
+)
+
+internal fun resolveManualEntryFxPersistence(
+    currency: String,
+    amount: BigDecimal,
+    incomeDate: LocalDate,
+    existing: IncomeEntry?,
+): ManualEntryFxPersistence {
+    val normalizedCurrency = currency.trim().uppercase()
+    val isGel = normalizedCurrency == "GEL"
+    val existingCurrency = existing?.originalCurrency?.trim()?.uppercase()
+    val fxFieldsChanged = existing == null ||
+        existingCurrency != normalizedCurrency ||
+        existing.originalAmount.compareTo(amount) != 0 ||
+        existing.incomeDate != incomeDate
+
+    return ManualEntryFxPersistence(
+        normalizedCurrency = normalizedCurrency,
+        gelEquivalent = when {
+            isGel -> amount
+            fxFieldsChanged -> null
+            else -> existing.gelEquivalent
+        },
+        rateSource = when {
+            isGel || fxFieldsChanged -> FxRateSource.NONE
+            else -> existing.rateSource
+        },
+        manualFxOverride = when {
+            isGel || fxFieldsChanged -> false
+            else -> existing.manualFxOverride
+        },
+    )
 }

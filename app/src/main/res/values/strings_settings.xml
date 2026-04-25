@@ -35,6 +35,10 @@
     <string name="settings_test_notification_generic_declaration_body">This is a test declaration reminder from Settings. Real reminders reuse the current due-period state when it is available.</string>
     <string name="settings_test_notification_generic_payment_title">Test payment reminder</string>
     <string name="settings_test_notification_generic_payment_body">This is a test payment reminder from Settings. Real reminders reuse the current due-period state when it is available.</string>
+    <string name="notification_channel_declaration_reminders_name">Declaration reminders</string>
+    <string name="notification_channel_declaration_reminders_description">Reminders to prepare and submit monthly small business declarations.</string>
+    <string name="notification_channel_payment_reminders_name">Payment reminders</string>
+    <string name="notification_channel_payment_reminders_description">Reminders to send and verify small business tax payments.</string>
     <string name="settings_data_management_body">All data stays local on the device, so backup/export is how you keep an external copy when you need one.</string>
     <string name="settings_data_management_warning">Importing a JSON backup replaces the current local database with the selected backup. Use it only when you want to restore the full local state.</string>
     <string name="settings_export_income_csv">Export income entries CSV</string>

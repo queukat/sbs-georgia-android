@@ -60,7 +60,7 @@ class ImportStatementViewModel @Inject constructor(
                 val rows = preview.rows.map { row ->
                     ImportStatementRowUiState(
                         transactionFingerprint = row.transactionFingerprint,
-                        incomeDate = row.incomeDate ?: LocalDate.now(),
+                        incomeDate = row.incomeDate,
                         description = row.description,
                         additionalInformation = row.additionalInformation,
                         paidOutLabel = row.paidOut?.toDisplayLabel(),
@@ -146,14 +146,7 @@ class ImportStatementViewModel @Inject constructor(
         }
 
         val rows = current.rows
-        val invalidIncludedRow = rows.firstOrNull { row ->
-            row.finalInclusion == DeclarationInclusion.INCLUDED && (
-                row.amount.toBigDecimalOrNull() == null ||
-                    row.amount.toBigDecimalOrNull()?.signum() != 1 ||
-                    row.currency.isBlank() ||
-                    row.sourceCategory.isBlank()
-                )
-        }
+        val invalidIncludedRow = rows.firstOrNull(ImportStatementRowUiState::isInvalidForIncludedImport)
         if (invalidIncludedRow != null) {
             _uiState.value = current.copy(
                 errorMessage = appContext.getString(R.string.import_statement_error_invalid_rows),
@@ -197,16 +190,21 @@ class ImportStatementViewModel @Inject constructor(
                     else -> null
                 }
                 val taxPaymentMessage = when {
-                    result.appliedTaxPaymentCount > 0 && result.skippedTaxPaymentCount == 0 ->
+                    result.appliedTaxPaymentCount > 0 && result.reviewRequiredTaxPaymentCount == 0 ->
                         appContext.getString(
                             R.string.import_statement_message_tax_payments_applied,
                             result.appliedTaxPaymentCount,
                         )
-                    result.appliedTaxPaymentCount > 0 || result.skippedTaxPaymentCount > 0 ->
+                    result.appliedTaxPaymentCount > 0 && result.reviewRequiredTaxPaymentCount > 0 ->
                         appContext.getString(
                             R.string.import_statement_message_tax_payments_partial,
                             result.appliedTaxPaymentCount,
-                            result.skippedTaxPaymentCount,
+                            result.reviewRequiredTaxPaymentCount,
+                        )
+                    result.reviewRequiredTaxPaymentCount > 0 ->
+                        appContext.getString(
+                            R.string.import_statement_message_tax_payments_review_required,
+                            result.reviewRequiredTaxPaymentCount,
                         )
                     else -> null
                 }

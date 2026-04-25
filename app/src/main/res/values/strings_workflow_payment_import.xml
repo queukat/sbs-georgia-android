@@ -49,7 +49,7 @@
     <string name="import_statement_import">Import</string>
     <string name="import_statement_importing">Importing…</string>
     <string name="import_statement_section_flow">Import flow</string>
-    <string name="import_statement_flow_body">This screen is for TBC bank statements specifically. The parser reads both incoming and outgoing rows, imports income entries, and tries to match detected tax payments to the correct months automatically.</string>
+    <string name="import_statement_flow_body">This screen is for TBC bank statements specifically. The parser reads both incoming and outgoing rows, imports income entries, and flags detected tax payments for manual workflow review.</string>
     <string name="import_statement_file_selected">Selected file: %1$s</string>
     <string name="import_statement_pick_hint">Pick a TBC bank statement PDF to preview recognized income rows, outgoing rows, and tax payments before import.</string>
     <string name="import_statement_rows_recognized">%1$d rows recognized. %2$d rows currently marked as taxable income.</string>
@@ -61,7 +61,8 @@
     <string name="import_statement_duplicate">Duplicate</string>
     <string name="import_statement_exclude">Exclude</string>
     <string name="import_statement_duplicate_hint">Duplicate transaction fingerprint detected. This row will not be imported again.</string>
-    <string name="import_statement_tax_payment_hint">This row looks like a tax payment. It will not be imported as income, but it can be used to autofill tax payment details and settle the matching month.</string>
+    <string name="import_statement_tax_payment_hint">This row looks like a tax payment. It will not be imported as income and should be reviewed manually in Workflow status before recording a payment.</string>
+    <string name="import_statement_missing_date_hint">Review required. No transaction date was parsed for this row, so included income cannot be imported until you set one.</string>
     <string name="import_statement_taxable_hint">Suggested taxable based on TBC description heuristics.</string>
     <string name="import_statement_review_hint">Review required. The parser did not assume this incoming payment is taxable.</string>
     <string name="import_statement_excluded_hint">Suggested excluded based on transfer/fee heuristics or missing incoming amount.</string>

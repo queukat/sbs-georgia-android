@@ -12,6 +12,7 @@
     <string name="common_copy_comment">Copy comment</string>
     <string name="common_copy_amount">Copy amount</string>
     <string name="common_copied_template">%1$s copied</string>
+    <string name="common_select_date">Select a date</string>
     <string name="nav_home">Home</string>
     <string name="nav_months">Months</string>
     <string name="nav_settings">Settings</string>

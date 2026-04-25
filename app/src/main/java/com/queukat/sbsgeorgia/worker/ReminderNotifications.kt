@@ -27,19 +27,19 @@ object ReminderNotifications {
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 DECLARATION_CHANNEL_ID,
-                "Declaration reminders",
+                context.getString(R.string.notification_channel_declaration_reminders_name),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
-                description = "Reminders to prepare and submit monthly small business declarations."
+                description = context.getString(R.string.notification_channel_declaration_reminders_description)
             },
         )
         notificationManager.createNotificationChannel(
             NotificationChannel(
                 PAYMENT_CHANNEL_ID,
-                "Payment reminders",
+                context.getString(R.string.notification_channel_payment_reminders_name),
                 NotificationManager.IMPORTANCE_DEFAULT,
             ).apply {
-                description = "Reminders to send and verify small business tax payments."
+                description = context.getString(R.string.notification_channel_payment_reminders_description)
             },
         )
     }

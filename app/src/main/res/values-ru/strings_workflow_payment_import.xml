@@ -49,7 +49,7 @@
     <string name="import_statement_import">Импортировать</string>
     <string name="import_statement_importing">Импорт…</string>
     <string name="import_statement_section_flow">Процесс импорта</string>
-    <string name="import_statement_flow_body">Этот экран импортирует именно банковскую выписку TBC. Парсер читает и входящие, и исходящие операции, сохраняет доходы, а найденные налоговые списания пытается автоматически привязать к месяцам.</string>
+    <string name="import_statement_flow_body">Этот экран импортирует именно банковскую выписку TBC. Парсер читает и входящие, и исходящие операции, сохраняет доходы, а найденные налоговые списания помечает для ручной проверки в workflow.</string>
     <string name="import_statement_file_selected">Выбран файл: %1$s</string>
     <string name="import_statement_pick_hint">Выберите PDF банковской выписки TBC, чтобы сначала просмотреть распознанные строки доходов, списаний и налогов.</string>
     <string name="import_statement_rows_recognized">Распознано строк: %1$d. Сейчас как облагаемый доход отмечено строк: %2$d.</string>
@@ -61,7 +61,8 @@
     <string name="import_statement_duplicate">Дубликат</string>
     <string name="import_statement_exclude">Исключить</string>
     <string name="import_statement_duplicate_hint">Обнаружен дубликат fingerprint транзакции. Эта строка не будет импортирована повторно.</string>
-    <string name="import_statement_tax_payment_hint">Эта строка похожа на оплату налога. Она не импортируется как доход, но будет использована для автозаполнения оплаты и закрытия соответствующего месяца.</string>
+    <string name="import_statement_tax_payment_hint">Эта строка похожа на оплату налога. Она не импортируется как доход и должна быть вручную проверена в Workflow status перед фиксацией оплаты.</string>
+    <string name="import_statement_missing_date_hint">Нужна проверка. Для этой строки не распознана дата операции, поэтому включённый доход нельзя импортировать, пока вы её не зададите.</string>
     <string name="import_statement_taxable_hint">Предложено как облагаемый доход по эвристикам описания TBC.</string>
     <string name="import_statement_review_hint">Нужна проверка. Парсер не стал автоматически считать этот входящий платёж облагаемым.</string>
     <string name="import_statement_excluded_hint">Предложено исключить по эвристикам переводов/комиссий или из-за отсутствия входящей суммы.</string>

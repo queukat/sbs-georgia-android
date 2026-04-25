@@ -32,7 +32,7 @@ data class ImportedStatementPreviewRow(
 
 data class ApprovedImportedStatementRow(
     val transactionFingerprint: String,
-    val incomeDate: LocalDate,
+    val incomeDate: LocalDate?,
     val description: String,
     val additionalInformation: String?,
     val paidOut: StatementMoney?,
@@ -72,5 +72,5 @@ data class ConfirmStatementImportWorkflowResult(
     val autoResolvedFxEntryCount: Int,
     val remainingUnresolvedFxEntryCount: Int,
     val appliedTaxPaymentCount: Int = 0,
-    val skippedTaxPaymentCount: Int = 0,
+    val reviewRequiredTaxPaymentCount: Int = 0,
 )

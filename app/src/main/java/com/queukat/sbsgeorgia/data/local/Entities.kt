@@ -47,7 +47,13 @@ data class ReminderConfigEntity(
     val themeMode: ThemeMode,
 )
 
-@Entity(tableName = "income_entry")
+@Entity(
+    tableName = "income_entry",
+    indices = [
+        Index(value = ["incomeDate"]),
+        Index(value = ["sourceTransactionFingerprint"]),
+    ],
+)
 data class IncomeEntryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val sourceType: IncomeSourceType,
@@ -96,7 +102,10 @@ data class ImportedStatementEntity(
 
 @Entity(
     tableName = "imported_transaction",
-    indices = [Index(value = ["transactionFingerprint"], unique = true)],
+    indices = [
+        Index(value = ["transactionFingerprint"], unique = true),
+        Index(value = ["statementId"]),
+    ],
 )
 data class ImportedTransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,

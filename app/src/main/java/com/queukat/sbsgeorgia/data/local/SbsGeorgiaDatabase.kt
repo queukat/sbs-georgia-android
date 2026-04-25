@@ -17,7 +17,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ImportedTransactionEntity::class,
         FxRateEntity::class,
     ],
-    version = 4,
+    version = 5,
     exportSchema = true,
 )
 @TypeConverters(AppTypeConverters::class)
@@ -90,6 +90,29 @@ abstract class SbsGeorgiaDatabase : RoomDatabase() {
                     """
                     ALTER TABLE monthly_declaration_record
                     ADD COLUMN paymentAmountGel TEXT
+                    """.trimIndent(),
+                )
+            }
+        }
+
+        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_income_entry_incomeDate
+                    ON income_entry (incomeDate)
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_income_entry_sourceTransactionFingerprint
+                    ON income_entry (sourceTransactionFingerprint)
+                    """.trimIndent(),
+                )
+                db.execSQL(
+                    """
+                    CREATE INDEX IF NOT EXISTS index_imported_transaction_statementId
+                    ON imported_transaction (statementId)
                     """.trimIndent(),
                 )
             }

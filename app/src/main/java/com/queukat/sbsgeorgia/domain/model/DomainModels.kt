@@ -6,42 +6,90 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 
-enum class BaseCurrencyView {
-    GEL,
+enum class BaseCurrencyView(val dbCode: String) {
+    GEL("gel"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): BaseCurrencyView = persistedEnumValue(
+            rawValue = value,
+            dbCode = BaseCurrencyView::dbCode,
+        )
+    }
 }
 
-enum class ThemeMode {
-    SYSTEM,
-    LIGHT,
-    DARK,
+enum class ThemeMode(val dbCode: String) {
+    SYSTEM("system"),
+    LIGHT("light"),
+    DARK("dark"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): ThemeMode = persistedEnumValue(
+            rawValue = value,
+            dbCode = ThemeMode::dbCode,
+        )
+    }
 }
 
-enum class IncomeSourceType {
-    MANUAL,
-    IMPORTED_STATEMENT,
+enum class IncomeSourceType(val dbCode: String) {
+    MANUAL("manual"),
+    IMPORTED_STATEMENT("imported_statement"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): IncomeSourceType = persistedEnumValue(
+            rawValue = value,
+            dbCode = IncomeSourceType::dbCode,
+        )
+    }
 }
 
-enum class DeclarationInclusion {
-    INCLUDED,
-    EXCLUDED,
-    REVIEW_REQUIRED,
+enum class DeclarationInclusion(val dbCode: String) {
+    INCLUDED("included"),
+    EXCLUDED("excluded"),
+    REVIEW_REQUIRED("review_required"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): DeclarationInclusion = persistedEnumValue(
+            rawValue = value,
+            dbCode = DeclarationInclusion::dbCode,
+        )
+    }
 }
 
-enum class FxRateSource {
-    NONE,
-    OFFICIAL_NBG_JSON,
-    MANUAL_OVERRIDE,
+enum class FxRateSource(val dbCode: String) {
+    NONE("none"),
+    OFFICIAL_NBG_JSON("official_nbg_json"),
+    MANUAL_OVERRIDE("manual_override"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): FxRateSource = persistedEnumValue(
+            rawValue = value,
+            dbCode = FxRateSource::dbCode,
+        )
+    }
 }
 
-enum class MonthlyWorkflowStatus {
-    DRAFT,
-    READY_TO_FILE,
-    FILED,
-    TAX_PAYMENT_PENDING,
-    PAYMENT_SENT,
-    PAYMENT_CREDITED,
-    SETTLED,
-    OVERDUE,
+enum class MonthlyWorkflowStatus(val dbCode: String) {
+    DRAFT("draft"),
+    READY_TO_FILE("ready_to_file"),
+    FILED("filed"),
+    TAX_PAYMENT_PENDING("tax_payment_pending"),
+    PAYMENT_SENT("payment_sent"),
+    PAYMENT_CREDITED("payment_credited"),
+    SETTLED("settled"),
+    OVERDUE("overdue"),
+    ;
+
+    companion object {
+        fun fromPersisted(value: String): MonthlyWorkflowStatus = persistedEnumValue(
+            rawValue = value,
+            dbCode = MonthlyWorkflowStatus::dbCode,
+        )
+    }
 }
 
 enum class TaxPaymentStatus {
@@ -117,6 +165,9 @@ data class IncomeEntry(
     val createdAtEpochMillis: Long,
     val updatedAtEpochMillis: Long,
 )
+
+fun IncomeEntry.requiresFxResolution(): Boolean =
+    !originalCurrency.equals("GEL", ignoreCase = true) && gelEquivalent == null
 
 data class FxRate(
     val rateDate: LocalDate,
@@ -199,3 +250,14 @@ data class DashboardSummary(
     val currentDuePeriod: MonthlyDeclarationSnapshot?,
     val nextReminderDay: Int?,
 )
+
+private inline fun <reified T : Enum<T>> persistedEnumValue(
+    rawValue: String,
+    dbCode: (T) -> String,
+): T {
+    val normalized = rawValue.trim()
+    return enumValues<T>().firstOrNull { value ->
+        dbCode(value).equals(normalized, ignoreCase = true) ||
+            value.name.equals(normalized, ignoreCase = true)
+    } ?: throw IllegalArgumentException("Unknown ${T::class.simpleName} value '$rawValue'")
+}

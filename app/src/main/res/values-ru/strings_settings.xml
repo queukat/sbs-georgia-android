@@ -35,6 +35,10 @@
     <string name="settings_test_notification_generic_declaration_body">Это тестовое напоминание о декларации из Settings. Если текущий отчётный период доступен, реальные reminders используют его состояние.</string>
     <string name="settings_test_notification_generic_payment_title">Тестовое напоминание об оплате</string>
     <string name="settings_test_notification_generic_payment_body">Это тестовое напоминание об оплате из Settings. Если текущий отчётный период доступен, реальные reminders используют его состояние.</string>
+    <string name="notification_channel_declaration_reminders_name">Напоминания о декларации</string>
+    <string name="notification_channel_declaration_reminders_description">Напоминания о подготовке и подаче ежемесячных деклараций малого бизнеса.</string>
+    <string name="notification_channel_payment_reminders_name">Напоминания об оплате</string>
+    <string name="notification_channel_payment_reminders_description">Напоминания об отправке и проверке налоговых платежей малого бизнеса.</string>
     <string name="settings_data_management_body">Все данные остаются на устройстве, поэтому backup/export нужен, когда вам нужна внешняя копия.</string>
     <string name="settings_data_management_warning">Импорт JSON-резервной копии заменяет текущую локальную базу данных выбранной резервной копией. Используйте его только для восстановления полного локального состояния.</string>
     <string name="settings_export_income_csv">Экспорт CSV доходов</string>

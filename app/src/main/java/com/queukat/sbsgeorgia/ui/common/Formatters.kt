@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.ui.common
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.text.NumberFormat
 import java.time.LocalDate
 import java.time.YearMonth
@@ -17,7 +18,18 @@ fun YearMonth.formatMonthYear(): String = atDay(1).format(DateTimeFormatter.ofPa
 fun LocalDate.formatIsoDate(): String = format(dateFormatter)
 
 fun formatAmount(amount: BigDecimal, currencyCode: String): String {
+    val normalizedCurrencyCode = currencyCode.trim().uppercase()
+    val currency = normalizedCurrencyCode
+        .takeIf(String::isNotBlank)
+        ?.let { code -> runCatching { Currency.getInstance(code) }.getOrNull() }
+    if (currency == null) {
+        return listOf(
+            amount.setScale(2, RoundingMode.HALF_UP).toPlainString(),
+            normalizedCurrencyCode,
+        ).filter(String::isNotBlank).joinToString(" ")
+    }
+
     val formatter = NumberFormat.getCurrencyInstance(currentLocale())
-    formatter.currency = Currency.getInstance(currencyCode.uppercase())
+    formatter.currency = currency
     return formatter.format(amount)
 }

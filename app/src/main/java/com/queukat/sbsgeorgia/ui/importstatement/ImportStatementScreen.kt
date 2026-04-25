@@ -202,6 +202,7 @@ fun ImportStatementScreen(
                     Text(
                         when {
                             row.duplicate -> stringResource(R.string.import_statement_duplicate_hint)
+                            row.incomeDate == null -> stringResource(R.string.import_statement_missing_date_hint)
                             row.isTaxPaymentCandidate -> stringResource(R.string.import_statement_tax_payment_hint)
                             row.suggestedInclusion == DeclarationInclusion.INCLUDED -> stringResource(R.string.import_statement_taxable_hint)
                             row.suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED -> stringResource(R.string.import_statement_review_hint)
@@ -212,6 +213,7 @@ fun ImportStatementScreen(
                         label = stringResource(R.string.import_statement_income_date),
                         value = row.incomeDate,
                         onValueChange = { onDateChanged(row.transactionFingerprint, it) },
+                        placeholderText = stringResource(R.string.common_select_date),
                     )
                     DecimalField(
                         label = stringResource(R.string.import_statement_amount),
