@@ -146,7 +146,7 @@ class StatementImportUseCasesTest {
                     suggestedInclusion = DeclarationInclusion.INCLUDED,
                     finalInclusion = DeclarationInclusion.INCLUDED,
                     amount = BigDecimal("130.00"),
-                    currency = "EUR",
+                    currency = " eur ",
                     sourceCategory = "Edited category",
                     duplicate = false,
                 ),
@@ -316,6 +316,44 @@ class StatementImportUseCasesTest {
         }
 
         assertTrue(error?.message.orEmpty().contains("income date"))
+    }
+
+    @Test
+    fun confirmImportRejectsIncludedRowWithInvalidCurrencyCode() = kotlinx.coroutines.test.runTest {
+        var error: IllegalArgumentException? = null
+
+        try {
+            ConfirmStatementImportUseCase(
+                statementImportRepository = FakeStatementImportRepository(),
+                resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
+                detectImportedTaxPaymentCandidatesUseCase = DetectImportedTaxPaymentCandidatesUseCase(),
+                clock = fixedClock,
+            ).invoke(
+                sourceFileName = "statement.pdf",
+                sourceFingerprint = "new-statement",
+                rows = listOf(
+                    ApprovedImportedStatementRow(
+                        transactionFingerprint = "tx-invalid-currency",
+                        incomeDate = LocalDate.of(2026, 3, 15),
+                        description = "FOR SOFTWARE SERVICES",
+                        additionalInformation = "Invoice 405",
+                        paidOut = null,
+                        paidIn = StatementMoney(BigDecimal("125.50"), "USD"),
+                        balance = StatementMoney(BigDecimal("1240.75"), "USD"),
+                        suggestedInclusion = DeclarationInclusion.INCLUDED,
+                        finalInclusion = DeclarationInclusion.INCLUDED,
+                        amount = BigDecimal("125.50"),
+                        currency = "lari",
+                        sourceCategory = "Software services",
+                        duplicate = false,
+                    ),
+                ),
+            )
+        } catch (caught: IllegalArgumentException) {
+            error = caught
+        }
+
+        assertTrue(error?.message.orEmpty().contains("valid 3-letter currency code"))
     }
 
     @Test

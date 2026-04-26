@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.ui.importstatement
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import java.time.LocalDate
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -48,9 +49,9 @@ class ImportStatementContractTest {
 
     @Test
     fun currencyCodeValidationNormalizesAndRejectsMalformedValues() {
-        assertTrue(isValidCurrencyCode(" usd "))
-        assertFalse(isValidCurrencyCode("US"))
-        assertFalse(isValidCurrencyCode("???"))
+        assertTrue(isIsoLikeCurrencyCode(" usd "))
+        assertFalse(isIsoLikeCurrencyCode("US"))
+        assertFalse(isIsoLikeCurrencyCode("???"))
     }
 
     private fun validRow(): ImportStatementRowUiState = ImportStatementRowUiState(

@@ -65,9 +65,16 @@ Official references:
 
 `Georgia Small Biz Tracker is an independent offline-first Android app for Georgian individual entrepreneurs with small business status.
 
-Track monthly income, convert foreign-currency revenue to GEL using official National Bank of Georgia rates, prepare declaration values for the previous month, and keep your tax workflow in one place.
+This app does not represent the Revenue Service of Georgia, the National Bank of Georgia, or any other government entity.
 
-The app is designed to replace fragile spreadsheet-based tracking with a focused local tool for:
+Official sources for the government-related information referenced by this app:
+
+- Revenue Service of Georgia (small business status, monthly declaration workflow, and taxpayer information): https://www.rs.ge/Persons-en and https://www.rs.ge/home-en
+- National Bank of Georgia (official GEL exchange rates): https://nbg.gov.ge/en/monetary-policy/currency
+
+Track monthly income, convert foreign-currency revenue to GEL using official National Bank of Georgia exchange rates, prepare declaration values for the previous month, and keep your tax workflow in one place.
+
+The app is designed to replace fragile spreadsheet-based tracking with a focused personal record-keeping tool for:
 
 - monthly income records
 - GEL conversion using official NBG exchange rates
@@ -77,9 +84,32 @@ The app is designed to replace fragile spreadsheet-based tracking with a focused
 - reminders for monthly declaration and payment deadlines
 - local backup and export
 
-This app is independent and is not affiliated with the Revenue Service of Georgia or any government entity.
+Your data stays on your device. The first version is single-user and local-only, without banking APIs, without automatic submission to rs.ge, and without government account integration.`
 
-Your data stays on your device. The first version is single-user and local-only, without banking APIs or automatic submission to rs.ge.`
+### Full description (RU)
+
+`Georgia Small Biz Tracker — это независимое Android-приложение с offline-first подходом для индивидуальных предпринимателей в Грузии со статусом малого бизнеса.
+
+Это приложение не представляет Службу доходов Грузии, Национальный банк Грузии или любой другой государственный орган.
+
+Официальные источники государственной информации, на которую ссылается приложение:
+
+- Служба доходов Грузии (статус малого бизнеса, ежемесячная декларация и информация для налогоплательщиков): https://www.rs.ge/Persons-en и https://www.rs.ge/home-en
+- Национальный банк Грузии (официальные курсы GEL): https://nbg.gov.ge/en/monetary-policy/currency
+
+Приложение помогает вести учёт ежемесячных доходов, конвертировать выручку в иностранной валюте в GEL по официальным курсам Национального банка Грузии, готовить значения для декларации за предыдущий месяц и держать налоговый workflow в одном месте.
+
+Приложение задумано как личный локальный инструмент вместо хрупких таблиц и подходит для:
+
+- учёта ежемесячных доходов
+- конвертации в GEL по официальным курсам NBG
+- подготовки значений для graph 15 и graph 20
+- генерации комментария к платежу
+- отслеживания статуса подачи декларации и оплаты
+- напоминаний о сроках ежемесячной декларации и оплаты
+- локального backup и экспорта
+
+Ваши данные остаются на устройстве. Первая версия рассчитана на одного пользователя, работает локально, без банковских API, без автоматической отправки данных на rs.ge и без интеграции с государственными аккаунтами.`
 
 ## Suggested Play settings
 

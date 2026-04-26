@@ -7,6 +7,8 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
@@ -106,7 +108,15 @@ class ObserveDashboardSummaryUseCase @Inject constructor(
 class UpsertManualIncomeEntryUseCase @Inject constructor(
     private val incomeRepository: IncomeRepository,
 ) {
-    suspend operator fun invoke(entry: IncomeEntry): Long = incomeRepository.upsert(entry)
+    suspend operator fun invoke(entry: IncomeEntry): Long {
+        val normalizedCurrency = normalizeCurrencyCode(entry.originalCurrency)
+        require(isIsoLikeCurrencyCode(normalizedCurrency)) {
+            "Manual income entries must use a valid 3-letter currency code."
+        }
+        return incomeRepository.upsert(
+            entry.copy(originalCurrency = normalizedCurrency),
+        )
+    }
 }
 
 class UpsertSettingsUseCase @Inject constructor(

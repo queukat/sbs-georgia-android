@@ -1,5 +1,6 @@
 <resources>
     <string name="manual_entry_error_amount_required">Enter an amount greater than zero.</string>
+    <string name="manual_entry_error_currency_invalid">Enter a valid 3-letter currency code, for example GEL or USD.</string>
     <string name="manual_entry_error_category_required">Source category is required.</string>
 
     <string name="fx_override_error_not_found">Income entry was not found.</string>
@@ -41,7 +42,7 @@
     <string name="import_statement_error_parse_failed">Failed to parse the selected PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Unsupported PDF. This importer only supports the current TBC statement layout without OCR.</string>
     <string name="import_statement_error_pick_pdf_first">Pick and parse a PDF before importing.</string>
-    <string name="import_statement_error_invalid_rows">Included taxable rows must have a transaction date, positive amount, currency, and source category.</string>
+    <string name="import_statement_error_invalid_rows">Included taxable rows must have a transaction date, positive amount, a valid 3-letter currency code, and a source category.</string>
     <string name="import_statement_error_import_failed">Import failed.</string>
 
     <string name="onboarding_error_unsupported_document">Unsupported PDF. Only text-based registry extracts and Georgian small business status certificates are supported in onboarding.</string>

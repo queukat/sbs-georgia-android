@@ -1,5 +1,6 @@
 <resources>
     <string name="manual_entry_error_amount_required">Введите сумму больше нуля.</string>
+    <string name="manual_entry_error_currency_invalid">Введите корректный трёхбуквенный код валюты, например GEL или USD.</string>
     <string name="manual_entry_error_category_required">Нужно указать категорию источника.</string>
 
     <string name="fx_override_error_not_found">Запись дохода не найдена.</string>
@@ -41,7 +42,7 @@
     <string name="import_statement_error_parse_failed">Не удалось разобрать выбранный PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Неподдерживаемый PDF. Этот импорт поддерживает только текущий layout выписки TBC без OCR.</string>
     <string name="import_statement_error_pick_pdf_first">Сначала выберите и разберите PDF.</string>
-    <string name="import_statement_error_invalid_rows">Все включённые строки должны иметь дату операции, положительную сумму, валюту и категорию источника.</string>
+    <string name="import_statement_error_invalid_rows">Все включённые строки должны иметь дату операции, положительную сумму, корректный трёхбуквенный код валюты и категорию источника.</string>
     <string name="import_statement_error_import_failed">Импорт завершился ошибкой.</string>
 
     <string name="onboarding_error_unsupported_document">Неподдерживаемый PDF. В начальной настройке поддерживаются только текстовые выписки из реестра и грузинские сертификаты малого бизнеса.</string>

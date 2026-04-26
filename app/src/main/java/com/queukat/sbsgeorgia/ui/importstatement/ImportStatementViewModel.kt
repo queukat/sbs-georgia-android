@@ -9,6 +9,7 @@ import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.usecase.ConfirmStatementImportUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadStatementImportPreviewUseCase
 import com.queukat.sbsgeorgia.ui.common.canonicalSourceCategory
@@ -75,7 +76,7 @@ class ImportStatementViewModel @Inject constructor(
                             DeclarationInclusion.EXCLUDED
                         },
                         amount = row.suggestedAmount.toPlainString(),
-                        currency = row.suggestedCurrency.orEmpty(),
+                        currency = normalizeCurrencyCode(row.suggestedCurrency.orEmpty()),
                         sourceCategory = displaySourceCategory(appContext, row.suggestedSourceCategory),
                         isTaxPaymentCandidate = row.suggestedSourceCategory == SourceCategoryPresets.TAX_PAYMENT,
                         duplicate = row.duplicate,

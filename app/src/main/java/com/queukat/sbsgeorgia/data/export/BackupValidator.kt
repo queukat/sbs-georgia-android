@@ -9,6 +9,8 @@ import com.queukat.sbsgeorgia.data.local.ReminderConfigEntity
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigEntity
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileEntity
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
@@ -80,23 +82,31 @@ private fun BackupRestorePlan.validateIntegrity() {
     monthlyDeclarationRecords.requireUniqueBy("monthly declaration period keys") { it.periodKey }
     fxRates.requireUniqueBy("FX rate ids") { it.id }
     fxRates.requireUniqueBy("FX rate date/currency/manual pairs") {
-        Triple(it.rateDate, it.currencyCode.uppercase(), it.manualOverride)
+        Triple(it.rateDate, normalizeCurrencyCode(it.currencyCode), it.manualOverride)
     }
     importedStatements.requireUniqueBy("imported statement ids") { it.id }
     importedStatements.requireUniqueBy("imported statement fingerprints") { it.sourceFingerprint }
     importedTransactions.requireUniqueBy("imported transaction ids") { it.id }
     importedTransactions.requireUniqueBy("imported transaction fingerprints") { it.transactionFingerprint }
+    incomeEntries
+        .filter { !it.sourceTransactionFingerprint.isNullOrBlank() }
+        .requireUniqueBy("income entry sourceTransactionFingerprint values") {
+            requireNotNull(it.sourceTransactionFingerprint)
+        }
 
     incomeEntries.forEach { entity ->
         require(entity.originalAmount.signum() > 0) {
             "Backup income entry '${entity.id}' must have positive originalAmount."
         }
-        require(entity.originalCurrency.isNotBlank()) {
-            "Backup income entry '${entity.id}' must have originalCurrency."
+        require(isIsoLikeCurrencyCode(entity.originalCurrency)) {
+            "Backup income entry '${entity.id}' must have valid originalCurrency."
         }
     }
 
     fxRates.forEach { entity ->
+        require(isIsoLikeCurrencyCode(entity.currencyCode)) {
+            "Backup FX rate '${entity.id}' must have valid currencyCode."
+        }
         require(entity.units > 0) {
             "Backup FX rate '${entity.id}' must have positive units."
         }
@@ -112,22 +122,26 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
-    importedTransactions.forEach { entity ->
-        if (entity.finalInclusion == DeclarationInclusion.INCLUDED) {
-            require(entity.incomeDate != null) {
-                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no incomeDate."
-            }
-            require(entity.paidIn?.signum() == 1) {
-                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no positive paidIn."
-            }
-        }
-    }
-
     val importedStatementIds = importedStatements.map(ImportedStatementEntity::id).toSet()
+    val incomeEntriesBySourceFingerprint = incomeEntries
+        .filter { !it.sourceTransactionFingerprint.isNullOrBlank() }
+        .associateBy { requireNotNull(it.sourceTransactionFingerprint) }
     val importedTransactionsByFingerprint = importedTransactions.associateBy(ImportedTransactionEntity::transactionFingerprint)
     importedTransactions.forEach { entity ->
         require(entity.statementId in importedStatementIds) {
             "Backup imported transaction '${entity.transactionFingerprint}' references missing statementId ${entity.statementId}."
+        }
+        if (entity.finalInclusion == DeclarationInclusion.INCLUDED) {
+            require(entity.incomeDate != null) {
+                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no incomeDate."
+            }
+            val linkedIncomeEntry = incomeEntriesBySourceFingerprint[entity.transactionFingerprint]
+            require(linkedIncomeEntry != null) {
+                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no linked income entry."
+            }
+            require(linkedIncomeEntry.originalAmount.signum() > 0) {
+                "Backup imported transaction '${entity.transactionFingerprint}' has linked income entry without positive originalAmount."
+            }
         }
     }
 

@@ -14,6 +14,7 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -94,7 +95,7 @@ class StatementImportRepositoryImpl @Inject constructor(
                         sourceType = IncomeSourceType.IMPORTED_STATEMENT,
                         incomeDate = incomeDate,
                         originalAmount = row.amount,
-                        originalCurrency = row.currency.uppercase(),
+                        originalCurrency = normalizeCurrencyCode(row.currency),
                         sourceCategory = row.sourceCategory.trim(),
                         note = buildNote(row.description, row.additionalInformation),
                         declarationInclusion = DeclarationInclusion.INCLUDED,

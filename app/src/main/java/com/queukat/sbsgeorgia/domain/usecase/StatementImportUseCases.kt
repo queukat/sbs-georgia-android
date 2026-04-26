@@ -8,6 +8,8 @@ import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmStatementImportWorkflowResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.LoadImportPreviewResult
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import com.queukat.sbsgeorgia.domain.service.TaxPaymentDetection
@@ -113,6 +115,7 @@ class ConfirmStatementImportUseCase @Inject constructor(
         rows: List<ApprovedImportedStatementRow>,
     ): ConfirmStatementImportWorkflowResult {
         val sanitizedRows = rows.map { row ->
+            val normalizedCurrency = normalizeCurrencyCode(row.currency)
             if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
                 require(row.incomeDate != null) {
                     "Included imported income rows must have an income date."
@@ -120,11 +123,11 @@ class ConfirmStatementImportUseCase @Inject constructor(
                 require(row.amount.signum() > 0) {
                     "Included imported income rows must have an amount greater than zero."
                 }
-                require(row.currency.isNotBlank()) {
-                    "Included imported income rows must have a currency."
+                require(isIsoLikeCurrencyCode(normalizedCurrency)) {
+                    "Included imported income rows must have a valid 3-letter currency code."
                 }
             }
-            row
+            row.copy(currency = normalizedCurrency)
         }
 
         val importResult = statementImportRepository.confirmImport(

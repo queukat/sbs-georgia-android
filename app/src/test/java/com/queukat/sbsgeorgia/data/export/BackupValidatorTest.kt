@@ -155,7 +155,34 @@ class BackupValidatorTest {
                     ]
                 """.trimIndent(),
             ),
-            messagePart = "must have originalCurrency",
+            messagePart = "must have valid originalCurrency",
+        )
+    }
+
+    @Test
+    fun buildRestorePlanRejectsInvalidIncomeCurrencyCode() {
+        assertRestorePlanFails(
+            content = backupDocument(
+                incomeEntries = """
+                    [
+                      {
+                        "id": 1,
+                        "sourceType": "manual",
+                        "incomeDate": "2026-03-10",
+                        "originalAmount": "125.50",
+                        "originalCurrency": "lari",
+                        "sourceCategory": "Software services",
+                        "note": "",
+                        "declarationInclusion": "included",
+                        "rateSource": "none",
+                        "manualFxOverride": false,
+                        "createdAtEpochMillis": 1,
+                        "updatedAtEpochMillis": 1
+                      }
+                    ]
+                """.trimIndent(),
+            ),
+            messagePart = "must have valid originalCurrency",
         )
     }
 
@@ -236,7 +263,61 @@ class BackupValidatorTest {
     }
 
     @Test
-    fun buildRestorePlanRejectsIncludedImportedTransactionWithoutPositivePaidIn() {
+    fun buildRestorePlanAcceptsIncludedImportedTransactionWithoutPaidInWhenLinkedIncomeEntryExists() {
+        val plan = validator.buildRestorePlan(
+            content = backupDocument(
+                incomeEntries = """
+                    [
+                      {
+                        "id": 1,
+                        "sourceType": "imported_statement",
+                        "incomeDate": "2026-03-10",
+                        "originalAmount": "125.50",
+                        "originalCurrency": "USD",
+                        "sourceCategory": "Software services",
+                        "note": "",
+                        "declarationInclusion": "included",
+                        "rateSource": "none",
+                        "manualFxOverride": false,
+                        "sourceStatementId": 42,
+                        "sourceTransactionFingerprint": "tx-1",
+                        "createdAtEpochMillis": 1,
+                        "updatedAtEpochMillis": 1
+                      }
+                    ]
+                """.trimIndent(),
+                importedStatements = """
+                    [
+                      {
+                        "id": 42,
+                        "sourceFileName": "statement.pdf",
+                        "sourceFingerprint": "statement-1",
+                        "importedAtEpochMillis": 1
+                      }
+                    ]
+                """.trimIndent(),
+                importedTransactions = """
+                    [
+                      {
+                        "id": 1,
+                        "statementId": 42,
+                        "transactionFingerprint": "tx-1",
+                        "incomeDate": "2026-03-10",
+                        "description": "Payment",
+                        "suggestedInclusion": "included",
+                        "finalInclusion": "included"
+                      }
+                    ]
+                """.trimIndent(),
+            ),
+        )
+
+        assertEquals(1, plan.incomeEntries.size)
+        assertEquals(1, plan.importedTransactions.size)
+    }
+
+    @Test
+    fun buildRestorePlanRejectsIncludedImportedTransactionWithoutLinkedIncomeEntry() {
         assertRestorePlanFails(
             content = backupDocument(
                 importedStatements = """
@@ -257,14 +338,58 @@ class BackupValidatorTest {
                         "transactionFingerprint": "tx-1",
                         "incomeDate": "2026-03-10",
                         "description": "Payment",
-                        "paidIn": "0",
                         "suggestedInclusion": "included",
                         "finalInclusion": "included"
                       }
                     ]
                 """.trimIndent(),
             ),
-            messagePart = "has no positive paidIn",
+            messagePart = "has no linked income entry",
+        )
+    }
+
+    @Test
+    fun buildRestorePlanRejectsDuplicateIncomeSourceFingerprints() {
+        assertRestorePlanFails(
+            content = backupDocument(
+                incomeEntries = """
+                    [
+                      {
+                        "id": 1,
+                        "sourceType": "imported_statement",
+                        "incomeDate": "2026-03-10",
+                        "originalAmount": "125.50",
+                        "originalCurrency": "USD",
+                        "sourceCategory": "Software services",
+                        "note": "",
+                        "declarationInclusion": "included",
+                        "rateSource": "none",
+                        "manualFxOverride": false,
+                        "sourceStatementId": 42,
+                        "sourceTransactionFingerprint": "tx-1",
+                        "createdAtEpochMillis": 1,
+                        "updatedAtEpochMillis": 1
+                      },
+                      {
+                        "id": 2,
+                        "sourceType": "imported_statement",
+                        "incomeDate": "2026-03-11",
+                        "originalAmount": "225.50",
+                        "originalCurrency": "USD",
+                        "sourceCategory": "Software services",
+                        "note": "",
+                        "declarationInclusion": "included",
+                        "rateSource": "none",
+                        "manualFxOverride": false,
+                        "sourceStatementId": 42,
+                        "sourceTransactionFingerprint": "tx-1",
+                        "createdAtEpochMillis": 1,
+                        "updatedAtEpochMillis": 1
+                      }
+                    ]
+                """.trimIndent(),
+            ),
+            messagePart = "duplicate income entry sourceTransactionFingerprint values",
         )
     }
 

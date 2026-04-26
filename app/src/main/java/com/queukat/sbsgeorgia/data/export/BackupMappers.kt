@@ -14,6 +14,7 @@ import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalTime
@@ -93,7 +94,7 @@ internal fun IncomeEntryPayload.toEntity(): IncomeEntryEntity = IncomeEntryEntit
     sourceType = IncomeSourceType.fromPersisted(sourceType),
     incomeDate = LocalDate.parse(incomeDate),
     originalAmount = BigDecimal(originalAmount),
-    originalCurrency = originalCurrency,
+    originalCurrency = normalizeCurrencyCode(originalCurrency),
     sourceCategory = sourceCategory,
     note = note,
     declarationInclusion = DeclarationInclusion.fromPersisted(declarationInclusion),
@@ -145,7 +146,7 @@ internal fun FxRateEntity.toPayload(): FxRatePayload = FxRatePayload(
 internal fun FxRatePayload.toEntity(): FxRateEntity = FxRateEntity(
     id = id,
     rateDate = LocalDate.parse(rateDate),
-    currencyCode = currencyCode,
+    currencyCode = normalizeCurrencyCode(currencyCode),
     units = units,
     rateToGel = BigDecimal(rateToGel),
     source = FxRateSource.fromPersisted(source),

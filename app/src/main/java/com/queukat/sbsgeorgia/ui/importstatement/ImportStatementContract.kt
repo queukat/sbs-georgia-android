@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.ui.importstatement
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import java.time.LocalDate
 
 data class ImportStatementUiState(
@@ -37,17 +38,10 @@ sealed interface ImportStatementEffect {
     data class Message(val text: String) : ImportStatementEffect
 }
 
-internal val CurrencyCodeRegex = Regex("^[A-Z]{3}$")
-
-internal fun normalizeCurrencyCode(value: String): String = value.trim().uppercase()
-
-internal fun isValidCurrencyCode(value: String): Boolean =
-    normalizeCurrencyCode(value).matches(CurrencyCodeRegex)
-
 internal fun ImportStatementRowUiState.isInvalidForIncludedImport(): Boolean =
     finalInclusion == DeclarationInclusion.INCLUDED && (
         incomeDate == null ||
             amount.toBigDecimalOrNull()?.signum() != 1 ||
-            !isValidCurrencyCode(currency) ||
+            !isIsoLikeCurrencyCode(currency) ||
             sourceCategory.isBlank()
         )

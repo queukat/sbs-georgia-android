@@ -9,6 +9,8 @@ import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.usecase.UpsertManualIncomeEntryUseCase
 import com.queukat.sbsgeorgia.ui.common.canonicalSourceCategory
@@ -102,6 +104,10 @@ class ManualEntryViewModel @Inject constructor(
             _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_amount_required))
             return
         }
+        if (!isIsoLikeCurrencyCode(current.currency)) {
+            _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_currency_invalid))
+            return
+        }
         if (current.sourceCategory.isBlank()) {
             _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_category_required))
             return
@@ -158,9 +164,9 @@ internal fun resolveManualEntryFxPersistence(
     incomeDate: LocalDate,
     existing: IncomeEntry?,
 ): ManualEntryFxPersistence {
-    val normalizedCurrency = currency.trim().uppercase()
+    val normalizedCurrency = normalizeCurrencyCode(currency)
     val isGel = normalizedCurrency == "GEL"
-    val existingCurrency = existing?.originalCurrency?.trim()?.uppercase()
+    val existingCurrency = existing?.originalCurrency?.let(::normalizeCurrencyCode)
     val fxFieldsChanged = existing == null ||
         existingCurrency != normalizedCurrency ||
         existing.originalAmount.compareTo(amount) != 0 ||
