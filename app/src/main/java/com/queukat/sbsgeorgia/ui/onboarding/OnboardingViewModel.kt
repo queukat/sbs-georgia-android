@@ -14,10 +14,11 @@ import com.queukat.sbsgeorgia.ui.common.DateInputParser
 import com.queukat.sbsgeorgia.ui.common.DateParseResult
 import com.queukat.sbsgeorgia.ui.common.dateOrNull
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
+import com.queukat.sbsgeorgia.ui.common.document.DocumentImportFormState
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportLoadResult
+import com.queukat.sbsgeorgia.ui.common.document.applyDocumentImportPreview
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
 import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
-import com.queukat.sbsgeorgia.ui.common.document.toDocumentImportFormPatch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
@@ -77,17 +78,19 @@ class OnboardingViewModel @Inject constructor(
 
     fun applyPreview() {
         val preview = _uiState.value.preview ?: return
-        val patch = preview.toDocumentImportFormPatch()
+        val patchedFormState = _uiState.value
+            .toDocumentImportFormState()
+            .applyDocumentImportPreview(preview)
         _uiState.value = _uiState.value.copy(
-            displayName = patch.displayName ?: _uiState.value.displayName,
-            legalForm = patch.legalForm ?: _uiState.value.legalForm,
-            registrationId = patch.registrationId ?: _uiState.value.registrationId,
-            registrationDate = patch.registrationDate ?: _uiState.value.registrationDate,
-            legalAddress = patch.legalAddress ?: _uiState.value.legalAddress,
-            activityType = patch.activityType ?: _uiState.value.activityType,
-            certificateNumber = patch.certificateNumber ?: _uiState.value.certificateNumber,
-            certificateIssuedDate = patch.certificateIssuedDate ?: _uiState.value.certificateIssuedDate,
-            effectiveDate = patch.effectiveDate ?: _uiState.value.effectiveDate,
+            displayName = patchedFormState.displayName,
+            legalForm = patchedFormState.legalForm,
+            registrationId = patchedFormState.registrationId,
+            registrationDate = patchedFormState.registrationDate,
+            legalAddress = patchedFormState.legalAddress,
+            activityType = patchedFormState.activityType,
+            certificateNumber = patchedFormState.certificateNumber,
+            certificateIssuedDate = patchedFormState.certificateIssuedDate,
+            effectiveDate = patchedFormState.effectiveDate,
             infoMessage = appContext.documentImportStrings().previewApplied,
             errorMessage = null,
         )
@@ -205,3 +208,15 @@ class OnboardingViewModel @Inject constructor(
         )
     }
 }
+
+private fun OnboardingUiState.toDocumentImportFormState(): DocumentImportFormState = DocumentImportFormState(
+    displayName = displayName,
+    legalForm = legalForm,
+    registrationId = registrationId,
+    registrationDate = registrationDate,
+    legalAddress = legalAddress,
+    activityType = activityType,
+    certificateNumber = certificateNumber,
+    certificateIssuedDate = certificateIssuedDate,
+    effectiveDate = effectiveDate,
+)

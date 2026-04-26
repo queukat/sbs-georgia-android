@@ -1,4 +1,4 @@
-package com.queukat.sbsgeorgia.domain.service
+package com.queukat.sbsgeorgia.domain.service.tbc
 
 import java.time.format.DateTimeFormatter
 

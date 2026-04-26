@@ -8,7 +8,7 @@ import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
-import com.queukat.sbsgeorgia.domain.service.OnboardingDocumentParser
+import com.queukat.sbsgeorgia.domain.service.onboarding.OnboardingDocumentParser
 import com.queukat.sbsgeorgia.worker.ReminderScheduler
 import java.time.LocalTime
 import javax.inject.Inject

@@ -129,7 +129,7 @@ class ImportStatementViewModel @Inject constructor(
     }
 
     fun updateCurrency(transactionFingerprint: String, value: String) {
-        updateRow(transactionFingerprint) { row -> row.copy(currency = value.uppercase()) }
+        updateRow(transactionFingerprint) { row -> row.copy(currency = normalizeCurrencyCode(value)) }
     }
 
     fun updateSourceCategory(transactionFingerprint: String, value: String) {
@@ -190,17 +190,6 @@ class ImportStatementViewModel @Inject constructor(
                     else -> null
                 }
                 val taxPaymentMessage = when {
-                    result.appliedTaxPaymentCount > 0 && result.reviewRequiredTaxPaymentCount == 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_tax_payments_applied,
-                            result.appliedTaxPaymentCount,
-                        )
-                    result.appliedTaxPaymentCount > 0 && result.reviewRequiredTaxPaymentCount > 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_tax_payments_partial,
-                            result.appliedTaxPaymentCount,
-                            result.reviewRequiredTaxPaymentCount,
-                        )
                     result.reviewRequiredTaxPaymentCount > 0 ->
                         appContext.getString(
                             R.string.import_statement_message_tax_payments_review_required,
@@ -261,7 +250,7 @@ class ImportStatementViewModel @Inject constructor(
         suggestedInclusion = suggestedInclusion,
         finalInclusion = finalInclusion,
         amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
-        currency = currency.trim().uppercase(),
+        currency = normalizeCurrencyCode(currency),
         sourceCategory = canonicalSourceCategory(appContext, sourceCategory),
         duplicate = duplicate,
     )

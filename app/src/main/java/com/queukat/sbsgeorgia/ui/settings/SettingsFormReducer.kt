@@ -4,8 +4,9 @@ import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.ui.common.document.DocumentImportFormState
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportLoadResult
-import com.queukat.sbsgeorgia.ui.common.document.toDocumentImportFormPatch
+import com.queukat.sbsgeorgia.ui.common.document.applyDocumentImportPreview
 import java.time.LocalDate
 
 internal object SettingsFormReducer {
@@ -75,17 +76,19 @@ internal object SettingsFormReducer {
         preview: OnboardingImportPreview,
         previewAppliedMessage: String,
     ): SettingsUiState {
-        val patch = preview.toDocumentImportFormPatch()
+        val patchedFormState = state
+            .toDocumentImportFormState()
+            .applyDocumentImportPreview(preview)
         return state.copy(
-            displayName = patch.displayName ?: state.displayName,
-            legalForm = patch.legalForm ?: state.legalForm,
-            registrationId = patch.registrationId ?: state.registrationId,
-            registrationDate = patch.registrationDate ?: state.registrationDate,
-            legalAddress = patch.legalAddress ?: state.legalAddress,
-            activityType = patch.activityType ?: state.activityType,
-            certificateNumber = patch.certificateNumber ?: state.certificateNumber,
-            certificateIssuedDate = patch.certificateIssuedDate ?: state.certificateIssuedDate,
-            effectiveDate = patch.effectiveDate ?: state.effectiveDate,
+            displayName = patchedFormState.displayName,
+            legalForm = patchedFormState.legalForm,
+            registrationId = patchedFormState.registrationId,
+            registrationDate = patchedFormState.registrationDate,
+            legalAddress = patchedFormState.legalAddress,
+            activityType = patchedFormState.activityType,
+            certificateNumber = patchedFormState.certificateNumber,
+            certificateIssuedDate = patchedFormState.certificateIssuedDate,
+            effectiveDate = patchedFormState.effectiveDate,
             documentInfoMessage = previewAppliedMessage,
             documentErrorMessage = null,
             errorMessage = null,
@@ -124,3 +127,15 @@ internal object SettingsFormReducer {
         errorMessage = null,
     )
 }
+
+private fun SettingsUiState.toDocumentImportFormState(): DocumentImportFormState = DocumentImportFormState(
+    displayName = displayName,
+    legalForm = legalForm,
+    registrationId = registrationId,
+    registrationDate = registrationDate,
+    legalAddress = legalAddress,
+    activityType = activityType,
+    certificateNumber = certificateNumber,
+    certificateIssuedDate = certificateIssuedDate,
+    effectiveDate = effectiveDate,
+)

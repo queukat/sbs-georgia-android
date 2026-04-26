@@ -33,6 +33,7 @@ fun DatePickerField(
     modifier: Modifier = Modifier,
     placeholderText: String? = null,
     testTag: String? = null,
+    enabled: Boolean = true,
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val zoneId = remember { ZoneId.systemDefault() }
@@ -43,6 +44,7 @@ fun DatePickerField(
     OutlinedTextField(
         value = value?.formatIsoDate().orEmpty(),
         onValueChange = {},
+        enabled = enabled,
         label = { Text(label) },
         placeholder = placeholderText?.let { placeholder ->
             { Text(placeholder) }
@@ -51,7 +53,7 @@ fun DatePickerField(
         modifier = modifier
             .fillMaxWidth()
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .clickable { showPicker = true },
+            .clickable(enabled = enabled) { showPicker = true },
     )
 
     if (showPicker) {
@@ -92,10 +94,12 @@ fun DecimalField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     testTag: String? = null,
+    enabled: Boolean = true,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
+        enabled = enabled,
         label = { Text(label) },
         modifier = modifier
             .fillMaxWidth()

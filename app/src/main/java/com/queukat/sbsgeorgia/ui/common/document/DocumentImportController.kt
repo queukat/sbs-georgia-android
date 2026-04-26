@@ -35,6 +35,18 @@ data class DocumentImportFormPatch(
     val effectiveDate: LocalDate? = null,
 )
 
+data class DocumentImportFormState(
+    val displayName: String,
+    val legalForm: String,
+    val registrationId: String,
+    val registrationDate: String,
+    val legalAddress: String,
+    val activityType: String,
+    val certificateNumber: String,
+    val certificateIssuedDate: String,
+    val effectiveDate: LocalDate,
+)
+
 sealed interface DocumentImportLoadResult {
     data class Success(
         val preview: OnboardingImportPreview,
@@ -96,6 +108,24 @@ fun OnboardingImportPreview.toDocumentImportFormPatch(): DocumentImportFormPatch
     certificateIssuedDate = certificateIssuedDate.value?.toString(),
     effectiveDate = effectiveDate.value,
 )
+
+fun DocumentImportFormState.applyDocumentImportPatch(
+    patch: DocumentImportFormPatch,
+): DocumentImportFormState = copy(
+    displayName = patch.displayName ?: displayName,
+    legalForm = patch.legalForm ?: legalForm,
+    registrationId = patch.registrationId ?: registrationId,
+    registrationDate = patch.registrationDate ?: registrationDate,
+    legalAddress = patch.legalAddress ?: legalAddress,
+    activityType = patch.activityType ?: activityType,
+    certificateNumber = patch.certificateNumber ?: certificateNumber,
+    certificateIssuedDate = patch.certificateIssuedDate ?: certificateIssuedDate,
+    effectiveDate = patch.effectiveDate ?: effectiveDate,
+)
+
+fun DocumentImportFormState.applyDocumentImportPreview(
+    preview: OnboardingImportPreview,
+): DocumentImportFormState = applyDocumentImportPatch(preview.toDocumentImportFormPatch())
 
 private fun DocumentImportAction.expectedDocumentType(): OnboardingDocumentType = when (this) {
     DocumentImportAction.IMPORT_REGISTRY_EXTRACT -> OnboardingDocumentType.REGISTRY_EXTRACT

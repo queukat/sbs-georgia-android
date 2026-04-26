@@ -8,6 +8,7 @@ import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordEntity
 import com.queukat.sbsgeorgia.data.local.ReminderConfigEntity
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigEntity
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileEntity
+import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.serialization.json.Json
@@ -86,6 +87,24 @@ private fun BackupRestorePlan.validateIntegrity() {
     importedTransactions.requireUniqueBy("imported transaction ids") { it.id }
     importedTransactions.requireUniqueBy("imported transaction fingerprints") { it.transactionFingerprint }
 
+    incomeEntries.forEach { entity ->
+        require(entity.originalAmount.signum() > 0) {
+            "Backup income entry '${entity.id}' must have positive originalAmount."
+        }
+        require(entity.originalCurrency.isNotBlank()) {
+            "Backup income entry '${entity.id}' must have originalCurrency."
+        }
+    }
+
+    fxRates.forEach { entity ->
+        require(entity.units > 0) {
+            "Backup FX rate '${entity.id}' must have positive units."
+        }
+        require(entity.rateToGel.signum() > 0) {
+            "Backup FX rate '${entity.id}' must have positive rateToGel."
+        }
+    }
+
     monthlyDeclarationRecords.forEach { entity ->
         val expectedPeriodKey = YearMonth.of(entity.year, entity.month).toString()
         require(entity.periodKey == expectedPeriodKey) {
@@ -93,10 +112,44 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
+    importedTransactions.forEach { entity ->
+        if (entity.finalInclusion == DeclarationInclusion.INCLUDED) {
+            require(entity.incomeDate != null) {
+                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no incomeDate."
+            }
+            require(entity.paidIn?.signum() == 1) {
+                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no positive paidIn."
+            }
+        }
+    }
+
     val importedStatementIds = importedStatements.map(ImportedStatementEntity::id).toSet()
+    val importedTransactionsByFingerprint = importedTransactions.associateBy(ImportedTransactionEntity::transactionFingerprint)
     importedTransactions.forEach { entity ->
         require(entity.statementId in importedStatementIds) {
             "Backup imported transaction '${entity.transactionFingerprint}' references missing statementId ${entity.statementId}."
+        }
+    }
+
+    incomeEntries.forEach { entity ->
+        val hasSourceStatementId = entity.sourceStatementId != null
+        val hasSourceTransactionFingerprint = !entity.sourceTransactionFingerprint.isNullOrBlank()
+        if (hasSourceStatementId || hasSourceTransactionFingerprint) {
+            require(hasSourceStatementId && hasSourceTransactionFingerprint) {
+                "Backup income entry '${entity.id}' must provide both sourceStatementId and sourceTransactionFingerprint."
+            }
+            val sourceStatementId = requireNotNull(entity.sourceStatementId)
+            val sourceTransactionFingerprint = requireNotNull(entity.sourceTransactionFingerprint)
+            require(sourceStatementId in importedStatementIds) {
+                "Backup income entry '${entity.id}' references missing sourceStatementId $sourceStatementId."
+            }
+            val importedTransaction = importedTransactionsByFingerprint[sourceTransactionFingerprint]
+            require(importedTransaction != null) {
+                "Backup income entry '${entity.id}' references missing sourceTransactionFingerprint '$sourceTransactionFingerprint'."
+            }
+            require(importedTransaction.statementId == sourceStatementId) {
+                "Backup income entry '${entity.id}' has conflicting sourceStatementId/sourceTransactionFingerprint linkage."
+            }
         }
     }
 }

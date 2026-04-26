@@ -36,8 +36,6 @@
     <string name="import_statement_message_fx_auto_resolved_all">Официальные курсы NBG автоматически применены для %1$d записей.</string>
     <string name="import_statement_message_fx_auto_resolved_partial">Официальные курсы NBG применены для %1$d записей. Ещё %2$d требуют проверки.</string>
     <string name="import_statement_message_fx_manual_review_needed">Ещё %1$d импортированных записей требуют ручной проверки FX.</string>
-    <string name="import_statement_message_tax_payments_applied">Найдено %1$d налоговых платежей, соответствующие месяцы закрыты автоматически.</string>
-    <string name="import_statement_message_tax_payments_partial">Автоматически применено %1$d налоговых платежей, ещё %2$d оставлены на ручную проверку.</string>
     <string name="import_statement_message_tax_payments_review_required">Найдено %1$d кандидатов на налоговый платёж. Проверьте и зафиксируйте их вручную в Workflow status.</string>
     <string name="import_statement_error_no_preview">Для выбранного PDF не удалось получить предпросмотр.</string>
     <string name="import_statement_error_parse_failed">Не удалось разобрать выбранный PDF.</string>

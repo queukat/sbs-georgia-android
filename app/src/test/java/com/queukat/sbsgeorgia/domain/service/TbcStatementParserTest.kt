@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.domain.service
 
+import com.queukat.sbsgeorgia.domain.service.tbc.TbcStatementParser
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

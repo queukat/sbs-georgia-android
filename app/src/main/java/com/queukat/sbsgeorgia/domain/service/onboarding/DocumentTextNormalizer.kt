@@ -1,4 +1,4 @@
-package com.queukat.sbsgeorgia.domain.service
+package com.queukat.sbsgeorgia.domain.service.onboarding
 
 internal fun String.normalizedLines(): List<String> = lineSequence()
     .map { line -> line.replace(Regex("\\s+"), " ").trim() }

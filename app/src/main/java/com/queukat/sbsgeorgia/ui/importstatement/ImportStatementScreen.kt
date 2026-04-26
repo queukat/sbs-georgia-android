@@ -185,6 +185,7 @@ fun ImportStatementScreen(
                         FilterChip(
                             selected = row.finalInclusion == DeclarationInclusion.EXCLUDED,
                             onClick = { onIncludeAsTaxableChanged(row.transactionFingerprint, false) },
+                            enabled = !row.duplicate,
                             modifier = Modifier.testTag("import-exclude-${row.transactionFingerprint}"),
                             label = {
                                 Text(
@@ -214,16 +215,19 @@ fun ImportStatementScreen(
                         value = row.incomeDate,
                         onValueChange = { onDateChanged(row.transactionFingerprint, it) },
                         placeholderText = stringResource(R.string.common_select_date),
+                        enabled = !row.duplicate,
                     )
                     DecimalField(
                         label = stringResource(R.string.import_statement_amount),
                         value = row.amount,
                         onValueChange = { onAmountChanged(row.transactionFingerprint, it) },
                         testTag = "import-amount-${row.transactionFingerprint}",
+                        enabled = !row.duplicate,
                     )
                     OutlinedTextField(
                         value = row.currency,
                         onValueChange = { onCurrencyChanged(row.transactionFingerprint, it) },
+                        enabled = !row.duplicate,
                         label = { Text(stringResource(R.string.import_statement_currency)) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -233,6 +237,7 @@ fun ImportStatementScreen(
                     OutlinedTextField(
                         value = row.sourceCategory,
                         onValueChange = { onSourceCategoryChanged(row.transactionFingerprint, it) },
+                        enabled = !row.duplicate,
                         label = { Text(stringResource(R.string.import_statement_source_category)) },
                         modifier = Modifier
                             .fillMaxWidth()

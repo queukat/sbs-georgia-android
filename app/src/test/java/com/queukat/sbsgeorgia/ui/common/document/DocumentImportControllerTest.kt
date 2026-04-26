@@ -98,6 +98,39 @@ class DocumentImportControllerTest {
     }
 
     @Test
+    fun applyDocumentImportPatchMergesOnlyProvidedFields() {
+        val initialState = DocumentImportFormState(
+            displayName = "Existing name",
+            legalForm = "LLC",
+            registrationId = "111111111",
+            registrationDate = "2025-01-10",
+            legalAddress = "Existing address",
+            activityType = "Existing activity",
+            certificateNumber = "OLD-CERT",
+            certificateIssuedDate = "2025-01-11",
+            effectiveDate = LocalDate.of(2025, 1, 1),
+        )
+
+        val updatedState = initialState.applyDocumentImportPatch(
+            DocumentImportFormPatch(
+                displayName = "Imported name",
+                registrationId = "222222222",
+                certificateNumber = "NEW-CERT",
+            ),
+        )
+
+        assertEquals("Imported name", updatedState.displayName)
+        assertEquals("LLC", updatedState.legalForm)
+        assertEquals("222222222", updatedState.registrationId)
+        assertEquals("2025-01-10", updatedState.registrationDate)
+        assertEquals("Existing address", updatedState.legalAddress)
+        assertEquals("Existing activity", updatedState.activityType)
+        assertEquals("NEW-CERT", updatedState.certificateNumber)
+        assertEquals("2025-01-11", updatedState.certificateIssuedDate)
+        assertEquals(LocalDate.of(2025, 1, 1), updatedState.effectiveDate)
+    }
+
+    @Test
     fun previewAppliedStringRemainsAvailableForViewModels() {
         assertTrue(strings.previewApplied.isNotBlank())
     }

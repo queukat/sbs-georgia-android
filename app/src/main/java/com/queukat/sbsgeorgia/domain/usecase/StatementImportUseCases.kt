@@ -11,7 +11,7 @@ import com.queukat.sbsgeorgia.domain.model.LoadImportPreviewResult
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import com.queukat.sbsgeorgia.domain.service.TaxPaymentDetection
-import com.queukat.sbsgeorgia.domain.service.TbcStatementParser
+import com.queukat.sbsgeorgia.domain.service.tbc.TbcStatementParser
 import java.time.Clock
 import java.time.YearMonth
 import javax.inject.Inject
@@ -104,7 +104,7 @@ private val transactionDateRegex = Regex("\\b\\d{2}/\\d{2}/\\d{4}\\b")
 class ConfirmStatementImportUseCase @Inject constructor(
     private val statementImportRepository: StatementImportRepository,
     private val resolveFxForMonthsUseCase: ResolveFxForMonthsUseCase,
-    private val applyImportedTaxPaymentsUseCase: ApplyImportedTaxPaymentsUseCase,
+    private val detectImportedTaxPaymentCandidatesUseCase: DetectImportedTaxPaymentCandidatesUseCase,
     private val clock: Clock,
 ) {
     suspend operator fun invoke(
@@ -144,25 +144,23 @@ class ConfirmStatementImportUseCase @Inject constructor(
             .mapNotNull { row -> row.incomeDate?.let(YearMonth::from) }
             .toSet()
         val fxResult = resolveFxForMonthsUseCase(monthsNeedingFxResolution)
-        val taxPaymentResult = applyImportedTaxPaymentsUseCase(sanitizedRows)
+        val taxPaymentResult = detectImportedTaxPaymentCandidatesUseCase(sanitizedRows)
 
         return ConfirmStatementImportWorkflowResult(
             importResult = importResult,
             autoResolvedFxEntryCount = fxResult.resolvedEntryCount,
             remainingUnresolvedFxEntryCount = fxResult.unresolvedEntryCount,
-            appliedTaxPaymentCount = taxPaymentResult.appliedCount,
             reviewRequiredTaxPaymentCount = taxPaymentResult.reviewRequiredCount,
         )
     }
 }
 
-data class ApplyImportedTaxPaymentsResult(
-    val appliedCount: Int,
+data class TaxPaymentCandidateDetectionResult(
     val reviewRequiredCount: Int,
 )
 
-class ApplyImportedTaxPaymentsUseCase @Inject constructor() {
-    suspend operator fun invoke(rows: List<ApprovedImportedStatementRow>): ApplyImportedTaxPaymentsResult {
+class DetectImportedTaxPaymentCandidatesUseCase @Inject constructor() {
+    suspend operator fun invoke(rows: List<ApprovedImportedStatementRow>): TaxPaymentCandidateDetectionResult {
         val reviewRequiredCount = rows
             .asSequence()
             .filterNot(ApprovedImportedStatementRow::duplicate)
@@ -177,10 +175,7 @@ class ApplyImportedTaxPaymentsUseCase @Inject constructor() {
                     TaxPaymentDetection.resolveOutgoingAmount(row.paidOut, row.amount)?.signum() == 1
             }
 
-        return ApplyImportedTaxPaymentsResult(
-            appliedCount = 0,
-            reviewRequiredCount = reviewRequiredCount,
-        )
+        return TaxPaymentCandidateDetectionResult(reviewRequiredCount = reviewRequiredCount)
     }
 }
 

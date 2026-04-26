@@ -71,6 +71,5 @@ data class ConfirmStatementImportWorkflowResult(
     val importResult: ConfirmImportedStatementResult,
     val autoResolvedFxEntryCount: Int,
     val remainingUnresolvedFxEntryCount: Int,
-    val appliedTaxPaymentCount: Int = 0,
     val reviewRequiredTaxPaymentCount: Int = 0,
 )

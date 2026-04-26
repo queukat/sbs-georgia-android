@@ -1,5 +1,6 @@
-package com.queukat.sbsgeorgia.domain.service
+package com.queukat.sbsgeorgia.domain.service.tbc
 
+import com.queukat.sbsgeorgia.domain.service.TaxPaymentDetection
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreviewRow
 import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets

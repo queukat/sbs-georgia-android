@@ -1,4 +1,4 @@
-package com.queukat.sbsgeorgia.domain.service
+package com.queukat.sbsgeorgia.domain.service.onboarding
 
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType

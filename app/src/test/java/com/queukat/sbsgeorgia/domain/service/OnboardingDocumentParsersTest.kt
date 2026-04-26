@@ -1,5 +1,8 @@
 package com.queukat.sbsgeorgia.domain.service
 
+import com.queukat.sbsgeorgia.domain.service.onboarding.OnboardingDocumentParser
+import com.queukat.sbsgeorgia.domain.service.onboarding.RegistryExtractParser
+import com.queukat.sbsgeorgia.domain.service.onboarding.SmallBusinessStatusCertificateParser
 import com.queukat.sbsgeorgia.domain.model.ExtractionConfidence
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentParseException

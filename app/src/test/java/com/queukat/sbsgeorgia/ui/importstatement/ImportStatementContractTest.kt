@@ -32,6 +32,27 @@ class ImportStatementContractTest {
         assertFalse(validRow().isInvalidForIncludedImport())
     }
 
+    @Test
+    fun invalidForIncludedImportRejectsNonIsoCurrencyCode() {
+        val row = validRow().copy(currency = "lari")
+
+        assertTrue(row.isInvalidForIncludedImport())
+    }
+
+    @Test
+    fun invalidForIncludedImportAcceptsTrimmedLowercaseIsoCurrencyCode() {
+        val row = validRow().copy(currency = " usd ")
+
+        assertFalse(row.isInvalidForIncludedImport())
+    }
+
+    @Test
+    fun currencyCodeValidationNormalizesAndRejectsMalformedValues() {
+        assertTrue(isValidCurrencyCode(" usd "))
+        assertFalse(isValidCurrencyCode("US"))
+        assertFalse(isValidCurrencyCode("???"))
+    }
+
     private fun validRow(): ImportStatementRowUiState = ImportStatementRowUiState(
         transactionFingerprint = "tx-1",
         incomeDate = LocalDate.of(2026, 3, 15),

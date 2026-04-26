@@ -16,7 +16,7 @@ import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
-import com.queukat.sbsgeorgia.domain.service.TbcStatementParser
+import com.queukat.sbsgeorgia.domain.service.tbc.TbcStatementParser
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
@@ -129,7 +129,7 @@ class StatementImportUseCasesTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
+            detectImportedTaxPaymentCandidatesUseCase = DetectImportedTaxPaymentCandidatesUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -219,7 +219,7 @@ class StatementImportUseCasesTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = repository,
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(fxIncomeRepository, fxRateRepository),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
+            detectImportedTaxPaymentCandidatesUseCase = DetectImportedTaxPaymentCandidatesUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -253,7 +253,7 @@ class StatementImportUseCasesTest {
         val result = ConfirmStatementImportUseCase(
             statementImportRepository = FakeStatementImportRepository(),
             resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
-            applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
+            detectImportedTaxPaymentCandidatesUseCase = DetectImportedTaxPaymentCandidatesUseCase(),
             clock = fixedClock,
         ).invoke(
             sourceFileName = "statement.pdf",
@@ -277,7 +277,6 @@ class StatementImportUseCasesTest {
             ),
         )
 
-        assertEquals(0, result.appliedTaxPaymentCount)
         assertEquals(1, result.reviewRequiredTaxPaymentCount)
     }
 
@@ -289,7 +288,7 @@ class StatementImportUseCasesTest {
             ConfirmStatementImportUseCase(
                 statementImportRepository = FakeStatementImportRepository(),
                 resolveFxForMonthsUseCase = resolveFxForMonthsUseCase(StatementImportFakeIncomeRepository()),
-                applyImportedTaxPaymentsUseCase = ApplyImportedTaxPaymentsUseCase(),
+                detectImportedTaxPaymentCandidatesUseCase = DetectImportedTaxPaymentCandidatesUseCase(),
                 clock = fixedClock,
             ).invoke(
                 sourceFileName = "statement.pdf",
