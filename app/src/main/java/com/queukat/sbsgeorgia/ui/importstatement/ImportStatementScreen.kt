@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -112,7 +113,7 @@ fun ImportStatementScreen(
                     if (uiState.rows.isNotEmpty()) {
                         TextButton(
                             onClick = onImportApproved,
-                            enabled = !uiState.isImporting && !uiState.isLoading,
+                            enabled = uiState.canImport && !uiState.isImporting && !uiState.isLoading,
                             modifier = Modifier.testTag("import-statement-import-button"),
                         ) {
                             Text(
@@ -146,6 +147,9 @@ fun ImportStatementScreen(
             item {
                 AppSection(title = stringResource(R.string.import_statement_section_flow)) {
                     Text(stringResource(R.string.import_statement_flow_body))
+                    if (uiState.isLoading || uiState.isImporting) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
                     uiState.sourceFileName?.let {
                         Text(
                             stringResource(R.string.import_statement_file_selected, it),
@@ -165,6 +169,15 @@ fun ImportStatementScreen(
                                 uiState.recognizedOutgoingCount,
                             ),
                         )
+                        if (uiState.invalidIncludedCount > 0) {
+                            Text(
+                                stringResource(
+                                    R.string.import_statement_invalid_rows_blocking_import,
+                                    uiState.invalidIncludedCount,
+                                ),
+                                color = MaterialTheme.colorScheme.error,
+                            )
+                        }
                     }
                 }
             }
@@ -244,6 +257,12 @@ fun ImportStatementScreen(
                             .testTag("import-category-${row.transactionFingerprint}"),
                         singleLine = true,
                     )
+                    if (row.isInvalidForIncludedImport()) {
+                        Text(
+                            stringResource(R.string.import_statement_row_invalid_hint),
+                            color = MaterialTheme.colorScheme.error,
+                        )
+                    }
                 }
             }
         }

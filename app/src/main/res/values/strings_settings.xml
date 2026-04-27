@@ -49,6 +49,9 @@
     <string name="settings_export_backup_json_body">Create a full restoreable backup of the local app state, including taxpayer settings, entries, declarations, FX cache, and imported statement metadata.</string>
     <string name="settings_import_backup_json">Import JSON backup</string>
     <string name="settings_import_backup_json_body">Restore a previously exported full-app backup when moving devices or recovering after reinstall. This replaces the current local data.</string>
+    <string name="settings_restore_backup_confirm_title">Restore backup?</string>
+    <string name="settings_restore_backup_confirm_body">This will replace all current local app data with the selected backup.</string>
+    <string name="settings_restore_backup_confirm_action">Restore</string>
     <string name="settings_help_feedback_body">Use these actions when you want a refresher, want to rate the app, or want to report a product issue.</string>
     <string name="settings_open_help_faq">Open help &amp; FAQ</string>
     <string name="settings_open_help_faq_body">Read short practical answers about income tracking, FX conversion, monthly declarations, reminders, backup/export, and feedback.</string>
@@ -60,4 +63,5 @@
     <string name="settings_send_feedback_body">Open a public browser form for feedback or bug reports with app and device context prefilled. Anything you write can be visible to others, so do not include taxpayer IDs, PDFs, or backup/export files.</string>
     <string name="settings_data_operation_in_progress">Working with local backup/export data…</string>
     <string name="settings_save">Save settings</string>
+    <string name="settings_saving">Saving…</string>
 </resources>

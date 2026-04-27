@@ -6,6 +6,7 @@ import java.math.BigDecimal
 
 data class ChartsUiState(
     val year: Int,
+    val availableYears: List<Int> = emptyList(),
     val snapshots: List<MonthlyDeclarationSnapshot> = emptyList(),
     val monthlyIncomePoints: List<ChartPoint> = emptyList(),
     val cumulativePoints: List<ChartPoint> = emptyList(),

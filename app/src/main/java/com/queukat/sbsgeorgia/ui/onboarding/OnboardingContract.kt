@@ -7,6 +7,7 @@ data class OnboardingUiState(
     val preview: OnboardingImportPreview? = null,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
+    val isRestoringBackup: Boolean = false,
     val infoMessage: String? = null,
     val errorMessage: String? = null,
     val displayName: String = "",

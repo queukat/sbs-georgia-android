@@ -185,6 +185,7 @@ private fun OnboardingRegistryScenario() {
         ),
         onImportRegistryExtract = {},
         onImportCertificate = {},
+        onRestoreBackup = {},
         onApplyPreview = {},
         onDisplayNameChanged = {},
         onLegalFormChanged = {},
@@ -356,6 +357,8 @@ private fun ImportPreviewScenario() {
             selectedIncomeCount = 1,
             detectedTaxPaymentCount = 0,
             recognizedOutgoingCount = 0,
+            invalidIncludedCount = 0,
+            canImport = true,
         ),
         snackbarHostState = SnackbarHostState(),
         onBack = {},
@@ -375,6 +378,7 @@ private fun ChartsScenario() {
         innerPadding = PaddingValues(),
         uiState = ChartsUiState(
             year = 2026,
+            availableYears = listOf(2026, 2025),
             monthlyIncomePoints = listOf(
                 ChartPoint("Jan", BigDecimal("4200.00")),
                 ChartPoint("Feb", BigDecimal("5800.00")),
@@ -391,6 +395,7 @@ private fun ChartsScenario() {
             peakMonthLabel = "March 2026",
             unresolvedMonthsCount = 0,
         ),
+        onYearSelected = {},
         onBack = {},
     )
 }

@@ -41,13 +41,14 @@ import java.time.LocalDate
 fun ManualEntryRoute(
     innerPadding: PaddingValues,
     entryId: Long?,
+    initialDate: LocalDate?,
     onBack: () -> Unit,
 ) {
     val viewModel: ManualEntryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(entryId) {
-        viewModel.initialize(entryId)
+    LaunchedEffect(entryId, initialDate) {
+        viewModel.initialize(entryId, initialDate)
     }
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->

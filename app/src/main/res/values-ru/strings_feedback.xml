@@ -44,6 +44,8 @@
     <string name="import_statement_error_pick_pdf_first">Сначала выберите и разберите PDF.</string>
     <string name="import_statement_error_invalid_rows">Все включённые строки должны иметь дату операции, положительную сумму, корректный трёхбуквенный код валюты и категорию источника.</string>
     <string name="import_statement_error_import_failed">Импорт завершился ошибкой.</string>
+    <string name="import_statement_invalid_rows_blocking_import">Ещё %1$d включённых строк нужно исправить перед импортом.</string>
+    <string name="import_statement_row_invalid_hint">Для включённой строки нужно указать дату, положительную сумму, корректную валюту и категорию источника.</string>
 
     <string name="onboarding_error_unsupported_document">Неподдерживаемый PDF. В начальной настройке поддерживаются только текстовые выписки из реестра и грузинские сертификаты малого бизнеса.</string>
     <string name="onboarding_error_expected_registry_extract">Этот PDF больше похож на грузинский сертификат малого бизнеса, а не на выписку из реестра.</string>

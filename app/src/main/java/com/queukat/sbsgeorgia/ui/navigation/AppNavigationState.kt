@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberNavBackStack
+import java.time.LocalDate
 import java.time.YearMonth
 
 interface AppNavigator {
@@ -18,7 +19,7 @@ interface AppNavigator {
     fun openSettings()
     fun openCharts()
     fun openMonthDetails(yearMonth: YearMonth)
-    fun openManualEntry(entryId: Long? = null)
+    fun openManualEntry(entryId: Long? = null, initialDate: LocalDate? = null)
     fun openImportStatement()
     fun openPaymentHelper(yearMonth: YearMonth)
     fun openFxOverride(entryId: Long)
@@ -67,8 +68,13 @@ class AppNavigationState internal constructor(
         monthsBackStack.add(MonthDetailDestination(yearMonth = yearMonth.toString()))
     }
 
-    override fun openManualEntry(entryId: Long?) {
-        currentBackStack.add(ManualEntryDestination(entryId = entryId))
+    override fun openManualEntry(entryId: Long?, initialDate: LocalDate?) {
+        currentBackStack.add(
+            ManualEntryDestination(
+                entryId = entryId,
+                initialDate = initialDate?.toString(),
+            ),
+        )
     }
 
     override fun openImportStatement() {

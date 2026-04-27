@@ -16,12 +16,16 @@
     <string name="onboarding_section_continue">Continue</string>
     <string name="onboarding_import_registration_pdf">Import registration PDF</string>
     <string name="onboarding_import_sbs_certificate_pdf">Import SBS certificate PDF</string>
+    <string name="onboarding_restore_backup_json">Restore JSON backup</string>
+    <string name="onboarding_restoring_backup">Restoring backup…</string>
     <string name="onboarding_manual_entry_hint">Manual entry stays available below even if a PDF is unsupported or only partially recognized.</string>
     <string name="onboarding_registry_recognized">Registry extract recognized. Review the preview before applying it.</string>
     <string name="onboarding_certificate_recognized">Small business status certificate recognized. Review the preview before applying it.</string>
     <string name="onboarding_apply_preview">Apply parsed fields</string>
     <string name="onboarding_preview_applied">Preview applied. You can edit every field before continuing.</string>
     <string name="onboarding_completed">Onboarding completed.</string>
+    <string name="onboarding_restore_backup_incomplete">Backup restored, but taxpayer setup is still incomplete. Review the fields below and finish setup.</string>
+    <string name="onboarding_restore_backup_failed">Backup restore failed. Check the selected file and try again.</string>
     <string name="onboarding_detected_document">Detected document</string>
     <string name="onboarding_document_registry_extract">Registry extract</string>
     <string name="onboarding_document_sbs_certificate">Georgian SBS certificate</string>

@@ -45,4 +45,7 @@
     <string name="month_detail_manual_fx_override">Ручное переопределение FX</string>
     <string name="month_detail_edit">Изменить</string>
     <string name="month_detail_delete">Удалить</string>
+    <string name="month_detail_delete_confirm_title">Удалить запись дохода?</string>
+    <string name="month_detail_delete_confirm_body">Эта запись будет убрана из месячных итогов. Отменить действие нельзя.</string>
+    <string name="month_detail_delete_confirm_action">Удалить</string>
 </resources>

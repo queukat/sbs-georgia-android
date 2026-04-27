@@ -2,10 +2,13 @@ package com.queukat.sbsgeorgia.ui.settings.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.queukat.sbsgeorgia.R
@@ -55,6 +58,9 @@ internal fun DocumentImportSection(
                     ),
                 )
             }
+        }
+        if (uiState.isDocumentLoading) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
         uiState.documentInfoMessage?.let {
             Text(it, color = MaterialTheme.colorScheme.primary)

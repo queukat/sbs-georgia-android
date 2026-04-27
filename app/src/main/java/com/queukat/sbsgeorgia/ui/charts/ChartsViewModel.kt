@@ -2,7 +2,7 @@ package com.queukat.sbsgeorgia.ui.charts
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.queukat.sbsgeorgia.domain.usecase.ObserveCurrentYearSnapshotsUseCase
+import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.chartCumulativePoints
 import com.queukat.sbsgeorgia.domain.usecase.chartMonthlyIncomePoints
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
@@ -11,33 +11,52 @@ import java.math.BigDecimal
 import java.time.Clock
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class ChartsViewModel @Inject constructor(
-    observeCurrentYearSnapshotsUseCase: ObserveCurrentYearSnapshotsUseCase,
+    observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
     clock: Clock,
 ) : ViewModel() {
-    private val year = YearMonth.now(clock).year
+    private val initialYear = YearMonth.now(clock).year
+    private val selectedYear = MutableStateFlow(initialYear)
 
-    val uiState = observeCurrentYearSnapshotsUseCase(year)
-        .map { snapshots ->
-            val peakMonth = snapshots.maxByOrNull { it.graph20TotalGel }
+    val uiState = combine(
+        observeAllSnapshotsUseCase(),
+        selectedYear,
+    ) { snapshots, selectedYear ->
+            val availableYears = snapshots
+                .map { it.period.incomeMonth.year }
+                .distinct()
+                .sortedDescending()
+            val effectiveYear = if (selectedYear in availableYears) {
+                selectedYear
+            } else {
+                availableYears.firstOrNull() ?: selectedYear
+            }
+            val yearSnapshots = snapshots.filter { it.period.incomeMonth.year == effectiveYear }
+            val peakMonth = yearSnapshots.maxByOrNull { it.graph20TotalGel }
             ChartsUiState(
-                year = year,
-                snapshots = snapshots,
-                monthlyIncomePoints = chartMonthlyIncomePoints(snapshots),
-                cumulativePoints = chartCumulativePoints(snapshots),
-                ytdIncomeGel = snapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
+                year = effectiveYear,
+                availableYears = availableYears,
+                snapshots = yearSnapshots,
+                monthlyIncomePoints = chartMonthlyIncomePoints(yearSnapshots),
+                cumulativePoints = chartCumulativePoints(yearSnapshots),
+                ytdIncomeGel = yearSnapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
                 peakMonthLabel = peakMonth?.period?.incomeMonth?.formatMonthYear(),
-                unresolvedMonthsCount = snapshots.count { it.unresolvedFxCount > 0 },
+                unresolvedMonthsCount = yearSnapshots.count { it.unresolvedFxCount > 0 },
             )
         }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            ChartsUiState(year = year),
+            ChartsUiState(year = initialYear),
         )
+
+    fun selectYear(year: Int) {
+        selectedYear.value = year
+    }
 }

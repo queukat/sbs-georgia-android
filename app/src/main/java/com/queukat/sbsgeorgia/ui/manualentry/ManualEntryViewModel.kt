@@ -34,7 +34,7 @@ class ManualEntryViewModel @Inject constructor(
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
-    private var initializedEntryId: Long? = Long.MIN_VALUE
+    private var initializedEntryKey: Pair<Long?, LocalDate?>? = null
 
     private val _uiState = MutableStateFlow(
         ManualEntryUiState(
@@ -47,13 +47,14 @@ class ManualEntryViewModel @Inject constructor(
     private val _effects = MutableSharedFlow<ManualEntryEffect>()
     val effects = _effects.asSharedFlow()
 
-    fun initialize(entryId: Long?) {
-        if (initializedEntryId == entryId) return
-        initializedEntryId = entryId
+    fun initialize(entryId: Long?, initialDate: LocalDate?) {
+        val key = entryId to initialDate
+        if (initializedEntryKey == key) return
+        initializedEntryKey = key
         if (entryId == null) {
             _uiState.value = ManualEntryUiState(
                 entryId = null,
-                incomeDate = LocalDate.now(clock),
+                incomeDate = initialDate ?: LocalDate.now(clock),
                 sourceCategory = displaySourceCategory(appContext, SourceCategoryPresets.SOFTWARE_SERVICES),
             )
             return
@@ -125,7 +126,7 @@ class ManualEntryViewModel @Inject constructor(
             upsertManualIncomeEntryUseCase(
                 IncomeEntry(
                     id = current.entryId ?: 0L,
-                    sourceType = IncomeSourceType.MANUAL,
+                    sourceType = existing?.sourceType ?: IncomeSourceType.MANUAL,
                     incomeDate = current.incomeDate,
                     originalAmount = amount,
                     originalCurrency = fxPersistence.normalizedCurrency,

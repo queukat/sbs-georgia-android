@@ -1,15 +1,20 @@
 package com.queukat.sbsgeorgia.data.repository
 
+import androidx.room.withTransaction
 import com.queukat.sbsgeorgia.data.local.IncomeEntryDao
 import com.queukat.sbsgeorgia.data.local.IncomeEntryEntity
+import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
 import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordDao
 import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordEntity
 import com.queukat.sbsgeorgia.data.local.ReminderConfigDao
+import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigDao
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.local.toDomain
 import com.queukat.sbsgeorgia.data.local.toEntity
+import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
@@ -54,7 +59,9 @@ class SettingsRepositoryImpl @Inject constructor(
 
 @Singleton
 class IncomeRepositoryImpl @Inject constructor(
+    private val database: SbsGeorgiaDatabase,
     private val incomeEntryDao: IncomeEntryDao,
+    private val importedTransactionDao: ImportedTransactionDao,
 ) : IncomeRepository {
     override fun observeAll(): Flow<List<IncomeEntry>> =
         incomeEntryDao.observeAll().map { entities -> entities.map(IncomeEntryEntity::toDomain) }
@@ -67,10 +74,36 @@ class IncomeRepositoryImpl @Inject constructor(
 
     override suspend fun getById(id: Long): IncomeEntry? = incomeEntryDao.getById(id)?.toDomain()
 
-    override suspend fun upsert(entry: IncomeEntry): Long = incomeEntryDao.upsert(entry.toEntity())
+    override suspend fun upsert(entry: IncomeEntry): Long = database.withTransaction {
+        val id = incomeEntryDao.upsert(entry.toEntity())
+        if (entry.sourceType == IncomeSourceType.IMPORTED_STATEMENT) {
+            entry.sourceTransactionFingerprint
+                ?.takeIf(String::isNotBlank)
+                ?.let { fingerprint ->
+                    importedTransactionDao.updateFinalInclusionByFingerprint(
+                        transactionFingerprint = fingerprint,
+                        finalInclusion = entry.declarationInclusion,
+                    )
+                }
+        }
+        id
+    }
 
     override suspend fun deleteById(id: Long) {
-        incomeEntryDao.deleteById(id)
+        database.withTransaction {
+            val existing = incomeEntryDao.getById(id) ?: return@withTransaction
+            incomeEntryDao.deleteById(id)
+            if (existing.sourceType == IncomeSourceType.IMPORTED_STATEMENT) {
+                existing.sourceTransactionFingerprint
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { fingerprint ->
+                        importedTransactionDao.updateFinalInclusionByFingerprint(
+                            transactionFingerprint = fingerprint,
+                            finalInclusion = DeclarationInclusion.EXCLUDED,
+                        )
+                    }
+            }
+        }
     }
 }
 

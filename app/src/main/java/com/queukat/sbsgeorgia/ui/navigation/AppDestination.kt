@@ -25,6 +25,7 @@ data class MonthDetailDestination(
 @Serializable
 data class ManualEntryDestination(
     val entryId: Long? = null,
+    val initialDate: String? = null,
 ) : AppDestination
 
 @Serializable

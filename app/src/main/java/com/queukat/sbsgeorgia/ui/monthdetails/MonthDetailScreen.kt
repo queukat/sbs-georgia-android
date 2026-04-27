@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
@@ -22,8 +23,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -112,6 +116,7 @@ fun MonthDetailScreen(
     val graph15Label = stringResource(R.string.snapshot_graph_15_cumulative)
     val paymentTextLabel = stringResource(R.string.month_detail_copy_payment_text)
     val fullTextLabel = stringResource(R.string.month_detail_copy_all_text)
+    var pendingDeleteEntryId by rememberSaveable { mutableStateOf<Long?>(null) }
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
@@ -139,6 +144,28 @@ fun MonthDetailScreen(
             SnackbarHost(hostState = snackbarHostState)
         },
     ) { contentPadding ->
+        pendingDeleteEntryId?.let { entryId ->
+            AlertDialog(
+                onDismissRequest = { pendingDeleteEntryId = null },
+                title = { Text(stringResource(R.string.month_detail_delete_confirm_title)) },
+                text = { Text(stringResource(R.string.month_detail_delete_confirm_body)) },
+                dismissButton = {
+                    TextButton(onClick = { pendingDeleteEntryId = null }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            pendingDeleteEntryId = null
+                            onDeleteEntry(entryId)
+                        },
+                    ) {
+                        Text(stringResource(R.string.month_detail_delete_confirm_action))
+                    }
+                },
+            )
+        }
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -368,7 +395,7 @@ fun MonthDetailScreen(
                         TextButton(onClick = { onEditEntry(entry.id) }) {
                             Text(stringResource(R.string.month_detail_edit))
                         }
-                        TextButton(onClick = { onDeleteEntry(entry.id) }) {
+                        TextButton(onClick = { pendingDeleteEntryId = entry.id }) {
                             Text(stringResource(R.string.month_detail_delete))
                         }
                     }

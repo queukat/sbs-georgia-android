@@ -45,4 +45,7 @@
     <string name="month_detail_manual_fx_override">Manual FX override</string>
     <string name="month_detail_edit">Edit</string>
     <string name="month_detail_delete">Delete</string>
+    <string name="month_detail_delete_confirm_title">Delete income entry?</string>
+    <string name="month_detail_delete_confirm_body">This removes the entry from monthly totals. This cannot be undone.</string>
+    <string name="month_detail_delete_confirm_action">Delete</string>
 </resources>

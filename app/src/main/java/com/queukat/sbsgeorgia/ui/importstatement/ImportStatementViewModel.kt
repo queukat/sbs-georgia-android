@@ -82,6 +82,7 @@ class ImportStatementViewModel @Inject constructor(
                         duplicate = row.duplicate,
                     )
                 }
+                val invalidIncludedCount = rows.invalidIncludedCount()
                 _uiState.value = ImportStatementUiState(
                     sourceFileName = preview.sourceFileName,
                     sourceFingerprint = preview.sourceFingerprint,
@@ -91,6 +92,10 @@ class ImportStatementViewModel @Inject constructor(
                     recognizedOutgoingCount = preview.rows.count {
                         it.paidOut?.amount?.signum() == 1
                     },
+                    invalidIncludedCount = invalidIncludedCount,
+                    canImport = rows.any {
+                        it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
+                    } && invalidIncludedCount == 0,
                     infoMessage = listOfNotNull(
                         result.existingImport?.let(::formatExistingImportMessage),
                         if (preview.skippedLineCount > 0) {
@@ -147,8 +152,7 @@ class ImportStatementViewModel @Inject constructor(
         }
 
         val rows = current.rows
-        val invalidIncludedRow = rows.firstOrNull(ImportStatementRowUiState::isInvalidForIncludedImport)
-        if (invalidIncludedRow != null) {
+        if (current.invalidIncludedCount > 0) {
             _uiState.value = current.copy(
                 errorMessage = appContext.getString(R.string.import_statement_error_invalid_rows),
             )
@@ -236,6 +240,10 @@ class ImportStatementViewModel @Inject constructor(
             selectedIncomeCount = updatedRows.count {
                 it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
             },
+            invalidIncludedCount = updatedRows.invalidIncludedCount(),
+            canImport = updatedRows.any {
+                it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
+            } && updatedRows.invalidIncludedCount() == 0,
             errorMessage = null,
         )
     }

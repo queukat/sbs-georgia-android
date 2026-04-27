@@ -13,13 +13,21 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,7 +59,6 @@ import com.queukat.sbsgeorgia.ui.settings.components.DocumentImportSection
 import com.queukat.sbsgeorgia.ui.settings.components.DocumentPreviewSection
 import com.queukat.sbsgeorgia.ui.settings.components.HelpFeedbackSection
 import com.queukat.sbsgeorgia.ui.settings.components.ReminderSettingsSection
-import com.queukat.sbsgeorgia.ui.settings.components.SaveSettingsSection
 import com.queukat.sbsgeorgia.ui.settings.components.SmallBusinessStatusSection
 import com.queukat.sbsgeorgia.ui.settings.components.TaxpayerSettingsSection
 import java.time.LocalDate
@@ -97,10 +104,11 @@ fun SettingsRoute(
     ) { uri: Uri? ->
         uri?.let { viewModel.exportBackupJson(it.toString()) }
     }
+    var pendingBackupImportUri by rememberSaveable { mutableStateOf<String?>(null) }
     val importBackupJsonLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
-        uri?.let { viewModel.importBackupJson(it.toString()) }
+        pendingBackupImportUri = uri?.toString()
     }
     val importDocumentLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
@@ -167,7 +175,9 @@ fun SettingsRoute(
             exportBackupJsonLauncher.launch("sbs-georgia-backup-${LocalDate.now()}.json")
         },
         onImportBackupJson = {
-            importBackupJsonLauncher.launch(arrayOf("application/json", "text/plain"))
+            importBackupJsonLauncher.launch(
+                arrayOf("application/json", "text/plain", "application/octet-stream"),
+            )
         },
         onRateApp = {
             if (!openPlayStoreListing(context)) {
@@ -185,6 +195,30 @@ fun SettingsRoute(
         },
         onSave = viewModel::save,
     )
+
+    pendingBackupImportUri?.let { uriString ->
+        AlertDialog(
+            onDismissRequest = { pendingBackupImportUri = null },
+            title = { Text(stringResource(R.string.settings_restore_backup_confirm_title)) },
+            text = { Text(stringResource(R.string.settings_restore_backup_confirm_body)) },
+            dismissButton = {
+                TextButton(onClick = { pendingBackupImportUri = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pendingBackupImportUri = null
+                        viewModel.importBackupJson(uriString)
+                    },
+                    enabled = !uiState.isDataOperationInProgress,
+                ) {
+                    Text(stringResource(R.string.settings_restore_backup_confirm_action))
+                }
+            },
+        )
+    }
 }
 
 @Composable
@@ -227,6 +261,8 @@ fun SettingsScreen(
     var testReminderTypeName by rememberSaveable { mutableStateOf(ReminderType.DECLARATION.name) }
     var testReminderDelaySeconds by rememberSaveable { mutableStateOf(5L) }
     val testReminderType = ReminderType.valueOf(testReminderTypeName)
+    val isPrimaryActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress && !uiState.isDocumentLoading
+    val showPrimaryProgress = uiState.isSaving || uiState.isDataOperationInProgress || uiState.isDocumentLoading
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -235,6 +271,42 @@ fun SettingsScreen(
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
+        },
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (showPrimaryProgress) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    uiState.errorMessage?.let {
+                        Text(it, color = MaterialTheme.colorScheme.error)
+                    }
+                    Button(
+                        onClick = onSave,
+                        enabled = isPrimaryActionEnabled,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (uiState.isSaving) {
+                                    R.string.settings_saving
+                                } else {
+                                    R.string.settings_save
+                                },
+                            ),
+                        )
+                    }
+                }
+            }
         },
     ) { contentPadding ->
         if (showHelpFaq) {
@@ -332,12 +404,6 @@ fun SettingsScreen(
                 onViewQuickStart = { showQuickStartGuide = true },
                 onRateApp = onRateApp,
                 onSendFeedback = onSendFeedback,
-            )
-
-            SaveSettingsSection(
-                errorMessage = uiState.errorMessage,
-                isActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
-                onSave = onSave,
             )
         }
     }

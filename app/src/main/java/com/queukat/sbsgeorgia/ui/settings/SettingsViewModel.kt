@@ -18,9 +18,9 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportMonthlySummariesCsvUseCase
-import com.queukat.sbsgeorgia.domain.usecase.ImportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
+import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
 import com.queukat.sbsgeorgia.worker.ReminderScheduler
@@ -46,11 +46,11 @@ class SettingsViewModel @Inject constructor(
     private val exportIncomeEntriesCsvUseCase: ExportIncomeEntriesCsvUseCase,
     private val exportMonthlySummariesCsvUseCase: ExportMonthlySummariesCsvUseCase,
     private val exportBackupJsonUseCase: ExportBackupJsonUseCase,
-    private val importBackupJsonUseCase: ImportBackupJsonUseCase,
     private val textDocumentStore: TextDocumentStore,
     private val observeDashboardSummaryUseCase: ObserveDashboardSummaryUseCase,
     private val reminderPlanner: ReminderPlanner,
     private val reminderScheduler: ReminderScheduler,
+    private val backupRestoreController: BackupRestoreController,
     private val reminderTestScheduler: ReminderTestScheduler,
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
@@ -78,9 +78,6 @@ class SettingsViewModel @Inject constructor(
         exportIncomeEntriesCsvUseCase = exportIncomeEntriesCsvUseCase,
         exportMonthlySummariesCsvUseCase = exportMonthlySummariesCsvUseCase,
         exportBackupJsonUseCase = exportBackupJsonUseCase,
-        importBackupJsonUseCase = importBackupJsonUseCase,
-        settingsRepository = settingsRepository,
-        reminderScheduler = reminderScheduler,
         context = appContext,
     )
 
@@ -263,10 +260,8 @@ class SettingsViewModel @Inject constructor(
 
     fun importBackupJson(uriString: String) {
         runDataOperation {
-            val result = backupActions.importBackupJson(uriString)
-            if (result.shouldReloadSettings) {
-                loadCurrentSettings()
-            }
+            val result = backupRestoreController.restore(uriString)
+            loadCurrentSettings()
             _effects.emit(SettingsEffect.Message(result.message))
         }
     }

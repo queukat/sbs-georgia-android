@@ -31,6 +31,7 @@
     <string name="months_filing_opens_on">Filing opens on %1$s</string>
     <string name="months_empty">No declaration months are available yet.</string>
     <string name="charts_title">Charts %1$d</string>
+    <string name="charts_section_year_selector">Select year</string>
     <string name="charts_section_year_overview">Year overview</string>
     <string name="charts_section_monthly_income">Monthly income in GEL</string>
     <string name="charts_section_yearly_cumulative">Yearly cumulative in GEL</string>
@@ -38,6 +39,7 @@
     <string name="charts_unresolved_months">Months with unresolved FX</string>
     <string name="charts_peak_month">Highest income month</string>
     <string name="charts_peak_month_empty">No income yet</string>
+    <string name="charts_no_income_for_selected_year">No income for the selected year yet.</string>
     <string name="charts_no_monthly_data">No monthly data is available yet.</string>
     <string name="charts_no_cumulative_data">No cumulative data is available yet.</string>
     <string name="charts_monthly_body">Graph 20 totals per declaration month. Unresolved FX months remain visibly lower until rates are resolved.</string>

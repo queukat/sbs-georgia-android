@@ -160,12 +160,13 @@ fun SbsGeorgiaApp() {
                     )
                 }
                 entry<MonthDetailDestination> { destination ->
+                    val yearMonth = YearMonth.parse(destination.yearMonth)
                     MonthDetailRoute(
                         innerPadding = innerPadding,
-                        yearMonth = YearMonth.parse(destination.yearMonth),
+                        yearMonth = yearMonth,
                         onBack = navigationState::pop,
-                        onAddIncome = { navigationState.openManualEntry() },
-                        onEditEntry = { entryId -> navigationState.openManualEntry(entryId) },
+                        onAddIncome = { navigationState.openManualEntry(initialDate = yearMonth.atDay(1)) },
+                        onEditEntry = { entryId -> navigationState.openManualEntry(entryId = entryId) },
                         onOpenPaymentHelper = navigationState::openPaymentHelper,
                         onOpenFxOverride = navigationState::openFxOverride,
                         onOpenWorkflowStatus = navigationState::openWorkflowStatus,
@@ -175,6 +176,7 @@ fun SbsGeorgiaApp() {
                     ManualEntryRoute(
                         innerPadding = innerPadding,
                         entryId = destination.entryId,
+                        initialDate = destination.initialDate?.let(java.time.LocalDate::parse),
                         onBack = navigationState::pop,
                     )
                 }

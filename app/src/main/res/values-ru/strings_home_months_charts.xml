@@ -31,6 +31,7 @@
     <string name="months_filing_opens_on">Подача откроется %1$s</string>
     <string name="months_empty">Пока нет доступных месяцев декларации.</string>
     <string name="charts_title">Графики %1$d</string>
+    <string name="charts_section_year_selector">Выбор года</string>
     <string name="charts_section_year_overview">Обзор года</string>
     <string name="charts_section_monthly_income">Доход по месяцам в GEL</string>
     <string name="charts_section_yearly_cumulative">Накопительный итог года в GEL</string>
@@ -38,6 +39,7 @@
     <string name="charts_unresolved_months">Месяцы с неразрешённым FX</string>
     <string name="charts_peak_month">Месяц с максимальным доходом</string>
     <string name="charts_peak_month_empty">Пока нет доходов</string>
+    <string name="charts_no_income_for_selected_year">За выбранный год пока нет дохода.</string>
     <string name="charts_no_monthly_data">Пока нет месячных данных.</string>
     <string name="charts_no_cumulative_data">Пока нет накопительных данных.</string>
     <string name="charts_monthly_body">Итоги Graph 20 по каждому месяцу декларации. Месяцы с неразрешённым FX остаются визуально ниже, пока курсы не подтверждены.</string>

@@ -1,7 +1,6 @@
 package com.queukat.sbsgeorgia.ui.home
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -24,12 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -211,7 +208,7 @@ private fun DeveloperSupportButton(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center,
         ) {
-            DonutMark(size = 22.dp)
+            DonutMark(size = 24.dp)
         }
     }
 }
@@ -220,57 +217,10 @@ private fun DeveloperSupportButton(
 private fun DonutMark(
     size: Dp,
 ) {
-    val colors = MaterialTheme.colorScheme
-    Canvas(modifier = Modifier.size(size)) {
-        val outerDiameter = this.size.minDimension * 0.82f
-        val outerTopLeft = Offset(
-            x = (this.size.width - outerDiameter) / 2f,
-            y = (this.size.height - outerDiameter) / 2f,
-        )
-        val outerSize = Size(outerDiameter, outerDiameter)
-        val strokeWidth = outerDiameter * 0.34f
-
-        drawArc(
-            color = colors.secondaryContainer,
-            startAngle = 0f,
-            sweepAngle = 360f,
-            useCenter = false,
-            topLeft = outerTopLeft,
-            size = outerSize,
-            style = Stroke(width = strokeWidth),
-        )
-        drawArc(
-            color = colors.primary,
-            startAngle = 195f,
-            sweepAngle = 300f,
-            useCenter = false,
-            topLeft = outerTopLeft,
-            size = outerSize,
-            style = Stroke(width = strokeWidth, cap = StrokeCap.Round),
-        )
-
-        val holeRadius = outerDiameter * 0.16f
-        drawCircle(
-            color = colors.surface,
-            radius = holeRadius,
-            center = center,
-        )
-
-        val sprinkleRadius = outerDiameter * 0.04f
-        drawCircle(
-            color = colors.tertiary,
-            radius = sprinkleRadius,
-            center = center + Offset(-outerDiameter * 0.18f, -outerDiameter * 0.13f),
-        )
-        drawCircle(
-            color = colors.onPrimaryContainer,
-            radius = sprinkleRadius * 0.9f,
-            center = center + Offset(outerDiameter * 0.06f, -outerDiameter * 0.18f),
-        )
-        drawCircle(
-            color = colors.tertiary,
-            radius = sprinkleRadius * 0.95f,
-            center = center + Offset(outerDiameter * 0.15f, outerDiameter * 0.03f),
-        )
-    }
+    Icon(
+        painter = painterResource(R.drawable.ic_donut_outline),
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurface,
+        modifier = Modifier.size(size),
+    )
 }

@@ -1,8 +1,11 @@
 package com.queukat.sbsgeorgia.ui.settings.components
 
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
@@ -54,6 +57,7 @@ internal fun DataManagementSection(
             testTag = "settings-import-backup-button",
         )
         if (uiState.isDataOperationInProgress) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             Text(stringResource(R.string.settings_data_operation_in_progress))
         }
     }

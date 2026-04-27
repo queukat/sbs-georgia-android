@@ -44,6 +44,8 @@
     <string name="import_statement_error_pick_pdf_first">Pick and parse a PDF before importing.</string>
     <string name="import_statement_error_invalid_rows">Included taxable rows must have a transaction date, positive amount, a valid 3-letter currency code, and a source category.</string>
     <string name="import_statement_error_import_failed">Import failed.</string>
+    <string name="import_statement_invalid_rows_blocking_import">%1$d included rows still need required fields before import is available.</string>
+    <string name="import_statement_row_invalid_hint">This included row still needs a date, positive amount, valid currency, and source category.</string>
 
     <string name="onboarding_error_unsupported_document">Unsupported PDF. Only text-based registry extracts and Georgian small business status certificates are supported in onboarding.</string>
     <string name="onboarding_error_expected_registry_extract">This PDF looks like a Georgian small business status certificate, not a registry extract.</string>

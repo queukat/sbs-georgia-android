@@ -11,6 +11,8 @@ data class ImportStatementUiState(
     val selectedIncomeCount: Int = 0,
     val detectedTaxPaymentCount: Int = 0,
     val recognizedOutgoingCount: Int = 0,
+    val invalidIncludedCount: Int = 0,
+    val canImport: Boolean = false,
     val isLoading: Boolean = false,
     val isImporting: Boolean = false,
     val infoMessage: String? = null,
@@ -45,3 +47,6 @@ internal fun ImportStatementRowUiState.isInvalidForIncludedImport(): Boolean =
             !isIsoLikeCurrencyCode(currency) ||
             sourceCategory.isBlank()
         )
+
+internal fun List<ImportStatementRowUiState>.invalidIncludedCount(): Int =
+    count(ImportStatementRowUiState::isInvalidForIncludedImport)

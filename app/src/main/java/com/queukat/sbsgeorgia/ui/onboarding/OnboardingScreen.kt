@@ -12,14 +12,17 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -61,6 +64,13 @@ fun OnboardingRoute(
         }
         pendingImportAction = null
     }
+    val restoreBackupLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument(),
+    ) { uri: Uri? ->
+        if (uri != null) {
+            viewModel.restoreBackup(uri)
+        }
+    }
 
     OnboardingScreen(
         innerPadding = innerPadding,
@@ -72,6 +82,11 @@ fun OnboardingRoute(
         onImportCertificate = {
             pendingImportAction = DocumentImportAction.IMPORT_SMALL_BUSINESS_CERTIFICATE
             pickerLauncher.launch(arrayOf("application/pdf"))
+        },
+        onRestoreBackup = {
+            restoreBackupLauncher.launch(
+                arrayOf("application/json", "text/plain", "application/octet-stream"),
+            )
         },
         onApplyPreview = viewModel::applyPreview,
         onDisplayNameChanged = viewModel::updateDisplayName,
@@ -94,6 +109,7 @@ fun OnboardingScreen(
     uiState: OnboardingUiState,
     onImportRegistryExtract: () -> Unit,
     onImportCertificate: () -> Unit,
+    onRestoreBackup: () -> Unit,
     onApplyPreview: () -> Unit,
     onDisplayNameChanged: (String) -> Unit,
     onLegalFormChanged: (String) -> Unit,
@@ -109,6 +125,43 @@ fun OnboardingScreen(
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
+                tonalElevation = 3.dp,
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    if (uiState.isLoading || uiState.isSaving || uiState.isRestoringBackup) {
+                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                    }
+                    Button(
+                        onClick = onComplete,
+                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("onboarding-complete-button"),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (uiState.isRestoringBackup) {
+                                    R.string.onboarding_restoring_backup
+                                } else if (uiState.isSaving) {
+                                    R.string.workflow_saving
+                                } else {
+                                    R.string.onboarding_continue_to_app
+                                },
+                            ),
+                        )
+                    }
+                }
+            }
+        },
     ) { contentPadding ->
         Column(
             modifier = Modifier
@@ -160,7 +213,7 @@ fun OnboardingScreen(
                 ) {
                     Button(
                         onClick = onImportRegistryExtract,
-                        enabled = !uiState.isLoading && !uiState.isSaving,
+                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
                         modifier = Modifier.testTag("onboarding-import-registry-button"),
                     ) {
                         Text(
@@ -175,7 +228,7 @@ fun OnboardingScreen(
                     }
                     Button(
                         onClick = onImportCertificate,
-                        enabled = !uiState.isLoading && !uiState.isSaving,
+                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
                         modifier = Modifier.testTag("onboarding-import-certificate-button"),
                     ) {
                         Text(
@@ -188,6 +241,24 @@ fun OnboardingScreen(
                             ),
                         )
                     }
+                    OutlinedButton(
+                        onClick = onRestoreBackup,
+                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier = Modifier.testTag("onboarding-restore-backup-button"),
+                    ) {
+                        Text(
+                            stringResource(
+                                if (uiState.isRestoringBackup) {
+                                    R.string.onboarding_restoring_backup
+                                } else {
+                                    R.string.onboarding_restore_backup_json
+                                },
+                            ),
+                        )
+                    }
+                }
+                if (uiState.isLoading || uiState.isRestoringBackup) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                 }
                 Text(stringResource(R.string.onboarding_manual_entry_hint))
                 uiState.infoMessage?.let {
@@ -225,7 +296,7 @@ fun OnboardingScreen(
                     }
                     Button(
                         onClick = onApplyPreview,
-                        enabled = !uiState.isSaving,
+                        enabled = !uiState.isSaving && !uiState.isRestoringBackup,
                         modifier = Modifier.testTag("onboarding-apply-preview-button"),
                     ) {
                         Text(stringResource(R.string.onboarding_apply_preview))
@@ -306,25 +377,6 @@ fun OnboardingScreen(
                 )
             }
 
-            AppSection(title = stringResource(R.string.onboarding_section_continue)) {
-                Button(
-                    onClick = onComplete,
-                    enabled = !uiState.isSaving,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("onboarding-complete-button"),
-                ) {
-                    Text(
-                        stringResource(
-                            if (uiState.isSaving) {
-                                R.string.workflow_saving
-                            } else {
-                                R.string.onboarding_continue_to_app
-                            },
-                        ),
-                    )
-                }
-            }
         }
     }
 }

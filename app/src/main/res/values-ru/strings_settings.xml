@@ -49,6 +49,9 @@
     <string name="settings_export_backup_json_body">Создаёт полный восстанавливаемый backup локального состояния приложения, включая настройки налогоплательщика, записи, декларации, кэш FX и метаданные импортированных выписок.</string>
     <string name="settings_import_backup_json">Импорт JSON-резервной копии</string>
     <string name="settings_import_backup_json_body">Восстанавливает ранее экспортированный полный backup приложения при переносе на новое устройство или после переустановки. Это заменяет текущие локальные данные.</string>
+    <string name="settings_restore_backup_confirm_title">Восстановить backup?</string>
+    <string name="settings_restore_backup_confirm_body">Это заменит все текущие локальные данные приложения выбранным backup-файлом.</string>
+    <string name="settings_restore_backup_confirm_action">Восстановить</string>
     <string name="settings_help_feedback_body">Используйте эти действия, когда нужно быстро освежить основные сценарии, оценить приложение или сообщить о проблеме.</string>
     <string name="settings_open_help_faq">Открыть помощь и FAQ</string>
     <string name="settings_open_help_faq_body">Короткие практические ответы про учёт доходов, FX, месячные декларации, напоминания, backup/export и обратную связь.</string>
@@ -60,4 +63,5 @@
     <string name="settings_send_feedback_body">Открывает публичную форму в браузере для отзывов и сообщений о проблемах с предзаполненной версией приложения и данными устройства. Всё, что вы напишете, может быть видно другим, поэтому не добавляйте налоговые ID, PDF и backup/export-файлы.</string>
     <string name="settings_data_operation_in_progress">Идёт работа с локальной резервной копией и экспортом…</string>
     <string name="settings_save">Сохранить настройки</string>
+    <string name="settings_saving">Сохранение…</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
@@ -200,6 +201,18 @@ interface ImportedTransactionDao {
         """,
     )
     suspend fun existsByFingerprint(transactionFingerprint: String): Boolean
+
+    @Query(
+        """
+        UPDATE imported_transaction
+        SET finalInclusion = :finalInclusion
+        WHERE transactionFingerprint = :transactionFingerprint
+        """,
+    )
+    suspend fun updateFinalInclusionByFingerprint(
+        transactionFingerprint: String,
+        finalInclusion: DeclarationInclusion,
+    ): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertAll(entities: List<ImportedTransactionEntity>): List<Long>

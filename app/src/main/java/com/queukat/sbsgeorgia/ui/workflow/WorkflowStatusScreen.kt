@@ -158,8 +158,9 @@ fun WorkflowStatusScreen(
                 HorizontalDivider()
                 DatePickerField(
                     label = stringResource(R.string.workflow_declaration_filed_date),
-                    value = uiState.declarationFiledDate ?: java.time.LocalDate.now(),
+                    value = uiState.declarationFiledDate,
                     onValueChange = onDeclarationFiledDateChanged,
+                    placeholderText = stringResource(R.string.common_select_date),
                 )
                 if (uiState.declarationFiledDate != null) {
                     TextButton(onClick = onClearDeclarationFiledDate) {
@@ -168,8 +169,9 @@ fun WorkflowStatusScreen(
                 }
                 DatePickerField(
                     label = stringResource(R.string.workflow_payment_sent_date),
-                    value = uiState.paymentSentDate ?: java.time.LocalDate.now(),
+                    value = uiState.paymentSentDate,
                     onValueChange = onPaymentSentDateChanged,
+                    placeholderText = stringResource(R.string.common_select_date),
                 )
                 if (uiState.paymentSentDate != null) {
                     TextButton(onClick = onClearPaymentSentDate) {
@@ -178,8 +180,9 @@ fun WorkflowStatusScreen(
                 }
                 DatePickerField(
                     label = stringResource(R.string.workflow_payment_credited_date),
-                    value = uiState.paymentCreditedDate ?: java.time.LocalDate.now(),
+                    value = uiState.paymentCreditedDate,
                     onValueChange = onPaymentCreditedDateChanged,
+                    placeholderText = stringResource(R.string.common_select_date),
                 )
                 if (uiState.paymentCreditedDate != null) {
                     TextButton(onClick = onClearPaymentCreditedDate) {

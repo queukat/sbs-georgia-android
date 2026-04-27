@@ -10,6 +10,7 @@ import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.CompleteOnboardingUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
+import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.DateInputParser
 import com.queukat.sbsgeorgia.ui.common.DateParseResult
 import com.queukat.sbsgeorgia.ui.common.dateOrNull
@@ -35,6 +36,7 @@ class OnboardingViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
+    private val backupRestoreController: BackupRestoreController,
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock,
 ) : ViewModel() {
@@ -72,6 +74,37 @@ class OnboardingViewModel @Inject constructor(
                         errorMessage = result.errorMessage,
                     )
                 }
+            }
+        }
+    }
+
+    fun restoreBackup(uri: Uri) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isRestoringBackup = true,
+                errorMessage = null,
+                infoMessage = null,
+                preview = null,
+            )
+            runCatching {
+                backupRestoreController.restore(uri.toString())
+            }.onSuccess { result ->
+                loadExistingValues(
+                    infoMessage = buildString {
+                        append(result.message)
+                        if (!result.setupComplete) {
+                            append('\n')
+                            append(appContext.getString(R.string.onboarding_restore_backup_incomplete))
+                        }
+                    },
+                    errorMessage = null,
+                    isRestoringBackup = false,
+                )
+            }.onFailure {
+                _uiState.value = _uiState.value.copy(
+                    isRestoringBackup = false,
+                    errorMessage = appContext.getString(R.string.onboarding_restore_backup_failed),
+                )
             }
         }
     }
@@ -191,10 +224,15 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private suspend fun loadExistingValues() {
+    private suspend fun loadExistingValues(
+        infoMessage: String? = _uiState.value.infoMessage,
+        errorMessage: String? = _uiState.value.errorMessage,
+        isRestoringBackup: Boolean = _uiState.value.isRestoringBackup,
+    ) {
         val profile = settingsRepository.observeTaxpayerProfile().first()
         val config = settingsRepository.observeStatusConfig().first()
         _uiState.value = _uiState.value.copy(
+            preview = null,
             displayName = profile?.displayName.orEmpty(),
             legalForm = profile?.legalForm.orEmpty(),
             registrationId = profile?.registrationId.orEmpty(),
@@ -205,6 +243,9 @@ class OnboardingViewModel @Inject constructor(
             certificateIssuedDate = config?.certificateIssuedDate?.toString().orEmpty(),
             effectiveDate = config?.effectiveDate ?: LocalDate.now(clock),
             taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
+            infoMessage = infoMessage,
+            errorMessage = errorMessage,
+            isRestoringBackup = isRestoringBackup,
         )
     }
 }
