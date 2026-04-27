@@ -60,12 +60,3 @@ Common commands:
 ```
 
 `internal` is the default track in the build, so `--track internal` is optional. `--track closed` overrides it for closed testing.
-
-## Commit policy
-
-This repository expects commits to use the project identity:
-
-- Name: `queukat`
-- Email: `75810528+queukat@users.noreply.github.com`
-
-And each commit must include a matching `Signed-off-by` trailer.
