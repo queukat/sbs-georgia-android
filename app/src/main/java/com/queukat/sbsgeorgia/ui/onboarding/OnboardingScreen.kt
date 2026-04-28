@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
@@ -26,10 +27,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -55,6 +58,7 @@ fun OnboardingRoute(
     val viewModel: OnboardingViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var pendingImportAction by remember { mutableStateOf<DocumentImportAction?>(null) }
+    var pendingRestoreBackupUri by rememberSaveable { mutableStateOf<String?>(null) }
     val pickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
@@ -68,7 +72,11 @@ fun OnboardingRoute(
         contract = ActivityResultContracts.OpenDocument(),
     ) { uri: Uri? ->
         if (uri != null) {
-            viewModel.restoreBackup(uri)
+            if (uiState.hasExistingSetupData) {
+                pendingRestoreBackupUri = uri.toString()
+            } else {
+                viewModel.restoreBackup(uri)
+            }
         }
     }
 
@@ -101,6 +109,30 @@ fun OnboardingRoute(
         onTaxRatePercentChanged = viewModel::updateTaxRatePercent,
         onComplete = viewModel::completeOnboarding,
     )
+
+    pendingRestoreBackupUri?.let { uriString ->
+        AlertDialog(
+            onDismissRequest = { pendingRestoreBackupUri = null },
+            title = { Text(stringResource(R.string.onboarding_restore_backup_confirm_title)) },
+            text = { Text(stringResource(R.string.onboarding_restore_backup_confirm_body)) },
+            dismissButton = {
+                TextButton(onClick = { pendingRestoreBackupUri = null }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pendingRestoreBackupUri = null
+                        viewModel.restoreBackup(Uri.parse(uriString))
+                    },
+                    enabled = !uiState.isRestoringBackup && !uiState.isLoading && !uiState.isSaving,
+                ) {
+                    Text(stringResource(R.string.onboarding_restore_backup_confirm_action))
+                }
+            },
+        )
+    }
 }
 
 @Composable

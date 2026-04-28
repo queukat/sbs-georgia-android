@@ -14,7 +14,6 @@ import com.queukat.sbsgeorgia.data.local.toDomain
 import com.queukat.sbsgeorgia.data.local.toEntity
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
-import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
@@ -76,16 +75,14 @@ class IncomeRepositoryImpl @Inject constructor(
 
     override suspend fun upsert(entry: IncomeEntry): Long = database.withTransaction {
         val id = incomeEntryDao.upsert(entry.toEntity())
-        if (entry.sourceType == IncomeSourceType.IMPORTED_STATEMENT) {
-            entry.sourceTransactionFingerprint
-                ?.takeIf(String::isNotBlank)
-                ?.let { fingerprint ->
-                    importedTransactionDao.updateFinalInclusionByFingerprint(
-                        transactionFingerprint = fingerprint,
-                        finalInclusion = entry.declarationInclusion,
-                    )
-                }
-        }
+        entry.sourceTransactionFingerprint
+            ?.takeIf(String::isNotBlank)
+            ?.let { fingerprint ->
+                importedTransactionDao.updateFinalInclusionByFingerprint(
+                    transactionFingerprint = fingerprint,
+                    finalInclusion = entry.declarationInclusion,
+                )
+            }
         id
     }
 
@@ -93,16 +90,14 @@ class IncomeRepositoryImpl @Inject constructor(
         database.withTransaction {
             val existing = incomeEntryDao.getById(id) ?: return@withTransaction
             incomeEntryDao.deleteById(id)
-            if (existing.sourceType == IncomeSourceType.IMPORTED_STATEMENT) {
-                existing.sourceTransactionFingerprint
-                    ?.takeIf(String::isNotBlank)
-                    ?.let { fingerprint ->
-                        importedTransactionDao.updateFinalInclusionByFingerprint(
-                            transactionFingerprint = fingerprint,
-                            finalInclusion = DeclarationInclusion.EXCLUDED,
-                        )
-                    }
-            }
+            existing.sourceTransactionFingerprint
+                ?.takeIf(String::isNotBlank)
+                ?.let { fingerprint ->
+                    importedTransactionDao.updateFinalInclusionByFingerprint(
+                        transactionFingerprint = fingerprint,
+                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                    )
+                }
         }
     }
 }

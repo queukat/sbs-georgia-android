@@ -5,6 +5,7 @@ import java.time.LocalDate
 
 data class OnboardingUiState(
     val preview: OnboardingImportPreview? = null,
+    val hasExistingSetupData: Boolean = false,
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val isRestoringBackup: Boolean = false,

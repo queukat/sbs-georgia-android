@@ -18,6 +18,9 @@
     <string name="onboarding_import_sbs_certificate_pdf">Импорт PDF сертификата SBS</string>
     <string name="onboarding_restore_backup_json">Восстановить JSON backup</string>
     <string name="onboarding_restoring_backup">Восстановление backup…</string>
+    <string name="onboarding_restore_backup_confirm_title">Восстановить backup?</string>
+    <string name="onboarding_restore_backup_confirm_body">Это заменит текущие локальные данные приложения выбранным backup-файлом и отбросит настройку, уже введённую на этом устройстве.</string>
+    <string name="onboarding_restore_backup_confirm_action">Восстановить</string>
     <string name="onboarding_manual_entry_hint">Ручной ввод доступен ниже, даже если PDF не поддерживается или распознан лишь частично.</string>
     <string name="onboarding_registry_recognized">Распознана выписка из реестра. Проверьте предпросмотр перед применением.</string>
     <string name="onboarding_certificate_recognized">Распознан сертификат малого бизнеса. Проверьте предпросмотр перед применением.</string>

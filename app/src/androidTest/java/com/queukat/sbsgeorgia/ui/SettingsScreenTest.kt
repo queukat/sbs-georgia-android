@@ -73,7 +73,7 @@ class SettingsScreenTest {
         composeRule.onNodeWithTag("settings-display-name-field").performTextInput("Jane Doe")
         composeRule.onNodeWithTag("settings-tax-rate-field").performTextClearance()
         composeRule.onNodeWithTag("settings-tax-rate-field").performTextInput("1.0")
-        composeRule.onNodeWithTag("settings-save-button").performScrollTo().performClick()
+        composeRule.onNodeWithTag("settings-save-button").performClick()
 
         assertTrue(saveClicked)
         composeRule.onNodeWithTag("settings-display-name-field").assertTextContains("Jane Doe")

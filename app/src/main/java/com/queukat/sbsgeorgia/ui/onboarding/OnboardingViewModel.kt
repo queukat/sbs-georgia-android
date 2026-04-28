@@ -233,6 +233,7 @@ class OnboardingViewModel @Inject constructor(
         val config = settingsRepository.observeStatusConfig().first()
         _uiState.value = _uiState.value.copy(
             preview = null,
+            hasExistingSetupData = profile != null || config != null,
             displayName = profile?.displayName.orEmpty(),
             legalForm = profile?.legalForm.orEmpty(),
             registrationId = profile?.registrationId.orEmpty(),

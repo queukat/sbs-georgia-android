@@ -39,6 +39,7 @@ class AppBackupManagerTest {
         ignoreUnknownKeys = true
         isLenient = true
     }
+    private val backupValidator = BackupValidator(json = json)
     private val fixedClock: Clock = Clock.fixed(Instant.parse("2026-04-02T10:00:00Z"), ZoneOffset.UTC)
 
     @Test
@@ -197,6 +198,7 @@ class AppBackupManagerTest {
         importedStatementDao = database.importedStatementDao(),
         importedTransactionDao = database.importedTransactionDao(),
         json = json,
+        backupValidator = backupValidator,
         clock = fixedClock,
         ioDispatcher = Dispatchers.IO,
     )

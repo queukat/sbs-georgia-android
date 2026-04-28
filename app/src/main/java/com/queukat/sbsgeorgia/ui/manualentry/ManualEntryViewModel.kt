@@ -126,7 +126,7 @@ class ManualEntryViewModel @Inject constructor(
             upsertManualIncomeEntryUseCase(
                 IncomeEntry(
                     id = current.entryId ?: 0L,
-                    sourceType = existing?.sourceType ?: IncomeSourceType.MANUAL,
+                    sourceType = resolvedManualEntrySourceType(existing),
                     incomeDate = current.incomeDate,
                     originalAmount = amount,
                     originalCurrency = fxPersistence.normalizedCurrency,
@@ -151,6 +151,13 @@ class ManualEntryViewModel @Inject constructor(
         }
     }
 }
+
+internal fun resolvedManualEntrySourceType(existing: IncomeEntry?): IncomeSourceType =
+    if (!existing?.sourceTransactionFingerprint.isNullOrBlank()) {
+        IncomeSourceType.IMPORTED_STATEMENT
+    } else {
+        existing?.sourceType ?: IncomeSourceType.MANUAL
+    }
 
 internal data class ManualEntryFxPersistence(
     val normalizedCurrency: String,

@@ -13,6 +13,18 @@ import org.junit.Test
 
 class ManualEntryViewModelTest {
     @Test
+    fun resolvedManualEntrySourceTypeRepairsLegacyManualImportedEntry() {
+        val result = resolvedManualEntrySourceType(
+            existingEntry().copy(
+                sourceType = IncomeSourceType.MANUAL,
+                sourceTransactionFingerprint = "tx-fingerprint",
+            ),
+        )
+
+        assertEquals(IncomeSourceType.IMPORTED_STATEMENT, result)
+    }
+
+    @Test
     fun resolveManualEntryFxPersistenceClearsStaleFxWhenAmountChanges() {
         val result = resolveManualEntryFxPersistence(
             currency = " usd ",
@@ -73,6 +85,7 @@ class ManualEntryViewModelTest {
         gelEquivalent = BigDecimal("270.00"),
         rateSource = FxRateSource.MANUAL_OVERRIDE,
         manualFxOverride = true,
+        sourceTransactionFingerprint = null,
         createdAtEpochMillis = 1L,
         updatedAtEpochMillis = 2L,
     )
