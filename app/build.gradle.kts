@@ -5,10 +5,8 @@ import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.androidx.baselineprofile)
     alias(libs.plugins.androidx.room)
     alias(libs.plugins.hilt.android)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
@@ -36,8 +34,8 @@ android {
         applicationId = "com.queukat.sbsgeorgia"
         minSdk = 24
         targetSdk = 36
-        versionCode = 9
-        versionName = "1.0.8"
+        versionCode = 10
+        versionName = "1.0.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -104,10 +102,6 @@ play {
         ?.let { serviceAccountCredentials.set(file(it)) }
 }
 
-baselineProfile {
-    dexLayoutOptimization = true
-}
-
 kotlin {
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
@@ -165,7 +159,6 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    baselineProfile(project(":baselineprofile"))
 }
 
 private fun requiresOfficialReleaseSigning(taskName: String): Boolean {

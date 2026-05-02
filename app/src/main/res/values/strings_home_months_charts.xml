@@ -14,6 +14,10 @@
     <string name="home_next_reminder">Next reminder</string>
     <string name="home_next_reminder_day">Declaration reminder day %1$d</string>
     <string name="home_no_due_period">No due period is available yet for the current date.</string>
+    <string name="home_due_period_quick_access">Declaration quick access</string>
+    <string name="home_open_due_month">Open this month</string>
+    <string name="home_share_to_telegram">Send to Telegram</string>
+    <string name="home_share_declaration_values_title">Share declaration values</string>
     <string name="home_setup_required_body">Complete the taxpayer profile and status settings before treating monthly totals as filing-ready.</string>
     <string name="home_open_settings">Open settings</string>
     <string name="home_add_income">Add income</string>

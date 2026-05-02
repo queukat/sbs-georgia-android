@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.queukat.sbsgeorgia.domain.model.DashboardSummary
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
@@ -22,6 +23,10 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
+import com.queukat.sbsgeorgia.ui.home.HomeDuePeriodQuickAccess
+import com.queukat.sbsgeorgia.ui.home.HomeScreen
+import com.queukat.sbsgeorgia.ui.home.HomeUiState
 import com.queukat.sbsgeorgia.ui.monthdetails.MonthDetailScreen
 import com.queukat.sbsgeorgia.ui.monthdetails.MonthDetailUiState
 import com.queukat.sbsgeorgia.ui.months.MonthsMonthItemUiState
@@ -100,6 +105,94 @@ class MonthsFlowTest {
         }
 
         composeRule.onNodeWithText("Open month").performClick()
+
+        composeRule.onNodeWithText("Declaration summary").assertIsDisplayed()
+        composeRule.onNodeWithText("March 2026").assertIsDisplayed()
+    }
+
+    @Test
+    fun homeDuePeriodQuickAccessNavigatesToMonthDetails() {
+        val snapshot = sampleSnapshot(unresolvedFxCount = 0)
+        val summary = DashboardSummary(
+            taxpayerName = "Demo taxpayer",
+            registrationId = "306449082",
+            setupComplete = true,
+            ytdIncomeGel = BigDecimal("350.00"),
+            unresolvedFxCount = 0,
+            unsettledMonthsCount = 1,
+            paidTaxAmountGel = BigDecimal.ZERO,
+            paymentMismatchMonthsCount = 0,
+            currentDuePeriod = snapshot,
+            nextReminderDay = null,
+        )
+        var selectedMonth: YearMonth? by mutableStateOf(null)
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                if (selectedMonth == null) {
+                    HomeScreen(
+                        innerPadding = PaddingValues(),
+                        uiState = HomeUiState(
+                            summary = summary,
+                            duePeriodQuickAccess = HomeDuePeriodQuickAccess(
+                                snapshot = snapshot,
+                                copyBundle = buildDeclarationCopyBundle(
+                                    snapshot = snapshot,
+                                    registrationId = summary.registrationId,
+                                    yearMonth = snapshot.period.incomeMonth,
+                                ),
+                                canCopyDeclarationValues = true,
+                                canQuickSettleMonth = true,
+                                monthAlreadySettled = false,
+                                filingOpensOn = null,
+                            ),
+                        ),
+                        onOpenMonths = {},
+                        onOpenDueMonth = { selectedMonth = it },
+                        onOpenCharts = {},
+                        onAddIncome = {},
+                        onImportStatement = {},
+                        onOpenSettings = {},
+                        onSettleCurrentDuePeriod = {},
+                    )
+                } else {
+                    MonthDetailScreen(
+                        innerPadding = PaddingValues(),
+                        uiState = MonthDetailUiState(
+                            yearMonth = selectedMonth,
+                            snapshot = snapshot,
+                            entries = emptyList(),
+                        ),
+                        snackbarHostState = androidx.compose.material3.SnackbarHostState(),
+                        onBack = { selectedMonth = null },
+                        onAddIncome = {},
+                        onEditEntry = {},
+                        onOpenPaymentHelper = {},
+                        onOpenFxOverride = {},
+                        onOpenWorkflowStatus = {},
+                        onDeleteEntry = {},
+                        onResolveOfficialRates = {},
+                        onToggleZeroPrepared = {},
+                    )
+                }
+            }
+        }
+
+        composeRule.onNodeWithTag("home-copy-graph-20-button")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("home-copy-payment-text-button")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("home-copy-all-text-button")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("home-share-telegram-button")
+            .performScrollTo()
+            .assertIsDisplayed()
+        composeRule.onNodeWithTag("home-open-due-month-button")
+            .performScrollTo()
+            .performClick()
 
         composeRule.onNodeWithText("Declaration summary").assertIsDisplayed()
         composeRule.onNodeWithText("March 2026").assertIsDisplayed()

@@ -24,4 +24,3 @@ dependencyResolutionManagement {
 
 rootProject.name = "sbs-georgia-android"
 include(":app")
-include(":baselineprofile")

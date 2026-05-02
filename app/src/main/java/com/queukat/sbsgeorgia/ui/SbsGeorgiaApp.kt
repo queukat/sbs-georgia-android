@@ -139,6 +139,7 @@ fun SbsGeorgiaApp() {
                     HomeRoute(
                         innerPadding = innerPadding,
                         onOpenMonths = navigationState::openMonths,
+                        onOpenDueMonth = navigationState::openMonthDetails,
                         onOpenCharts = navigationState::openCharts,
                         onAddIncome = { navigationState.openManualEntry() },
                         onImportStatement = navigationState::openImportStatement,

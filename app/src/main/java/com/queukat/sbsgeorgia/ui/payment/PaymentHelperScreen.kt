@@ -2,9 +2,6 @@
 
 package com.queukat.sbsgeorgia.ui.payment
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,6 +32,7 @@ import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
+import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
 import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
 import java.time.YearMonth
@@ -78,7 +76,7 @@ fun PaymentHelperScreen(
     val taxAmountCopiedMessage = stringResource(R.string.common_copied_template, taxAmountLabel)
 
     fun copy(label: String, value: String, copiedMessage: String) {
-        context.copyToClipboard(label, value)
+        context.copyPlainTextToClipboard(label, value)
         if (value.isNotBlank()) {
             coroutineScope.launch {
                 snackbarHostState.showSnackbar(copiedMessage)
@@ -178,9 +176,4 @@ fun PaymentHelperScreen(
             }
         }
     }
-}
-
-private fun Context.copyToClipboard(label: String, value: String) {
-    val clipboardManager = getSystemService(ClipboardManager::class.java)
-    clipboardManager?.setPrimaryClip(ClipData.newPlainText(label, value))
 }

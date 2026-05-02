@@ -2,9 +2,6 @@
 
 package com.queukat.sbsgeorgia.ui.monthdetails
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -42,6 +39,7 @@ import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
+import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
 import com.queukat.sbsgeorgia.ui.common.fxRateSourceLabel
 import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
@@ -120,7 +118,7 @@ fun MonthDetailScreen(
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
-        context.copyToClipboard(label, value)
+        context.copyPlainTextToClipboard(label, value)
         coroutineScope.launch {
             snackbarHostState.showSnackbar(copiedTemplate.replace("%1\$s", label))
         }
@@ -403,9 +401,4 @@ fun MonthDetailScreen(
             }
         }
     }
-}
-
-private fun Context.copyToClipboard(label: String, value: String) {
-    val clipboardManager = getSystemService(ClipboardManager::class.java)
-    clipboardManager?.setPrimaryClip(ClipData.newPlainText(label, value))
 }

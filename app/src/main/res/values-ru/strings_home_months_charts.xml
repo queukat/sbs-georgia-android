@@ -14,6 +14,10 @@
     <string name="home_next_reminder">Следующее напоминание</string>
     <string name="home_next_reminder_day">День напоминания о декларации: %1$d</string>
     <string name="home_no_due_period">Для текущей даты пока нет доступного отчётного периода.</string>
+    <string name="home_due_period_quick_access">Быстрый доступ к декларации</string>
+    <string name="home_open_due_month">Открыть этот месяц</string>
+    <string name="home_share_to_telegram">Отправить в Telegram</string>
+    <string name="home_share_declaration_values_title">Поделиться значениями декларации</string>
     <string name="home_setup_required_body">Заполните профиль налогоплательщика и настройки статуса, прежде чем считать месячные итоги готовыми к подаче.</string>
     <string name="home_open_settings">Открыть настройки</string>
     <string name="home_add_income">Добавить доход</string>

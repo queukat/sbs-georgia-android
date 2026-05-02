@@ -49,6 +49,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ChartPoint
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
 import com.queukat.sbsgeorgia.ui.charts.ChartsScreen
 import com.queukat.sbsgeorgia.ui.charts.ChartsUiState
+import com.queukat.sbsgeorgia.ui.home.HomeDuePeriodQuickAccess
 import com.queukat.sbsgeorgia.ui.home.HomeScreen
 import com.queukat.sbsgeorgia.ui.home.HomeUiState
 import com.queukat.sbsgeorgia.ui.importstatement.ImportStatementRowUiState
@@ -206,12 +207,14 @@ private fun HomeDashboardScenario() {
     TopLevelScreenshotFrame(selectedIndex = 0) { innerPadding ->
         HomeScreen(
             innerPadding = innerPadding,
-            uiState = HomeUiState(summary = sampleDashboardSummary()),
+            uiState = sampleHomeUiState(),
             onOpenMonths = {},
+            onOpenDueMonth = {},
             onOpenCharts = {},
             onAddIncome = {},
             onImportStatement = {},
             onOpenSettings = {},
+            onSettleCurrentDuePeriod = {},
         )
     }
 }
@@ -455,6 +458,26 @@ private fun sampleDashboardSummary(): DashboardSummary {
         paymentMismatchMonthsCount = 0,
         currentDuePeriod = currentDuePeriod,
         nextReminderDay = 13,
+    )
+}
+
+private fun sampleHomeUiState(): HomeUiState {
+    val summary = sampleDashboardSummary()
+    val duePeriod = summary.currentDuePeriod ?: return HomeUiState(summary = summary)
+    return HomeUiState(
+        summary = summary,
+        duePeriodQuickAccess = HomeDuePeriodQuickAccess(
+            snapshot = duePeriod,
+            copyBundle = buildDeclarationCopyBundle(
+                snapshot = duePeriod,
+                registrationId = summary.registrationId,
+                yearMonth = duePeriod.period.incomeMonth,
+            ),
+            canCopyDeclarationValues = true,
+            canQuickSettleMonth = true,
+            monthAlreadySettled = false,
+            filingOpensOn = null,
+        ),
     )
 }
 
