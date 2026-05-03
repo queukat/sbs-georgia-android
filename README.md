@@ -2,6 +2,13 @@
 
 Offline-first Android app for Georgian individual entrepreneurs with small business status.
 
+<div align="center">
+  <p><strong>Install SBS Georgia from Google Play</strong></p>
+  <a href="https://play.google.com/store/apps/details?id=com.queukat.sbsgeorgia">
+    <img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" width="220">
+  </a>
+</div>
+
 The app is focused on replacing manual spreadsheets for:
 
 - monthly income tracking
