@@ -38,12 +38,7 @@ import com.queukat.sbsgeorgia.ui.common.sourceCategoryLabel
 import java.time.LocalDate
 
 @Composable
-fun ManualEntryRoute(
-    innerPadding: PaddingValues,
-    entryId: Long?,
-    initialDate: LocalDate?,
-    onBack: () -> Unit,
-) {
+fun ManualEntryRoute(innerPadding: PaddingValues, entryId: Long?, initialDate: LocalDate?, onBack: () -> Unit) {
     val viewModel: ManualEntryViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -68,7 +63,7 @@ fun ManualEntryRoute(
         onCategoryChanged = viewModel::updateCategory,
         onNoteChanged = viewModel::updateNote,
         onIncludedChanged = viewModel::updateIncluded,
-        onSave = viewModel::save,
+        onSave = viewModel::save
     )
 }
 
@@ -83,25 +78,27 @@ fun ManualEntryScreen(
     onCategoryChanged: (String) -> Unit,
     onNoteChanged: (String) -> Unit,
     onIncludedChanged: (Boolean) -> Unit,
-    onSave: () -> Unit,
+    onSave: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SbsTopAppBar(
-                title = stringResource(
+                title =
+                stringResource(
                     if (uiState.entryId == null) {
                         R.string.manual_entry_title_new
                     } else {
                         R.string.manual_entry_title_edit
-                    },
+                    }
                 ),
-                onBack = onBack,
+                onBack = onBack
             )
-        },
+        }
     ) { contentPadding ->
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -109,29 +106,29 @@ fun ManualEntryScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.manual_entry_section_entry)) {
                 DatePickerField(
                     label = stringResource(R.string.manual_entry_income_date),
                     value = uiState.incomeDate,
                     onValueChange = onDateChanged,
-                    testTag = "manual-entry-date-field",
+                    testTag = "manual-entry-date-field"
                 )
                 DecimalField(
                     label = stringResource(R.string.manual_entry_amount),
                     value = uiState.amount,
                     onValueChange = onAmountChanged,
-                    testTag = "manual-entry-amount-field",
+                    testTag = "manual-entry-amount-field"
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("GEL", "USD", "EUR").forEach { currency ->
                         FilterChip(
                             selected = uiState.currency == currency,
                             onClick = { onCurrencyChanged(currency) },
-                            label = { Text(currency) },
+                            label = { Text(currency) }
                         )
                     }
                 }
@@ -139,17 +136,20 @@ fun ManualEntryScreen(
                     value = uiState.sourceCategory,
                     onValueChange = onCategoryChanged,
                     label = { Text(stringResource(R.string.manual_entry_source_category)) },
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
-                        .testTag("manual-entry-category-field"),
+                        .testTag("manual-entry-category-field")
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SourceCategoryPresets.manualSuggestions.forEach { suggestion ->
                         val suggestionLabel = sourceCategoryLabel(suggestion)
                         FilterChip(
-                            selected = uiState.sourceCategory == suggestion || uiState.sourceCategory == suggestionLabel,
+                            selected =
+                            uiState.sourceCategory == suggestion ||
+                                uiState.sourceCategory == suggestionLabel,
                             onClick = { onCategoryChanged(suggestionLabel) },
-                            label = { Text(suggestionLabel) },
+                            label = { Text(suggestionLabel) }
                         )
                     }
                 }
@@ -157,19 +157,20 @@ fun ManualEntryScreen(
                     value = uiState.note,
                     onValueChange = onNoteChanged,
                     label = { Text(stringResource(R.string.manual_entry_note)) },
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .testTag("manual-entry-note-field"),
-                    minLines = 3,
+                    minLines = 3
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.manual_entry_include_graph_20))
                     Switch(
                         checked = uiState.declarationIncluded,
-                        onCheckedChange = onIncludedChanged,
+                        onCheckedChange = onIncludedChanged
                     )
                 }
                 if (!uiState.currency.equals("GEL", ignoreCase = true)) {
@@ -181,7 +182,7 @@ fun ManualEntryScreen(
                 Button(
                     onClick = onSave,
                     enabled = !uiState.isSaving,
-                    modifier = Modifier.testTag("manual-entry-save-button"),
+                    modifier = Modifier.testTag("manual-entry-save-button")
                 ) {
                     Text(
                         stringResource(
@@ -189,8 +190,8 @@ fun ManualEntryScreen(
                                 R.string.manual_entry_save
                             } else {
                                 R.string.manual_entry_save_changes
-                            },
-                        ),
+                            }
+                        )
                     )
                 }
             }

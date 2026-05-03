@@ -20,5 +20,5 @@ data class OnboardingUiState(
     val certificateNumber: String = "",
     val certificateIssuedDate: String = "",
     val effectiveDate: LocalDate = LocalDate.now(),
-    val taxRatePercent: String = "1.0",
+    val taxRatePercent: String = "1.0"
 )

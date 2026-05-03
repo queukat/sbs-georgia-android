@@ -14,77 +14,84 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DocumentImportControllerTest {
-    private val strings = DocumentImportStrings(
-        registryRecognized = "Registry recognized",
-        certificateRecognized = "Certificate recognized",
-        previewApplied = "Preview applied",
-        unsupportedDocument = "Unsupported",
-        expectedRegistryExtract = "Expected registry",
-        expectedSmallBusinessCertificate = "Expected certificate",
-        parseFailed = "Parse failed",
-    )
+    private val strings =
+        DocumentImportStrings(
+            registryRecognized = "Registry recognized",
+            certificateRecognized = "Certificate recognized",
+            previewApplied = "Preview applied",
+            unsupportedDocument = "Unsupported",
+            expectedRegistryExtract = "Expected registry",
+            expectedSmallBusinessCertificate = "Expected certificate",
+            parseFailed = "Parse failed"
+        )
 
     @Test
     fun loadDocumentImportPreviewMapsRegistrySuccess() = runTest {
         val preview = samplePreview(documentType = OnboardingDocumentType.REGISTRY_EXTRACT)
 
-        val result = loadDocumentImportPreview(
-            uriString = "content://registry",
-            action = DocumentImportAction.IMPORT_REGISTRY_EXTRACT,
-            strings = strings,
-            loadPreview = { uriString, expectedDocumentType ->
-                assertEquals("content://registry", uriString)
-                assertEquals(OnboardingDocumentType.REGISTRY_EXTRACT, expectedDocumentType)
-                preview
-            },
-        )
+        val result =
+            loadDocumentImportPreview(
+                uriString = "content://registry",
+                action = DocumentImportAction.IMPORT_REGISTRY_EXTRACT,
+                strings = strings,
+                loadPreview = { uriString, expectedDocumentType ->
+                    assertEquals("content://registry", uriString)
+                    assertEquals(OnboardingDocumentType.REGISTRY_EXTRACT, expectedDocumentType)
+                    preview
+                }
+            )
 
         assertEquals(
             DocumentImportLoadResult.Success(
                 preview = preview,
-                infoMessage = strings.registryRecognized,
+                infoMessage = strings.registryRecognized
             ),
-            result,
+            result
         )
     }
 
     @Test
     fun loadDocumentImportPreviewMapsExpectedDocumentError() = runTest {
-        val result = loadDocumentImportPreview(
-            uriString = "content://certificate",
-            action = DocumentImportAction.IMPORT_SMALL_BUSINESS_CERTIFICATE,
-            strings = strings,
-            loadPreview = { _, _ ->
-                throw OnboardingDocumentParseException(OnboardingParseError.EXPECTED_REGISTRY_EXTRACT)
-            },
-        )
+        val result =
+            loadDocumentImportPreview(
+                uriString = "content://certificate",
+                action = DocumentImportAction.IMPORT_SMALL_BUSINESS_CERTIFICATE,
+                strings = strings,
+                loadPreview = { _, _ ->
+                    throw OnboardingDocumentParseException(
+                        OnboardingParseError.EXPECTED_REGISTRY_EXTRACT
+                    )
+                }
+            )
 
         assertEquals(
             DocumentImportLoadResult.Error(strings.expectedRegistryExtract),
-            result,
+            result
         )
     }
 
     @Test
     fun loadDocumentImportPreviewMapsUnknownFailureToParseFailed() = runTest {
-        val result = loadDocumentImportPreview(
-            uriString = "content://broken",
-            action = DocumentImportAction.IMPORT_REGISTRY_EXTRACT,
-            strings = strings,
-            loadPreview = { _, _ -> error("boom") },
-        )
+        val result =
+            loadDocumentImportPreview(
+                uriString = "content://broken",
+                action = DocumentImportAction.IMPORT_REGISTRY_EXTRACT,
+                strings = strings,
+                loadPreview = { _, _ -> error("boom") }
+            )
 
         assertEquals(
             DocumentImportLoadResult.Error(strings.parseFailed),
-            result,
+            result
         )
     }
 
     @Test
     fun toDocumentImportFormPatchMapsPreviewFields() {
-        val patch = samplePreview(
-            documentType = OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE,
-        ).toDocumentImportFormPatch()
+        val patch =
+            samplePreview(
+                documentType = OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE
+            ).toDocumentImportFormPatch()
 
         assertEquals("Test Entrepreneur", patch.displayName)
         assertEquals("IE", patch.legalForm)
@@ -99,25 +106,27 @@ class DocumentImportControllerTest {
 
     @Test
     fun applyDocumentImportPatchMergesOnlyProvidedFields() {
-        val initialState = DocumentImportFormState(
-            displayName = "Existing name",
-            legalForm = "LLC",
-            registrationId = "111111111",
-            registrationDate = "2025-01-10",
-            legalAddress = "Existing address",
-            activityType = "Existing activity",
-            certificateNumber = "OLD-CERT",
-            certificateIssuedDate = "2025-01-11",
-            effectiveDate = LocalDate.of(2025, 1, 1),
-        )
+        val initialState =
+            DocumentImportFormState(
+                displayName = "Existing name",
+                legalForm = "LLC",
+                registrationId = "111111111",
+                registrationDate = "2025-01-10",
+                legalAddress = "Existing address",
+                activityType = "Existing activity",
+                certificateNumber = "OLD-CERT",
+                certificateIssuedDate = "2025-01-11",
+                effectiveDate = LocalDate.of(2025, 1, 1)
+            )
 
-        val updatedState = initialState.applyDocumentImportPatch(
-            DocumentImportFormPatch(
-                displayName = "Imported name",
-                registrationId = "222222222",
-                certificateNumber = "NEW-CERT",
-            ),
-        )
+        val updatedState =
+            initialState.applyDocumentImportPatch(
+                DocumentImportFormPatch(
+                    displayName = "Imported name",
+                    registrationId = "222222222",
+                    certificateNumber = "NEW-CERT"
+                )
+            )
 
         assertEquals("Imported name", updatedState.displayName)
         assertEquals("LLC", updatedState.legalForm)
@@ -142,11 +151,26 @@ class DocumentImportControllerTest {
         displayName = ParsedTextField("Test Entrepreneur", ExtractionConfidence.CONFIDENT),
         legalForm = ParsedTextField("IE", ExtractionConfidence.REVIEW_REQUIRED),
         registrationId = ParsedTextField("306449082", ExtractionConfidence.CONFIDENT),
-        registrationDate = ParsedDateField(LocalDate.of(2026, 1, 15), ExtractionConfidence.CONFIDENT),
-        legalAddress = ParsedTextField("Tbilisi, Georgia", ExtractionConfidence.REVIEW_REQUIRED),
-        activityType = ParsedTextField("Software services", ExtractionConfidence.REVIEW_REQUIRED),
+        registrationDate = ParsedDateField(
+            LocalDate.of(2026, 1, 15),
+            ExtractionConfidence.CONFIDENT
+        ),
+        legalAddress = ParsedTextField(
+            "Tbilisi, Georgia",
+            ExtractionConfidence.REVIEW_REQUIRED
+        ),
+        activityType = ParsedTextField(
+            "Software services",
+            ExtractionConfidence.REVIEW_REQUIRED
+        ),
         certificateNumber = ParsedTextField("CERT-42", ExtractionConfidence.CONFIDENT),
-        certificateIssuedDate = ParsedDateField(LocalDate.of(2026, 1, 16), ExtractionConfidence.REVIEW_REQUIRED),
-        effectiveDate = ParsedDateField(LocalDate.of(2026, 1, 1), ExtractionConfidence.CONFIDENT),
+        certificateIssuedDate = ParsedDateField(
+            LocalDate.of(2026, 1, 16),
+            ExtractionConfidence.REVIEW_REQUIRED
+        ),
+        effectiveDate = ParsedDateField(
+            LocalDate.of(2026, 1, 1),
+            ExtractionConfidence.CONFIDENT
+        )
     )
 }

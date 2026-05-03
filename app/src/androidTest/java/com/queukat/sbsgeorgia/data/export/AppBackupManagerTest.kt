@@ -35,25 +35,30 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AppBackupManagerTest {
     private val appContext: Context = ApplicationProvider.getApplicationContext()
-    private val json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+        }
     private val backupValidator = BackupValidator(json = json)
-    private val fixedClock: Clock = Clock.fixed(Instant.parse("2026-04-02T10:00:00Z"), ZoneOffset.UTC)
+    private val fixedClock: Clock = Clock.fixed(
+        Instant.parse("2026-04-02T10:00:00Z"),
+        ZoneOffset.UTC
+    )
 
     @Test
     fun exportAndImportRoundTripPreservesRawImportedStatementMetadata() = runTest {
         val sourceDb = buildDatabase("backup-source")
         val restoreDb = buildDatabase("backup-restore")
         try {
-            val sourceStatementId = sourceDb.importedStatementDao().insert(
-                ImportedStatementEntity(
-                    sourceFileName = "march-statement.pdf",
-                    sourceFingerprint = "statement-fingerprint",
-                    importedAtEpochMillis = 1234L,
-                ),
-            )
+            val sourceStatementId =
+                sourceDb.importedStatementDao().insert(
+                    ImportedStatementEntity(
+                        sourceFileName = "march-statement.pdf",
+                        sourceFingerprint = "statement-fingerprint",
+                        importedAtEpochMillis = 1234L
+                    )
+                )
             sourceDb.taxpayerProfileDao().upsert(
                 TaxpayerProfileEntity(
                     registrationId = "306449082",
@@ -62,16 +67,16 @@ class AppBackupManagerTest {
                     legalForm = "Individual Entrepreneur",
                     registrationDate = LocalDate.of(2023, 11, 24),
                     legalAddress = "Georgia, Tbilisi",
-                    activityType = "Software development services",
-                ),
+                    activityType = "Software development services"
+                )
             )
             sourceDb.smallBusinessStatusConfigDao().upsert(
                 SmallBusinessStatusConfigEntity(
                     effectiveDate = LocalDate.of(2026, 3, 7),
                     defaultTaxRatePercent = BigDecimal("1.0"),
                     certificateNumber = "SBS-2026-000123",
-                    certificateIssuedDate = LocalDate.of(2026, 3, 7),
-                ),
+                    certificateIssuedDate = LocalDate.of(2026, 3, 7)
+                )
             )
             sourceDb.reminderConfigDao().upsert(
                 ReminderConfigEntity(
@@ -80,8 +85,8 @@ class AppBackupManagerTest {
                     declarationRemindersEnabled = true,
                     paymentRemindersEnabled = true,
                     defaultReminderTime = LocalTime.of(9, 0),
-                    themeMode = ThemeMode.DARK,
-                ),
+                    themeMode = ThemeMode.DARK
+                )
             )
             sourceDb.incomeEntryDao().upsert(
                 IncomeEntryEntity(
@@ -99,8 +104,8 @@ class AppBackupManagerTest {
                     sourceStatementId = sourceStatementId,
                     sourceTransactionFingerprint = "tx-fingerprint",
                     createdAtEpochMillis = 100L,
-                    updatedAtEpochMillis = 200L,
-                ),
+                    updatedAtEpochMillis = 200L
+                )
             )
             sourceDb.monthlyDeclarationRecordDao().upsert(
                 MonthlyDeclarationRecordEntity(
@@ -113,8 +118,8 @@ class AppBackupManagerTest {
                     paymentSentDate = null,
                     paymentCreditedDate = null,
                     paymentAmountGel = BigDecimal("81.60"),
-                    notes = "Filed on time",
-                ),
+                    notes = "Filed on time"
+                )
             )
             sourceDb.fxRateDao().upsert(
                 FxRateEntity(
@@ -124,8 +129,8 @@ class AppBackupManagerTest {
                     units = 1,
                     rateToGel = BigDecimal("2.70"),
                     source = FxRateSource.OFFICIAL_NBG_JSON,
-                    manualOverride = false,
-                ),
+                    manualOverride = false
+                )
             )
             sourceDb.importedTransactionDao().replaceAll(
                 listOf(
@@ -140,9 +145,9 @@ class AppBackupManagerTest {
                         paidIn = BigDecimal("125.50"),
                         balance = BigDecimal("1000.00"),
                         suggestedInclusion = DeclarationInclusion.INCLUDED,
-                        finalInclusion = DeclarationInclusion.INCLUDED,
-                    ),
-                ),
+                        finalInclusion = DeclarationInclusion.INCLUDED
+                    )
+                )
             )
 
             val sourceManager = backupManager(sourceDb)
@@ -169,8 +174,14 @@ class AppBackupManagerTest {
             assertEquals("march-statement.pdf", restoredStatements.single().sourceFileName)
             assertEquals("statement-fingerprint", restoredStatements.single().sourceFingerprint)
             assertEquals("tx-fingerprint", restoredTransactions.single().transactionFingerprint)
-            assertEquals(restoredStatements.single().id, restoredTransactions.single().statementId)
-            assertEquals(restoredStatements.single().id, restoredIncomeEntries.single().sourceStatementId)
+            assertEquals(
+                restoredStatements.single().id,
+                restoredTransactions.single().statementId
+            )
+            assertEquals(
+                restoredStatements.single().id,
+                restoredIncomeEntries.single().sourceStatementId
+            )
             assertEquals("2.70", restoredFxRates.single().rateToGel.toPlainString())
             assertTrue(exportedJson.contains("\"certificateNumber\":\"SBS-2026-000123\""))
             assertTrue(exportedJson.contains("\"importedStatements\""))
@@ -181,11 +192,11 @@ class AppBackupManagerTest {
         }
     }
 
-    private fun buildDatabase(name: String): SbsGeorgiaDatabase =
-        Room.inMemoryDatabaseBuilder(appContext, SbsGeorgiaDatabase::class.java)
-            .allowMainThreadQueries()
-            .setQueryCoroutineContext(Dispatchers.IO)
-            .build()
+    private fun buildDatabase(name: String): SbsGeorgiaDatabase = Room
+        .inMemoryDatabaseBuilder(appContext, SbsGeorgiaDatabase::class.java)
+        .allowMainThreadQueries()
+        .setQueryCoroutineContext(Dispatchers.IO)
+        .build()
 
     private fun backupManager(database: SbsGeorgiaDatabase): AppBackupManager = AppBackupManager(
         database = database,
@@ -200,6 +211,6 @@ class AppBackupManagerTest {
         json = json,
         backupValidator = backupValidator,
         clock = fixedClock,
-        ioDispatcher = Dispatchers.IO,
+        ioDispatcher = Dispatchers.IO
     )
 }

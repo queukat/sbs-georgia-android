@@ -21,7 +21,7 @@ class FormParsersTest {
 
         assertEquals(
             DateParseResult.Valid(LocalDate.of(2026, 4, 25)),
-            result,
+            result
         )
         assertEquals(LocalDate.of(2026, 4, 25), result.dateOrNull())
     }

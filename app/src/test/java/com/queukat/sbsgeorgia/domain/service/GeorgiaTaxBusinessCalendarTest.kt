@@ -17,7 +17,7 @@ class GeorgiaTaxBusinessCalendarTest {
     fun `moves fixed public holiday to next business day`() {
         assertEquals(
             LocalDate.of(2026, 5, 27),
-            calendar.adjustToNextBusinessDay(LocalDate.of(2026, 5, 26)),
+            calendar.adjustToNextBusinessDay(LocalDate.of(2026, 5, 26))
         )
     }
 
@@ -30,7 +30,7 @@ class GeorgiaTaxBusinessCalendarTest {
     fun `adjusts through holiday weekend chain`() {
         assertEquals(
             LocalDate.of(2026, 4, 14),
-            calendar.adjustToNextBusinessDay(LocalDate.of(2026, 4, 12)),
+            calendar.adjustToNextBusinessDay(LocalDate.of(2026, 4, 12))
         )
     }
 }

@@ -13,11 +13,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
-data class ImportedPdfDocument(
-    val fileName: String,
-    val sourceFingerprint: String,
-    val bytes: ByteArray,
-)
+data class ImportedPdfDocument(val fileName: String, val sourceFingerprint: String, val bytes: ByteArray)
 
 interface StatementDocumentReader {
     suspend fun read(uriString: String): ImportedPdfDocument
@@ -30,42 +26,46 @@ interface StatementTextExtractor {
 }
 
 @Singleton
-class AndroidStatementDocumentReader @Inject constructor(
+class AndroidStatementDocumentReader
+@Inject
+constructor(
     @param:ApplicationContext private val context: Context,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatementDocumentReader {
     override suspend fun read(uriString: String): ImportedPdfDocument = withContext(ioDispatcher) {
         val uri = Uri.parse(uriString)
         val fileName = resolveDisplayName(uri) ?: "statement.pdf"
-        val bytes = context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
-            ?: error("Unable to open the selected PDF.")
+        val bytes =
+            context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
+                ?: error("Unable to open the selected PDF.")
         ImportedPdfDocument(
             fileName = fileName,
             sourceFingerprint = sha256(bytes),
-            bytes = bytes,
+            bytes = bytes
         )
     }
 
-    private fun resolveDisplayName(uri: Uri): String? =
-        context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
-            ?.use { cursor ->
-                if (!cursor.moveToFirst()) return@use null
-                cursor.getString(0)
-            }
+    private fun resolveDisplayName(uri: Uri): String? = context.contentResolver
+        .query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
+        ?.use { cursor ->
+            if (!cursor.moveToFirst()) return@use null
+            cursor.getString(0)
+        }
 
-    private fun sha256(bytes: ByteArray): String =
-        MessageDigest.getInstance("SHA-256")
-            .digest(bytes)
-            .joinToString(separator = "") { byte -> "%02x".format(byte) }
+    private fun sha256(bytes: ByteArray): String = MessageDigest
+        .getInstance("SHA-256")
+        .digest(bytes)
+        .joinToString(separator = "") { byte -> "%02x".format(byte) }
 }
 
 @Singleton
-class PdfBoxStatementTextExtractor @Inject constructor(
+class PdfBoxStatementTextExtractor
+@Inject
+constructor(
     private val pdfBoxInitializer: PdfBoxInitializer,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatementTextExtractor {
-    override suspend fun extractText(documentBytes: ByteArray): String =
-        extractTextCandidates(documentBytes).first()
+    override suspend fun extractText(documentBytes: ByteArray): String = extractTextCandidates(documentBytes).first()
 
     override suspend fun extractTextCandidates(documentBytes: ByteArray): List<String> = withContext(ioDispatcher) {
         pdfBoxInitializer.ensureInitialized()
@@ -76,10 +76,8 @@ class PdfBoxStatementTextExtractor @Inject constructor(
         }
     }
 
-    private fun extractText(
-        document: PDDocument,
-        sortByPosition: Boolean,
-    ): String = PDFTextStripper().apply {
-        this.sortByPosition = sortByPosition
-    }.getText(document)
+    private fun extractText(document: PDDocument, sortByPosition: Boolean): String = PDFTextStripper()
+        .apply {
+            this.sortByPosition = sortByPosition
+        }.getText(document)
 }

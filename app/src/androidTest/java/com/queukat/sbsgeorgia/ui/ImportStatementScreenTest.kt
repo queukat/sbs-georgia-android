@@ -6,11 +6,9 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -43,7 +41,8 @@ class ImportStatementScreenTest {
         var uiState by mutableStateOf(
             ImportStatementUiState(
                 sourceFileName = "tbc-statement.pdf",
-                rows = listOf(
+                rows =
+                listOf(
                     ImportStatementRowUiState(
                         transactionFingerprint = "tx-1",
                         incomeDate = LocalDate.of(2026, 3, 15),
@@ -57,11 +56,11 @@ class ImportStatementScreenTest {
                         amount = "125.50",
                         currency = "USD",
                         sourceCategory = "Software services",
-                        duplicate = false,
-                    ),
+                        duplicate = false
+                    )
                 ),
-                selectedIncomeCount = 1,
-            ),
+                selectedIncomeCount = 1
+            )
         )
         var importClicked = false
 
@@ -74,50 +73,79 @@ class ImportStatementScreenTest {
                     onBack = {},
                     onPickPdf = {},
                     onIncludeAsTaxableChanged = { fingerprint, included ->
-                        uiState = uiState.copy(
-                            rows = uiState.rows.map { row ->
-                                if (row.transactionFingerprint == fingerprint) {
-                                    row.copy(
-                                        finalInclusion = if (included) {
-                                            DeclarationInclusion.INCLUDED
-                                        } else {
-                                            DeclarationInclusion.EXCLUDED
-                                        },
-                                    )
-                                } else {
-                                    row
+                        uiState =
+                            uiState.copy(
+                                rows =
+                                uiState.rows.map { row ->
+                                    if (row.transactionFingerprint == fingerprint) {
+                                        row.copy(
+                                            finalInclusion =
+                                            if (included) {
+                                                DeclarationInclusion.INCLUDED
+                                            } else {
+                                                DeclarationInclusion.EXCLUDED
+                                            }
+                                        )
+                                    } else {
+                                        row
+                                    }
                                 }
-                            },
-                        )
+                            )
                     },
                     onDateChanged = { _, _ -> },
                     onAmountChanged = { fingerprint, amount ->
-                        uiState = uiState.copy(
-                            rows = uiState.rows.map { row ->
-                                if (row.transactionFingerprint == fingerprint) row.copy(amount = amount) else row
-                            },
-                        )
+                        uiState =
+                            uiState.copy(
+                                rows =
+                                uiState.rows.map { row ->
+                                    if (row.transactionFingerprint ==
+                                        fingerprint
+                                    ) {
+                                        row.copy(amount = amount)
+                                    } else {
+                                        row
+                                    }
+                                }
+                            )
                     },
                     onCurrencyChanged = { fingerprint, currency ->
-                        uiState = uiState.copy(
-                            rows = uiState.rows.map { row ->
-                                if (row.transactionFingerprint == fingerprint) row.copy(currency = currency) else row
-                            },
-                        )
+                        uiState =
+                            uiState.copy(
+                                rows =
+                                uiState.rows.map { row ->
+                                    if (row.transactionFingerprint ==
+                                        fingerprint
+                                    ) {
+                                        row.copy(currency = currency)
+                                    } else {
+                                        row
+                                    }
+                                }
+                            )
                     },
                     onSourceCategoryChanged = { fingerprint, category ->
-                        uiState = uiState.copy(
-                            rows = uiState.rows.map { row ->
-                                if (row.transactionFingerprint == fingerprint) row.copy(sourceCategory = category) else row
-                            },
-                        )
+                        uiState =
+                            uiState.copy(
+                                rows =
+                                uiState.rows.map { row ->
+                                    if (row.transactionFingerprint ==
+                                        fingerprint
+                                    ) {
+                                        row.copy(sourceCategory = category)
+                                    } else {
+                                        row
+                                    }
+                                }
+                            )
                     },
-                    onImportApproved = { importClicked = true },
+                    onImportApproved = { importClicked = true }
                 )
             }
         }
 
-        composeRule.onNodeWithTag("import-selected-file").assertTextContains("tbc-statement.pdf", substring = true)
+        composeRule.onNodeWithTag(
+            "import-selected-file"
+        ).assertTextContains("tbc-statement.pdf", substring = true)
         composeRule.onNodeWithTag("import-amount-tx-1").performTextClearance()
         composeRule.onNodeWithTag("import-amount-tx-1").performTextInput("130.00")
         composeRule.onNodeWithTag("import-currency-tx-1").performTextClearance()

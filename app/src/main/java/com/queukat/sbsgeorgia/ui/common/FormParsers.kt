@@ -4,7 +4,9 @@ import java.time.LocalDate
 
 sealed interface DateParseResult {
     data object Empty : DateParseResult
+
     data class Valid(val date: LocalDate) : DateParseResult
+
     data class Invalid(val raw: String) : DateParseResult
 }
 
@@ -16,7 +18,7 @@ object DateInputParser {
         return runCatching { LocalDate.parse(trimmed) }
             .fold(
                 onSuccess = DateParseResult::Valid,
-                onFailure = { DateParseResult.Invalid(raw = value) },
+                onFailure = { DateParseResult.Invalid(raw = value) }
             )
     }
 }

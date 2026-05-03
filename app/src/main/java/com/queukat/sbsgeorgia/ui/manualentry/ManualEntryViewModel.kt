@@ -28,20 +28,26 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class ManualEntryViewModel @Inject constructor(
+class ManualEntryViewModel
+@Inject
+constructor(
     private val incomeRepository: IncomeRepository,
     private val upsertManualIncomeEntryUseCase: UpsertManualIncomeEntryUseCase,
     @param:ApplicationContext private val appContext: Context,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
     private var initializedEntryKey: Pair<Long?, LocalDate?>? = null
 
-    private val _uiState = MutableStateFlow(
-        ManualEntryUiState(
-            incomeDate = LocalDate.now(clock),
-            sourceCategory = displaySourceCategory(appContext, SourceCategoryPresets.SOFTWARE_SERVICES),
-        ),
-    )
+    private val _uiState =
+        MutableStateFlow(
+            ManualEntryUiState(
+                incomeDate = LocalDate.now(clock),
+                sourceCategory = displaySourceCategory(
+                    appContext,
+                    SourceCategoryPresets.SOFTWARE_SERVICES
+                )
+            )
+        )
     val uiState = _uiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<ManualEntryEffect>()
@@ -52,24 +58,33 @@ class ManualEntryViewModel @Inject constructor(
         if (initializedEntryKey == key) return
         initializedEntryKey = key
         if (entryId == null) {
-            _uiState.value = ManualEntryUiState(
-                entryId = null,
-                incomeDate = initialDate ?: LocalDate.now(clock),
-                sourceCategory = displaySourceCategory(appContext, SourceCategoryPresets.SOFTWARE_SERVICES),
-            )
+            _uiState.value =
+                ManualEntryUiState(
+                    entryId = null,
+                    incomeDate = initialDate ?: LocalDate.now(clock),
+                    sourceCategory = displaySourceCategory(
+                        appContext,
+                        SourceCategoryPresets.SOFTWARE_SERVICES
+                    )
+                )
             return
         }
         viewModelScope.launch {
             incomeRepository.getById(entryId)?.let { entry ->
-                _uiState.value = ManualEntryUiState(
-                    entryId = entry.id,
-                    incomeDate = entry.incomeDate,
-                    amount = entry.originalAmount.toPlainString(),
-                    currency = entry.originalCurrency,
-                    sourceCategory = displaySourceCategory(appContext, entry.sourceCategory),
-                    note = entry.note,
-                    declarationIncluded = entry.declarationInclusion == DeclarationInclusion.INCLUDED,
-                )
+                _uiState.value =
+                    ManualEntryUiState(
+                        entryId = entry.id,
+                        incomeDate = entry.incomeDate,
+                        amount = entry.originalAmount.toPlainString(),
+                        currency = entry.originalCurrency,
+                        sourceCategory = displaySourceCategory(
+                            appContext,
+                            entry.sourceCategory
+                        ),
+                        note = entry.note,
+                        declarationIncluded =
+                        entry.declarationInclusion == DeclarationInclusion.INCLUDED
+                    )
             }
         }
     }
@@ -102,27 +117,43 @@ class ManualEntryViewModel @Inject constructor(
         val current = _uiState.value
         val amount = runCatching { BigDecimal(current.amount) }.getOrNull()
         if (amount == null || amount <= BigDecimal.ZERO) {
-            _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_amount_required))
+            _uiState.value =
+                current.copy(
+                    errorMessage = appContext.getString(
+                        R.string.manual_entry_error_amount_required
+                    )
+                )
             return
         }
         if (!isIsoLikeCurrencyCode(current.currency)) {
-            _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_currency_invalid))
+            _uiState.value =
+                current.copy(
+                    errorMessage = appContext.getString(
+                        R.string.manual_entry_error_currency_invalid
+                    )
+                )
             return
         }
         if (current.sourceCategory.isBlank()) {
-            _uiState.value = current.copy(errorMessage = appContext.getString(R.string.manual_entry_error_category_required))
+            _uiState.value =
+                current.copy(
+                    errorMessage = appContext.getString(
+                        R.string.manual_entry_error_category_required
+                    )
+                )
             return
         }
 
         _uiState.value = current.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
             val existing = current.entryId?.let { incomeRepository.getById(it) }
-            val fxPersistence = resolveManualEntryFxPersistence(
-                currency = current.currency,
-                amount = amount,
-                incomeDate = current.incomeDate,
-                existing = existing,
-            )
+            val fxPersistence =
+                resolveManualEntryFxPersistence(
+                    currency = current.currency,
+                    amount = amount,
+                    incomeDate = current.incomeDate,
+                    existing = existing
+                )
             upsertManualIncomeEntryUseCase(
                 IncomeEntry(
                     id = current.entryId ?: 0L,
@@ -130,9 +161,13 @@ class ManualEntryViewModel @Inject constructor(
                     incomeDate = current.incomeDate,
                     originalAmount = amount,
                     originalCurrency = fxPersistence.normalizedCurrency,
-                    sourceCategory = canonicalSourceCategory(appContext, current.sourceCategory),
+                    sourceCategory = canonicalSourceCategory(
+                        appContext,
+                        current.sourceCategory
+                    ),
                     note = current.note.trim(),
-                    declarationInclusion = if (current.declarationIncluded) {
+                    declarationInclusion =
+                    if (current.declarationIncluded) {
                         DeclarationInclusion.INCLUDED
                     } else {
                         DeclarationInclusion.EXCLUDED
@@ -143,8 +178,8 @@ class ManualEntryViewModel @Inject constructor(
                     sourceStatementId = existing?.sourceStatementId,
                     sourceTransactionFingerprint = existing?.sourceTransactionFingerprint,
                     createdAtEpochMillis = existing?.createdAtEpochMillis ?: clock.millis(),
-                    updatedAtEpochMillis = clock.millis(),
-                ),
+                    updatedAtEpochMillis = clock.millis()
+                )
             )
             _uiState.value = _uiState.value.copy(isSaving = false)
             _effects.emit(ManualEntryEffect.Saved)
@@ -163,37 +198,41 @@ internal data class ManualEntryFxPersistence(
     val normalizedCurrency: String,
     val gelEquivalent: BigDecimal?,
     val rateSource: FxRateSource,
-    val manualFxOverride: Boolean,
+    val manualFxOverride: Boolean
 )
 
 internal fun resolveManualEntryFxPersistence(
     currency: String,
     amount: BigDecimal,
     incomeDate: LocalDate,
-    existing: IncomeEntry?,
+    existing: IncomeEntry?
 ): ManualEntryFxPersistence {
     val normalizedCurrency = normalizeCurrencyCode(currency)
     val isGel = normalizedCurrency == "GEL"
     val existingCurrency = existing?.originalCurrency?.let(::normalizeCurrencyCode)
-    val fxFieldsChanged = existing == null ||
-        existingCurrency != normalizedCurrency ||
-        existing.originalAmount.compareTo(amount) != 0 ||
-        existing.incomeDate != incomeDate
+    val fxFieldsChanged =
+        existing == null ||
+            existingCurrency != normalizedCurrency ||
+            existing.originalAmount.compareTo(amount) != 0 ||
+            existing.incomeDate != incomeDate
 
     return ManualEntryFxPersistence(
         normalizedCurrency = normalizedCurrency,
-        gelEquivalent = when {
+        gelEquivalent =
+        when {
             isGel -> amount
             fxFieldsChanged -> null
             else -> existing.gelEquivalent
         },
-        rateSource = when {
+        rateSource =
+        when {
             isGel || fxFieldsChanged -> FxRateSource.NONE
             else -> existing.rateSource
         },
-        manualFxOverride = when {
+        manualFxOverride =
+        when {
             isGel || fxFieldsChanged -> false
             else -> existing.manualFxOverride
-        },
+        }
     )
 }

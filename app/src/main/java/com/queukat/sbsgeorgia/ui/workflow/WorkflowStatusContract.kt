@@ -17,7 +17,7 @@ data class WorkflowStatusUiState(
     val paymentAmount: String = "",
     val notes: String = "",
     val isSaving: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 sealed interface WorkflowStatusEffect {

@@ -7,47 +7,51 @@ import android.os.Build
 import java.util.Locale
 
 fun openPlayStoreListing(context: Context): Boolean {
-    val marketIntent = Intent(
-        Intent.ACTION_VIEW,
-        Uri.parse("market://details?id=${context.packageName}"),
-    ).setPackage("com.android.vending")
+    val marketIntent =
+        Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse("market://details?id=${context.packageName}")
+        ).setPackage("com.android.vending")
     if (context.safeStartActivity(marketIntent)) {
         return true
     }
     return context.safeStartActivity(
         Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}"),
-        ),
+            Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+        )
     )
 }
 
-fun openFeedbackPage(context: Context): Boolean =
-    context.safeStartActivity(
-        Intent(
-            Intent.ACTION_VIEW,
-            buildFeedbackIssueUri(context),
-        ),
+fun openFeedbackPage(context: Context): Boolean = context.safeStartActivity(
+    Intent(
+        Intent.ACTION_VIEW,
+        buildFeedbackIssueUri(context)
     )
+)
 
 private fun buildFeedbackIssueUri(context: Context): Uri {
-    val packageInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        context.packageManager.getPackageInfo(
-            context.packageName,
-            android.content.pm.PackageManager.PackageInfoFlags.of(0),
-        )
-    } else {
-        @Suppress("DEPRECATION")
-        context.packageManager.getPackageInfo(context.packageName, 0)
-    }
+    val packageInfo =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            context.packageManager.getPackageInfo(
+                context.packageName,
+                android.content.pm.PackageManager.PackageInfoFlags
+                    .of(0)
+            )
+        } else {
+            @Suppress("DEPRECATION")
+            context.packageManager.getPackageInfo(context.packageName, 0)
+        }
     val versionName = packageInfo.versionName ?: "unknown"
-    val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-        packageInfo.longVersionCode.toString()
-    } else {
-        @Suppress("DEPRECATION")
-        packageInfo.versionCode.toString()
-    }
-    val body = """
+    val versionCode =
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode.toString()
+        } else {
+            @Suppress("DEPRECATION")
+            packageInfo.versionCode.toString()
+        }
+    val body =
+        """
         ## What happened?
         <!-- Please do not include taxpayer IDs, imported PDFs, or backup/export files. -->
 
@@ -60,9 +64,10 @@ private fun buildFeedbackIssueUri(context: Context): Uri {
         - Android: ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})
         - Device: ${Build.MANUFACTURER} ${Build.MODEL}
         - App language: ${Locale.getDefault().toLanguageTag()}
-    """.trimIndent()
+        """.trimIndent()
 
-    return Uri.parse("https://github.com/queukat/sbs-georgia-android/issues/new")
+    return Uri
+        .parse("https://github.com/queukat/sbs-georgia-android/issues/new")
         .buildUpon()
         .appendQueryParameter("title", "[Feedback] ")
         .appendQueryParameter("body", body)

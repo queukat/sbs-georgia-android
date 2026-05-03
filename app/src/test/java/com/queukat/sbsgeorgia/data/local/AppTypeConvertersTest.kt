@@ -16,7 +16,10 @@ class AppTypeConvertersTest {
         assertEquals("system", converters.fromThemeMode(ThemeMode.SYSTEM))
         assertEquals("gel", converters.fromBaseCurrencyView(BaseCurrencyView.GEL))
         assertEquals("manual", converters.fromIncomeSourceType(IncomeSourceType.MANUAL))
-        assertEquals("review_required", converters.fromDeclarationInclusion(DeclarationInclusion.REVIEW_REQUIRED))
+        assertEquals(
+            "review_required",
+            converters.fromDeclarationInclusion(DeclarationInclusion.REVIEW_REQUIRED)
+        )
         assertEquals("manual_override", converters.fromFxRateSource(FxRateSource.MANUAL_OVERRIDE))
     }
 
@@ -24,7 +27,10 @@ class AppTypeConvertersTest {
     fun decodesLegacyEnumNamesForBackwardCompatibility() {
         assertEquals(ThemeMode.DARK, converters.toThemeMode("DARK"))
         assertEquals(BaseCurrencyView.GEL, converters.toBaseCurrencyView("GEL"))
-        assertEquals(IncomeSourceType.IMPORTED_STATEMENT, converters.toIncomeSourceType("IMPORTED_STATEMENT"))
+        assertEquals(
+            IncomeSourceType.IMPORTED_STATEMENT,
+            converters.toIncomeSourceType("IMPORTED_STATEMENT")
+        )
         assertEquals(DeclarationInclusion.INCLUDED, converters.toDeclarationInclusion("INCLUDED"))
         assertEquals(FxRateSource.OFFICIAL_NBG_JSON, converters.toFxRateSource("OFFICIAL_NBG_JSON"))
     }

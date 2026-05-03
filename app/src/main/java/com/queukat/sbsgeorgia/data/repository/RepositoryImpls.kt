@@ -1,9 +1,9 @@
 package com.queukat.sbsgeorgia.data.repository
 
 import androidx.room.withTransaction
+import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
 import com.queukat.sbsgeorgia.data.local.IncomeEntryDao
 import com.queukat.sbsgeorgia.data.local.IncomeEntryEntity
-import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
 import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordDao
 import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordEntity
 import com.queukat.sbsgeorgia.data.local.ReminderConfigDao
@@ -29,19 +29,24 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 @Singleton
-class SettingsRepositoryImpl @Inject constructor(
+class SettingsRepositoryImpl
+@Inject
+constructor(
     private val taxpayerProfileDao: TaxpayerProfileDao,
     private val statusConfigDao: SmallBusinessStatusConfigDao,
-    private val reminderConfigDao: ReminderConfigDao,
+    private val reminderConfigDao: ReminderConfigDao
 ) : SettingsRepository {
-    override fun observeTaxpayerProfile(): Flow<TaxpayerProfile?> =
-        taxpayerProfileDao.observe().map { it?.toDomain() }
+    override fun observeTaxpayerProfile(): Flow<TaxpayerProfile?> = taxpayerProfileDao.observe().map {
+        it?.toDomain()
+    }
 
-    override fun observeStatusConfig(): Flow<SmallBusinessStatusConfig?> =
-        statusConfigDao.observe().map { it?.toDomain() }
+    override fun observeStatusConfig(): Flow<SmallBusinessStatusConfig?> = statusConfigDao.observe().map {
+        it?.toDomain()
+    }
 
-    override fun observeReminderConfig(): Flow<ReminderConfig?> =
-        reminderConfigDao.observe().map { it?.toDomain() }
+    override fun observeReminderConfig(): Flow<ReminderConfig?> = reminderConfigDao.observe().map {
+        it?.toDomain()
+    }
 
     override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
         taxpayerProfileDao.upsert(profile.toEntity())
@@ -57,18 +62,21 @@ class SettingsRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class IncomeRepositoryImpl @Inject constructor(
+class IncomeRepositoryImpl
+@Inject
+constructor(
     private val database: SbsGeorgiaDatabase,
     private val incomeEntryDao: IncomeEntryDao,
-    private val importedTransactionDao: ImportedTransactionDao,
+    private val importedTransactionDao: ImportedTransactionDao
 ) : IncomeRepository {
-    override fun observeAll(): Flow<List<IncomeEntry>> =
-        incomeEntryDao.observeAll().map { entities -> entities.map(IncomeEntryEntity::toDomain) }
+    override fun observeAll(): Flow<List<IncomeEntry>> = incomeEntryDao.observeAll().map { entities ->
+        entities.map(IncomeEntryEntity::toDomain)
+    }
 
-    override fun observeByMonth(yearMonth: YearMonth): Flow<List<IncomeEntry>> =
-        incomeEntryDao.observeByMonth(
+    override fun observeByMonth(yearMonth: YearMonth): Flow<List<IncomeEntry>> = incomeEntryDao
+        .observeByMonth(
             startDate = yearMonth.atDay(1).toString(),
-            endDate = yearMonth.atEndOfMonth().toString(),
+            endDate = yearMonth.atEndOfMonth().toString()
         ).map { entities -> entities.map(IncomeEntryEntity::toDomain) }
 
     override suspend fun getById(id: Long): IncomeEntry? = incomeEntryDao.getById(id)?.toDomain()
@@ -80,7 +88,7 @@ class IncomeRepositoryImpl @Inject constructor(
             ?.let { fingerprint ->
                 importedTransactionDao.updateFinalInclusionByFingerprint(
                     transactionFingerprint = fingerprint,
-                    finalInclusion = entry.declarationInclusion,
+                    finalInclusion = entry.declarationInclusion
                 )
             }
         id
@@ -95,7 +103,7 @@ class IncomeRepositoryImpl @Inject constructor(
                 ?.let { fingerprint ->
                     importedTransactionDao.updateFinalInclusionByFingerprint(
                         transactionFingerprint = fingerprint,
-                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                        finalInclusion = DeclarationInclusion.EXCLUDED
                     )
                 }
         }
@@ -103,11 +111,15 @@ class IncomeRepositoryImpl @Inject constructor(
 }
 
 @Singleton
-class MonthlyDeclarationRepositoryImpl @Inject constructor(
-    private val monthlyDeclarationRecordDao: MonthlyDeclarationRecordDao,
+class MonthlyDeclarationRepositoryImpl
+@Inject
+constructor(
+    private val monthlyDeclarationRecordDao: MonthlyDeclarationRecordDao
 ) : MonthlyDeclarationRepository {
     override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> =
-        monthlyDeclarationRecordDao.observeAll().map { entities -> entities.map(MonthlyDeclarationRecordEntity::toDomain) }
+        monthlyDeclarationRecordDao.observeAll().map { entities ->
+            entities.map(MonthlyDeclarationRecordEntity::toDomain)
+        }
 
     override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> =
         monthlyDeclarationRecordDao.observeByPeriod(yearMonth.toString()).map { it?.toDomain() }
@@ -132,7 +144,7 @@ private fun IncomeEntryEntity.toDomain(): IncomeEntry = IncomeEntry(
     sourceStatementId = sourceStatementId,
     sourceTransactionFingerprint = sourceTransactionFingerprint,
     createdAtEpochMillis = createdAtEpochMillis,
-    updatedAtEpochMillis = updatedAtEpochMillis,
+    updatedAtEpochMillis = updatedAtEpochMillis
 )
 
 private fun IncomeEntry.toEntity(): IncomeEntryEntity = IncomeEntryEntity(
@@ -150,7 +162,7 @@ private fun IncomeEntry.toEntity(): IncomeEntryEntity = IncomeEntryEntity(
     sourceStatementId = sourceStatementId,
     sourceTransactionFingerprint = sourceTransactionFingerprint,
     createdAtEpochMillis = createdAtEpochMillis,
-    updatedAtEpochMillis = updatedAtEpochMillis,
+    updatedAtEpochMillis = updatedAtEpochMillis
 )
 
 private fun MonthlyDeclarationRecordEntity.toDomain(): MonthlyDeclarationRecord = MonthlyDeclarationRecord(
@@ -161,7 +173,7 @@ private fun MonthlyDeclarationRecordEntity.toDomain(): MonthlyDeclarationRecord 
     paymentSentDate = paymentSentDate,
     paymentCreditedDate = paymentCreditedDate,
     paymentAmountGel = paymentAmountGel,
-    notes = notes,
+    notes = notes
 )
 
 private fun MonthlyDeclarationRecord.toEntity(): MonthlyDeclarationRecordEntity = MonthlyDeclarationRecordEntity(
@@ -174,5 +186,5 @@ private fun MonthlyDeclarationRecord.toEntity(): MonthlyDeclarationRecordEntity 
     paymentSentDate = paymentSentDate,
     paymentCreditedDate = paymentCreditedDate,
     paymentAmountGel = paymentAmountGel,
-    notes = notes,
+    notes = notes
 )

@@ -11,13 +11,16 @@ import kotlinx.coroutines.withContext
 
 interface TextDocumentStore {
     suspend fun writeText(uriString: String, content: String)
+
     suspend fun readText(uriString: String): String
 }
 
 @Singleton
-class AndroidTextDocumentStore @Inject constructor(
+class AndroidTextDocumentStore
+@Inject
+constructor(
     @param:ApplicationContext private val context: Context,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TextDocumentStore {
     override suspend fun writeText(uriString: String, content: String) = withContext(ioDispatcher) {
         val uri = Uri.parse(uriString)

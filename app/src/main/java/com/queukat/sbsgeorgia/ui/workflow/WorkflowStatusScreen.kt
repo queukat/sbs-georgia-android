@@ -41,11 +41,7 @@ import com.queukat.sbsgeorgia.ui.common.workflowStatusLabel
 import java.time.YearMonth
 
 @Composable
-fun WorkflowStatusRoute(
-    innerPadding: PaddingValues,
-    yearMonth: YearMonth,
-    onBack: () -> Unit,
-) {
+fun WorkflowStatusRoute(innerPadding: PaddingValues, yearMonth: YearMonth, onBack: () -> Unit) {
     val viewModel: WorkflowStatusViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -74,7 +70,7 @@ fun WorkflowStatusRoute(
         onClearPaymentCreditedDate = viewModel::clearPaymentCreditedDate,
         onPaymentAmountChanged = viewModel::updatePaymentAmount,
         onNotesChanged = viewModel::updateNotes,
-        onSave = viewModel::save,
+        onSave = viewModel::save
     )
 }
 
@@ -93,19 +89,21 @@ fun WorkflowStatusScreen(
     onClearPaymentCreditedDate: () -> Unit,
     onPaymentAmountChanged: (String) -> Unit,
     onNotesChanged: (String) -> Unit,
-    onSave: () -> Unit,
+    onSave: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SbsTopAppBar(
-                title = uiState.yearMonth?.toString() ?: stringResource(R.string.workflow_status_title),
-                onBack = onBack,
+                title =
+                uiState.yearMonth?.toString() ?: stringResource(R.string.workflow_status_title),
+                onBack = onBack
             )
-        },
+        }
     ) { contentPadding ->
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -113,23 +111,26 @@ fun WorkflowStatusScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.workflow_section_due_state)) {
                 KeyValueRow(
                     stringResource(R.string.workflow_derived_status),
-                    uiState.derivedStatus?.let { workflowStatusLabel(it) } ?: stringResource(R.string.fx_override_unknown),
+                    uiState.derivedStatus?.let { workflowStatusLabel(it) }
+                        ?: stringResource(R.string.fx_override_unknown)
                 )
                 KeyValueRow(
                     stringResource(R.string.workflow_due_date),
-                    uiState.dueDate?.formatIsoDate() ?: stringResource(R.string.fx_override_unknown),
+                    uiState.dueDate?.formatIsoDate() ?: stringResource(
+                        R.string.fx_override_unknown
+                    )
                 )
                 if (uiState.derivedStatus == MonthlyWorkflowStatus.OVERDUE) {
                     Text(
                         stringResource(R.string.workflow_due_state_overdue_hint),
-                        color = MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
             }
@@ -139,7 +140,7 @@ fun WorkflowStatusScreen(
                         FilterChip(
                             selected = uiState.baseStatus == status,
                             onClick = { onStatusChanged(status) },
-                            label = { Text(workflowStatusLabel(status)) },
+                            label = { Text(workflowStatusLabel(status)) }
                         )
                     }
                 }
@@ -147,12 +148,12 @@ fun WorkflowStatusScreen(
             AppSection(title = stringResource(R.string.workflow_section_dates_notes)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(stringResource(R.string.workflow_zero_prepared))
                     Switch(
                         checked = uiState.zeroDeclarationPrepared,
-                        onCheckedChange = onZeroDeclarationPreparedChanged,
+                        onCheckedChange = onZeroDeclarationPreparedChanged
                     )
                 }
                 HorizontalDivider()
@@ -160,7 +161,7 @@ fun WorkflowStatusScreen(
                     label = stringResource(R.string.workflow_declaration_filed_date),
                     value = uiState.declarationFiledDate,
                     onValueChange = onDeclarationFiledDateChanged,
-                    placeholderText = stringResource(R.string.common_select_date),
+                    placeholderText = stringResource(R.string.common_select_date)
                 )
                 if (uiState.declarationFiledDate != null) {
                     TextButton(onClick = onClearDeclarationFiledDate) {
@@ -171,7 +172,7 @@ fun WorkflowStatusScreen(
                     label = stringResource(R.string.workflow_payment_sent_date),
                     value = uiState.paymentSentDate,
                     onValueChange = onPaymentSentDateChanged,
-                    placeholderText = stringResource(R.string.common_select_date),
+                    placeholderText = stringResource(R.string.common_select_date)
                 )
                 if (uiState.paymentSentDate != null) {
                     TextButton(onClick = onClearPaymentSentDate) {
@@ -182,7 +183,7 @@ fun WorkflowStatusScreen(
                     label = stringResource(R.string.workflow_payment_credited_date),
                     value = uiState.paymentCreditedDate,
                     onValueChange = onPaymentCreditedDateChanged,
-                    placeholderText = stringResource(R.string.common_select_date),
+                    placeholderText = stringResource(R.string.common_select_date)
                 )
                 if (uiState.paymentCreditedDate != null) {
                     TextButton(onClick = onClearPaymentCreditedDate) {
@@ -192,14 +193,14 @@ fun WorkflowStatusScreen(
                 DecimalField(
                     label = stringResource(R.string.workflow_payment_amount),
                     value = uiState.paymentAmount,
-                    onValueChange = onPaymentAmountChanged,
+                    onValueChange = onPaymentAmountChanged
                 )
                 OutlinedTextField(
                     value = uiState.notes,
                     onValueChange = onNotesChanged,
                     label = { Text(stringResource(R.string.workflow_notes)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 3,
+                    minLines = 3
                 )
                 uiState.errorMessage?.let {
                     Text(it, color = MaterialTheme.colorScheme.error)
@@ -211,8 +212,8 @@ fun WorkflowStatusScreen(
                                 R.string.workflow_saving
                             } else {
                                 R.string.workflow_save
-                            },
-                        ),
+                            }
+                        )
                     )
                 }
             }

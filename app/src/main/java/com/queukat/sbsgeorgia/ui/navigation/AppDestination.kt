@@ -18,30 +18,19 @@ data object SettingsDestination : AppDestination
 data object ChartsDestination : AppDestination
 
 @Serializable
-data class MonthDetailDestination(
-    val yearMonth: String,
-) : AppDestination
+data class MonthDetailDestination(val yearMonth: String) : AppDestination
 
 @Serializable
-data class ManualEntryDestination(
-    val entryId: Long? = null,
-    val initialDate: String? = null,
-) : AppDestination
+data class ManualEntryDestination(val entryId: Long? = null, val initialDate: String? = null) : AppDestination
 
 @Serializable
-data class PaymentHelperDestination(
-    val yearMonth: String,
-) : AppDestination
+data class PaymentHelperDestination(val yearMonth: String) : AppDestination
 
 @Serializable
-data class FxOverrideDestination(
-    val entryId: Long,
-) : AppDestination
+data class FxOverrideDestination(val entryId: Long) : AppDestination
 
 @Serializable
-data class WorkflowStatusDestination(
-    val yearMonth: String,
-) : AppDestination
+data class WorkflowStatusDestination(val yearMonth: String) : AppDestination
 
 @Serializable
 data object ImportStatementDestination : AppDestination

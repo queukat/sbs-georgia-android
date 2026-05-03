@@ -7,7 +7,7 @@ import java.time.LocalDate
 
 data class HomeUiState(
     val summary: DashboardSummary? = null,
-    val duePeriodQuickAccess: HomeDuePeriodQuickAccess? = null,
+    val duePeriodQuickAccess: HomeDuePeriodQuickAccess? = null
 )
 
 data class HomeDuePeriodQuickAccess(
@@ -16,5 +16,5 @@ data class HomeDuePeriodQuickAccess(
     val canCopyDeclarationValues: Boolean,
     val canQuickSettleMonth: Boolean,
     val monthAlreadySettled: Boolean,
-    val filingOpensOn: LocalDate?,
+    val filingOpensOn: LocalDate?
 )

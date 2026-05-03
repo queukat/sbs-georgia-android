@@ -66,9 +66,7 @@ import java.time.LocalDate
 import kotlinx.coroutines.launch
 
 @Composable
-fun SettingsRoute(
-    innerPadding: PaddingValues,
-) {
+fun SettingsRoute(innerPadding: PaddingValues) {
     val viewModel: SettingsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -85,41 +83,47 @@ fun SettingsRoute(
         notificationPermissionGranted = isNotificationPermissionGranted(context)
         onPauseOrDispose { }
     }
-    val notificationPermissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-    ) { granted ->
-        notificationPermissionGranted = granted
-    }
-    val exportIncomeCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv"),
-    ) { uri: Uri? ->
-        uri?.let { viewModel.exportIncomeEntriesCsv(it.toString()) }
-    }
-    val exportMonthlySummariesCsvLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("text/csv"),
-    ) { uri: Uri? ->
-        uri?.let { viewModel.exportMonthlySummariesCsv(it.toString()) }
-    }
-    val exportBackupJsonLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
-    ) { uri: Uri? ->
-        uri?.let { viewModel.exportBackupJson(it.toString()) }
-    }
-    var pendingBackupImportUri by rememberSaveable { mutableStateOf<String?>(null) }
-    val importBackupJsonLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        pendingBackupImportUri = uri?.toString()
-    }
-    val importDocumentLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        val action = pendingDocumentImportAction
-        if (uri != null && action != null) {
-            viewModel.loadDocument(uri, action)
+    val notificationPermissionLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.RequestPermission()
+        ) { granted ->
+            notificationPermissionGranted = granted
         }
-        pendingDocumentImportAction = null
-    }
+    val exportIncomeCsvLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("text/csv")
+        ) { uri: Uri? ->
+            uri?.let { viewModel.exportIncomeEntriesCsv(it.toString()) }
+        }
+    val exportMonthlySummariesCsvLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("text/csv")
+        ) { uri: Uri? ->
+            uri?.let { viewModel.exportMonthlySummariesCsv(it.toString()) }
+        }
+    val exportBackupJsonLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json")
+        ) { uri: Uri? ->
+            uri?.let { viewModel.exportBackupJson(it.toString()) }
+        }
+    var pendingBackupImportUri by rememberSaveable { mutableStateOf<String?>(null) }
+    val importBackupJsonLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+            pendingBackupImportUri = uri?.toString()
+        }
+    val importDocumentLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+            val action = pendingDocumentImportAction
+            if (uri != null && action != null) {
+                viewModel.loadDocument(uri, action)
+            }
+            pendingDocumentImportAction = null
+        }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -170,14 +174,16 @@ fun SettingsRoute(
             exportIncomeCsvLauncher.launch("sbs-georgia-income-entries-${LocalDate.now()}.csv")
         },
         onExportMonthlySummariesCsv = {
-            exportMonthlySummariesCsvLauncher.launch("sbs-georgia-monthly-summaries-${LocalDate.now()}.csv")
+            exportMonthlySummariesCsvLauncher.launch(
+                "sbs-georgia-monthly-summaries-${LocalDate.now()}.csv"
+            )
         },
         onExportBackupJson = {
             exportBackupJsonLauncher.launch("sbs-georgia-backup-${LocalDate.now()}.json")
         },
         onImportBackupJson = {
             importBackupJsonLauncher.launch(
-                arrayOf("application/json", "text/plain", "application/octet-stream"),
+                arrayOf("application/json", "text/plain", "application/octet-stream")
             )
         },
         onRateApp = {
@@ -194,7 +200,7 @@ fun SettingsRoute(
                 }
             }
         },
-        onSave = viewModel::save,
+        onSave = viewModel::save
     )
 
     pendingBackupImportUri?.let { uriString ->
@@ -213,11 +219,11 @@ fun SettingsRoute(
                         pendingBackupImportUri = null
                         viewModel.importBackupJson(uriString)
                     },
-                    enabled = !uiState.isDataOperationInProgress,
+                    enabled = !uiState.isDataOperationInProgress
                 ) {
                     Text(stringResource(R.string.settings_restore_backup_confirm_action))
                 }
-            },
+            }
         )
     }
 }
@@ -255,15 +261,17 @@ fun SettingsScreen(
     onImportBackupJson: () -> Unit = {},
     onRateApp: () -> Unit = {},
     onSendFeedback: () -> Unit = {},
-    onSave: () -> Unit,
+    onSave: () -> Unit
 ) {
     var showHelpFaq by rememberSaveable { mutableStateOf(false) }
     var showQuickStartGuide by rememberSaveable { mutableStateOf(false) }
     var testReminderTypeName by rememberSaveable { mutableStateOf(ReminderType.DECLARATION.name) }
     var testReminderDelaySeconds by rememberSaveable { mutableStateOf(5L) }
     val testReminderType = ReminderType.valueOf(testReminderTypeName)
-    val isPrimaryActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress && !uiState.isDocumentLoading
-    val showPrimaryProgress = uiState.isSaving || uiState.isDataOperationInProgress || uiState.isDocumentLoading
+    val isPrimaryActionEnabled =
+        !uiState.isSaving && !uiState.isDataOperationInProgress && !uiState.isDocumentLoading
+    val showPrimaryProgress =
+        uiState.isSaving || uiState.isDataOperationInProgress || uiState.isDocumentLoading
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -276,14 +284,15 @@ fun SettingsScreen(
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp,
+                tonalElevation = 3.dp
             ) {
                 Column(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (showPrimaryProgress) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
@@ -294,9 +303,10 @@ fun SettingsScreen(
                     Button(
                         onClick = onSave,
                         enabled = isPrimaryActionEnabled,
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxWidth()
-                            .testTag("settings-save-button"),
+                            .testTag("settings-save-button")
                     ) {
                         Text(
                             stringResource(
@@ -304,13 +314,13 @@ fun SettingsScreen(
                                     R.string.settings_saving
                                 } else {
                                     R.string.settings_save
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                 }
             }
-        },
+        }
     ) { contentPadding ->
         if (showHelpFaq) {
             HelpFaqDialog(
@@ -320,16 +330,17 @@ fun SettingsScreen(
                     showQuickStartGuide = true
                 },
                 onRateApp = onRateApp,
-                onSendFeedback = onSendFeedback,
+                onSendFeedback = onSendFeedback
             )
         }
         if (showQuickStartGuide) {
             QuickStartGuideDialog(
-                onDismiss = { showQuickStartGuide = false },
+                onDismiss = { showQuickStartGuide = false }
             )
         }
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -337,21 +348,21 @@ fun SettingsScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             DocumentImportSection(
                 uiState = uiState,
                 onImportRegistryExtract = onImportRegistryExtract,
-                onImportCertificate = onImportCertificate,
+                onImportCertificate = onImportCertificate
             )
 
             uiState.preview?.let { preview ->
                 DocumentPreviewSection(
                     preview = preview,
                     isActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
-                    onApplyPreview = onApplyPreview,
+                    onApplyPreview = onApplyPreview
                 )
             }
 
@@ -362,7 +373,7 @@ fun SettingsScreen(
                 onLegalFormChanged = onLegalFormChanged,
                 onRegistrationDateChanged = onRegistrationDateChanged,
                 onLegalAddressChanged = onLegalAddressChanged,
-                onActivityTypeChanged = onActivityTypeChanged,
+                onActivityTypeChanged = onActivityTypeChanged
             )
 
             SmallBusinessStatusSection(
@@ -370,7 +381,7 @@ fun SettingsScreen(
                 onCertificateNumberChanged = onCertificateNumberChanged,
                 onCertificateIssuedDateChanged = onCertificateIssuedDateChanged,
                 onEffectiveDateChanged = onEffectiveDateChanged,
-                onTaxRateChanged = onTaxRateChanged,
+                onTaxRateChanged = onTaxRateChanged
             )
 
             ReminderSettingsSection(
@@ -386,12 +397,12 @@ fun SettingsScreen(
                 onRequestNotificationPermission = onRequestNotificationPermission,
                 onTestReminderTypeChanged = { testReminderTypeName = it.name },
                 onTestReminderDelayChanged = { testReminderDelaySeconds = it },
-                onScheduleTestReminder = onScheduleTestReminder,
+                onScheduleTestReminder = onScheduleTestReminder
             )
 
             AppearanceSettingsSection(
                 selectedThemeMode = uiState.themeMode,
-                onThemeModeChanged = onThemeModeChanged,
+                onThemeModeChanged = onThemeModeChanged
             )
 
             DataManagementSection(
@@ -399,14 +410,14 @@ fun SettingsScreen(
                 onExportIncomeEntriesCsv = onExportIncomeEntriesCsv,
                 onExportMonthlySummariesCsv = onExportMonthlySummariesCsv,
                 onExportBackupJson = onExportBackupJson,
-                onImportBackupJson = onImportBackupJson,
+                onImportBackupJson = onImportBackupJson
             )
 
             HelpFeedbackSection(
                 onOpenHelpFaq = { showHelpFaq = true },
                 onViewQuickStart = { showQuickStartGuide = true },
                 onRateApp = onRateApp,
-                onSendFeedback = onSendFeedback,
+                onSendFeedback = onSendFeedback
             )
         }
     }
@@ -416,6 +427,6 @@ private fun isNotificationPermissionGranted(context: Context): Boolean {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return true
     return ContextCompat.checkSelfPermission(
         context,
-        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.POST_NOTIFICATIONS
     ) == PackageManager.PERMISSION_GRANTED
 }

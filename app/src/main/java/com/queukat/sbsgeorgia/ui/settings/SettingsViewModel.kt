@@ -6,19 +6,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
-import com.queukat.sbsgeorgia.domain.service.ReminderNotification
-import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
-import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
-import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
+import com.queukat.sbsgeorgia.domain.service.ReminderNotification
+import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
+import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportMonthlySummariesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
+import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
 import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
@@ -39,7 +39,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel
+@Inject
+constructor(
     private val settingsRepository: SettingsRepository,
     private val upsertSettingsUseCase: UpsertSettingsUseCase,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
@@ -53,39 +55,60 @@ class SettingsViewModel @Inject constructor(
     private val backupRestoreController: BackupRestoreController,
     private val reminderTestScheduler: ReminderTestScheduler,
     @param:ApplicationContext private val appContext: Context,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
     private var persistedProfile: TaxpayerProfile? = null
     private var persistedStatusConfig: SmallBusinessStatusConfig? = null
-    private val validator = SettingsValidator(
-        strings = SettingsValidationStrings(
-            registrationIdRequired = appContext.getString(R.string.settings_error_registration_id_required),
-            displayNameRequired = appContext.getString(R.string.settings_error_display_name_required),
-            taxRateInvalid = appContext.getString(R.string.settings_error_tax_rate_invalid),
-            registrationDateInvalid = appContext.getString(R.string.onboarding_error_registration_date_invalid),
-            certificateIssuedDateInvalid = appContext.getString(R.string.onboarding_error_certificate_issued_date_invalid),
-            reminderTimeInvalid = appContext.getString(R.string.settings_error_reminder_time_invalid),
-            declarationDaysInvalid = appContext.getString(R.string.settings_error_declaration_days_invalid),
-            paymentDaysInvalid = appContext.getString(R.string.settings_error_payment_days_invalid),
-        ),
-    )
-    private val documentImportHandler = SettingsDocumentImportHandler(
-        strings = appContext.documentImportStrings(),
-        loadPreview = loadOnboardingDocumentPreviewUseCase::invoke,
-    )
-    private val backupActions = SettingsBackupActions(
-        textDocumentStore = textDocumentStore,
-        exportIncomeEntriesCsvUseCase = exportIncomeEntriesCsvUseCase,
-        exportMonthlySummariesCsvUseCase = exportMonthlySummariesCsvUseCase,
-        exportBackupJsonUseCase = exportBackupJsonUseCase,
-        context = appContext,
-    )
+    private val validator =
+        SettingsValidator(
+            strings =
+            SettingsValidationStrings(
+                registrationIdRequired = appContext.getString(
+                    R.string.settings_error_registration_id_required
+                ),
+                displayNameRequired = appContext.getString(
+                    R.string.settings_error_display_name_required
+                ),
+                taxRateInvalid = appContext.getString(
+                    R.string.settings_error_tax_rate_invalid
+                ),
+                registrationDateInvalid = appContext.getString(
+                    R.string.onboarding_error_registration_date_invalid
+                ),
+                certificateIssuedDateInvalid = appContext.getString(
+                    R.string.onboarding_error_certificate_issued_date_invalid
+                ),
+                reminderTimeInvalid = appContext.getString(
+                    R.string.settings_error_reminder_time_invalid
+                ),
+                declarationDaysInvalid = appContext.getString(
+                    R.string.settings_error_declaration_days_invalid
+                ),
+                paymentDaysInvalid = appContext.getString(
+                    R.string.settings_error_payment_days_invalid
+                )
+            )
+        )
+    private val documentImportHandler =
+        SettingsDocumentImportHandler(
+            strings = appContext.documentImportStrings(),
+            loadPreview = loadOnboardingDocumentPreviewUseCase::invoke
+        )
+    private val backupActions =
+        SettingsBackupActions(
+            textDocumentStore = textDocumentStore,
+            exportIncomeEntriesCsvUseCase = exportIncomeEntriesCsvUseCase,
+            exportMonthlySummariesCsvUseCase = exportMonthlySummariesCsvUseCase,
+            exportBackupJsonUseCase = exportBackupJsonUseCase,
+            context = appContext
+        )
 
-    private val _uiState = MutableStateFlow(
-        SettingsUiState(
-            effectiveDate = LocalDate.now(clock),
-        ),
-    )
+    private val _uiState =
+        MutableStateFlow(
+            SettingsUiState(
+                effectiveDate = LocalDate.now(clock)
+            )
+        )
     val uiState = _uiState.asStateFlow()
 
     private val _effects = MutableSharedFlow<SettingsEffect>()
@@ -142,7 +165,8 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun updateDeclarationReminderDays(value: String) {
-        _uiState.value = SettingsFormReducer.updateDeclarationReminderDays(_uiState.value, value)
+        _uiState.value =
+            SettingsFormReducer.updateDeclarationReminderDays(_uiState.value, value)
     }
 
     fun updatePaymentReminderDays(value: String) {
@@ -168,8 +192,8 @@ class SettingsViewModel @Inject constructor(
                     declarationRemindersEnabled = true,
                     paymentRemindersEnabled = true,
                     defaultReminderTime = LocalTime.of(9, 0),
-                    themeMode = mode,
-                ),
+                    themeMode = mode
+                )
             )
         }
     }
@@ -184,11 +208,12 @@ class SettingsViewModel @Inject constructor(
 
     fun applyPreview() {
         val preview = _uiState.value.preview ?: return
-        _uiState.value = SettingsFormReducer.applyPreview(
-            state = _uiState.value,
-            preview = preview,
-            previewAppliedMessage = documentImportHandler.previewAppliedMessage,
-        )
+        _uiState.value =
+            SettingsFormReducer.applyPreview(
+                state = _uiState.value,
+                preview = preview,
+                previewAppliedMessage = documentImportHandler.previewAppliedMessage
+            )
     }
 
     fun save() {
@@ -201,36 +226,43 @@ class SettingsViewModel @Inject constructor(
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
                     val input = validation.value
-                    val reminders = ReminderConfig(
-                        declarationReminderDays = input.declarationReminderDays,
-                        paymentReminderDays = input.paymentReminderDays,
-                        declarationRemindersEnabled = current.declarationRemindersEnabled,
-                        paymentRemindersEnabled = current.paymentRemindersEnabled,
-                        defaultReminderTime = input.defaultReminderTime,
-                        themeMode = current.themeMode,
-                    )
+                    val reminders =
+                        ReminderConfig(
+                            declarationReminderDays = input.declarationReminderDays,
+                            paymentReminderDays = input.paymentReminderDays,
+                            declarationRemindersEnabled = current.declarationRemindersEnabled,
+                            paymentRemindersEnabled = current.paymentRemindersEnabled,
+                            defaultReminderTime = input.defaultReminderTime,
+                            themeMode = current.themeMode
+                        )
                     upsertSettingsUseCase(
-                        profile = (persistedProfile ?: TaxpayerProfile(
-                            registrationId = input.registrationId,
-                            displayName = input.displayName,
-                        )).copy(
+                        profile =
+                        (
+                            persistedProfile ?: TaxpayerProfile(
+                                registrationId = input.registrationId,
+                                displayName = input.displayName
+                            )
+                            ).copy(
                             registrationId = input.registrationId,
                             displayName = input.displayName,
                             legalForm = input.legalForm,
                             registrationDate = input.registrationDate,
                             legalAddress = input.legalAddress,
-                            activityType = input.activityType,
+                            activityType = input.activityType
                         ),
-                        config = (persistedStatusConfig ?: SmallBusinessStatusConfig(
-                            effectiveDate = input.effectiveDate,
-                            defaultTaxRatePercent = input.taxRatePercent,
-                        )).copy(
+                        config =
+                        (
+                            persistedStatusConfig ?: SmallBusinessStatusConfig(
+                                effectiveDate = input.effectiveDate,
+                                defaultTaxRatePercent = input.taxRatePercent
+                            )
+                            ).copy(
                             effectiveDate = input.effectiveDate,
                             defaultTaxRatePercent = input.taxRatePercent,
                             certificateNumber = input.certificateNumber,
-                            certificateIssuedDate = input.certificateIssuedDate,
+                            certificateIssuedDate = input.certificateIssuedDate
                         ),
-                        reminders = reminders,
+                        reminders = reminders
                     )
                     reminderScheduler.reschedule(reminders)
                     _uiState.value = _uiState.value.copy(isSaving = false)
@@ -242,19 +274,27 @@ class SettingsViewModel @Inject constructor(
 
     fun exportIncomeEntriesCsv(uriString: String) {
         runDataOperation {
-            _effects.emit(SettingsEffect.Message(backupActions.exportIncomeEntriesCsv(uriString).message))
+            _effects.emit(
+                SettingsEffect.Message(backupActions.exportIncomeEntriesCsv(uriString).message)
+            )
         }
     }
 
     fun exportMonthlySummariesCsv(uriString: String) {
         runDataOperation {
-            _effects.emit(SettingsEffect.Message(backupActions.exportMonthlySummariesCsv(uriString).message))
+            _effects.emit(
+                SettingsEffect.Message(
+                    backupActions.exportMonthlySummariesCsv(uriString).message
+                )
+            )
         }
     }
 
     fun exportBackupJson(uriString: String) {
         runDataOperation {
-            _effects.emit(SettingsEffect.Message(backupActions.exportBackupJson(uriString).message))
+            _effects.emit(
+                SettingsEffect.Message(backupActions.exportBackupJson(uriString).message)
+            )
         }
     }
 
@@ -266,28 +306,28 @@ class SettingsViewModel @Inject constructor(
         }
     }
 
-    fun scheduleTestReminder(
-        type: ReminderType,
-        delaySeconds: Long,
-    ) {
+    fun scheduleTestReminder(type: ReminderType, delaySeconds: Long) {
         viewModelScope.launch {
             val dueSnapshot = observeDashboardSummaryUseCase().first().currentDuePeriod
-            val notification = reminderPlanner.buildPreviewNotification(type, dueSnapshot)
-                ?: fallbackTestNotification(type)
+            val notification =
+                reminderPlanner.buildPreviewNotification(type, dueSnapshot)
+                    ?: fallbackTestNotification(type)
             reminderTestScheduler.schedule(
-                reminderNotification = notification.copy(
-                    notificationId = notification.notificationId ?: defaultNotificationId(type),
+                reminderNotification =
+                notification.copy(
+                    notificationId =
+                    notification.notificationId ?: defaultNotificationId(type)
                 ),
-                delaySeconds = delaySeconds,
+                delaySeconds = delaySeconds
             )
             _effects.emit(
                 SettingsEffect.Message(
                     appContext.getString(
                         R.string.settings_message_test_notification_scheduled,
                         type.label(appContext),
-                        delaySeconds,
-                    ),
-                ),
+                        delaySeconds
+                    )
+                )
             )
         }
     }
@@ -301,8 +341,8 @@ class SettingsViewModel @Inject constructor(
             }.onFailure {
                 _effects.emit(
                     SettingsEffect.Message(
-                        appContext.getString(R.string.settings_message_data_operation_failed),
-                    ),
+                        appContext.getString(R.string.settings_message_data_operation_failed)
+                    )
                 )
             }
             _uiState.value = _uiState.value.copy(isDataOperationInProgress = false)
@@ -315,35 +355,48 @@ class SettingsViewModel @Inject constructor(
         val reminderConfig = settingsRepository.observeReminderConfig().first()
         persistedProfile = profile
         persistedStatusConfig = config
-        _uiState.value = SettingsFormReducer.loadedState(
-            currentState = _uiState.value,
-            profile = profile,
-            config = config,
-            reminderConfig = reminderConfig,
-            today = LocalDate.now(clock),
-        )
+        _uiState.value =
+            SettingsFormReducer.loadedState(
+                currentState = _uiState.value,
+                profile = profile,
+                config = config,
+                reminderConfig = reminderConfig,
+                today = LocalDate.now(clock)
+            )
     }
 
     private fun fallbackTestNotification(type: ReminderType): ReminderNotification = when (type) {
-        ReminderType.DECLARATION -> ReminderNotification(
-            type = type,
-            title = appContext.getString(R.string.settings_test_notification_generic_declaration_title),
-            body = appContext.getString(R.string.settings_test_notification_generic_declaration_body),
-        )
-        ReminderType.PAYMENT -> ReminderNotification(
-            type = type,
-            title = appContext.getString(R.string.settings_test_notification_generic_payment_title),
-            body = appContext.getString(R.string.settings_test_notification_generic_payment_body),
-        )
+        ReminderType.DECLARATION ->
+            ReminderNotification(
+                type = type,
+                title = appContext.getString(
+                    R.string.settings_test_notification_generic_declaration_title
+                ),
+                body = appContext.getString(
+                    R.string.settings_test_notification_generic_declaration_body
+                )
+            )
+        ReminderType.PAYMENT ->
+            ReminderNotification(
+                type = type,
+                title = appContext.getString(
+                    R.string.settings_test_notification_generic_payment_title
+                ),
+                body = appContext.getString(
+                    R.string.settings_test_notification_generic_payment_body
+                )
+            )
     }
 
-    private fun defaultNotificationId(type: ReminderType): Int =
-        ((clock.millis() + type.ordinal) and 0x7fffffff).toInt()
+    private fun defaultNotificationId(type: ReminderType): Int = (
+        (clock.millis() + type.ordinal) and
+            0x7fffffff
+        ).toInt()
 }
 
 private fun ReminderType.label(context: Context): String = context.getString(
     when (this) {
         ReminderType.DECLARATION -> R.string.settings_test_notification_type_declaration
         ReminderType.PAYMENT -> R.string.settings_test_notification_type_payment
-    },
+    }
 )

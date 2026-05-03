@@ -10,9 +10,9 @@ import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.CompleteOnboardingUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
-import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.DateInputParser
 import com.queukat.sbsgeorgia.ui.common.DateParseResult
+import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.dateOrNull
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportFormState
@@ -32,15 +32,18 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class OnboardingViewModel @Inject constructor(
+class OnboardingViewModel
+@Inject
+constructor(
     private val settingsRepository: SettingsRepository,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val completeOnboardingUseCase: CompleteOnboardingUseCase,
     private val backupRestoreController: BackupRestoreController,
     @param:ApplicationContext private val appContext: Context,
-    private val clock: Clock,
+    private val clock: Clock
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(OnboardingUiState(effectiveDate = LocalDate.now(clock)))
+    private val _uiState =
+        MutableStateFlow(OnboardingUiState(effectiveDate = LocalDate.now(clock)))
     val uiState = _uiState.asStateFlow()
 
     init {
@@ -51,28 +54,32 @@ class OnboardingViewModel @Inject constructor(
 
     fun loadDocument(uri: Uri, action: DocumentImportAction) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, infoMessage = null)
+            _uiState.value =
+                _uiState.value.copy(isLoading = true, errorMessage = null, infoMessage = null)
             when (
-                val result = loadDocumentImportPreview(
-                    uriString = uri.toString(),
-                    action = action,
-                    strings = appContext.documentImportStrings(),
-                    loadPreview = loadOnboardingDocumentPreviewUseCase::invoke,
-                )
+                val result =
+                    loadDocumentImportPreview(
+                        uriString = uri.toString(),
+                        action = action,
+                        strings = appContext.documentImportStrings(),
+                        loadPreview = loadOnboardingDocumentPreviewUseCase::invoke
+                    )
             ) {
                 is DocumentImportLoadResult.Success -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        preview = result.preview,
-                        infoMessage = result.infoMessage,
-                    )
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            preview = result.preview,
+                            infoMessage = result.infoMessage
+                        )
                 }
                 is DocumentImportLoadResult.Error -> {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        preview = null,
-                        errorMessage = result.errorMessage,
-                    )
+                    _uiState.value =
+                        _uiState.value.copy(
+                            isLoading = false,
+                            preview = null,
+                            errorMessage = result.errorMessage
+                        )
                 }
             }
         }
@@ -80,53 +87,64 @@ class OnboardingViewModel @Inject constructor(
 
     fun restoreBackup(uri: Uri) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isRestoringBackup = true,
-                errorMessage = null,
-                infoMessage = null,
-                preview = null,
-            )
+            _uiState.value =
+                _uiState.value.copy(
+                    isRestoringBackup = true,
+                    errorMessage = null,
+                    infoMessage = null,
+                    preview = null
+                )
             runCatching {
                 backupRestoreController.restore(uri.toString())
             }.onSuccess { result ->
                 loadExistingValues(
-                    infoMessage = buildString {
+                    infoMessage =
+                    buildString {
                         append(result.message)
                         if (!result.setupComplete) {
                             append('\n')
-                            append(appContext.getString(R.string.onboarding_restore_backup_incomplete))
+                            append(
+                                appContext.getString(
+                                    R.string.onboarding_restore_backup_incomplete
+                                )
+                            )
                         }
                     },
                     errorMessage = null,
-                    isRestoringBackup = false,
+                    isRestoringBackup = false
                 )
             }.onFailure {
-                _uiState.value = _uiState.value.copy(
-                    isRestoringBackup = false,
-                    errorMessage = appContext.getString(R.string.onboarding_restore_backup_failed),
-                )
+                _uiState.value =
+                    _uiState.value.copy(
+                        isRestoringBackup = false,
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_restore_backup_failed
+                        )
+                    )
             }
         }
     }
 
     fun applyPreview() {
         val preview = _uiState.value.preview ?: return
-        val patchedFormState = _uiState.value
-            .toDocumentImportFormState()
-            .applyDocumentImportPreview(preview)
-        _uiState.value = _uiState.value.copy(
-            displayName = patchedFormState.displayName,
-            legalForm = patchedFormState.legalForm,
-            registrationId = patchedFormState.registrationId,
-            registrationDate = patchedFormState.registrationDate,
-            legalAddress = patchedFormState.legalAddress,
-            activityType = patchedFormState.activityType,
-            certificateNumber = patchedFormState.certificateNumber,
-            certificateIssuedDate = patchedFormState.certificateIssuedDate,
-            effectiveDate = patchedFormState.effectiveDate,
-            infoMessage = appContext.documentImportStrings().previewApplied,
-            errorMessage = null,
-        )
+        val patchedFormState =
+            _uiState.value
+                .toDocumentImportFormState()
+                .applyDocumentImportPreview(preview)
+        _uiState.value =
+            _uiState.value.copy(
+                displayName = patchedFormState.displayName,
+                legalForm = patchedFormState.legalForm,
+                registrationId = patchedFormState.registrationId,
+                registrationDate = patchedFormState.registrationDate,
+                legalAddress = patchedFormState.legalAddress,
+                activityType = patchedFormState.activityType,
+                certificateNumber = patchedFormState.certificateNumber,
+                certificateIssuedDate = patchedFormState.certificateIssuedDate,
+                effectiveDate = patchedFormState.effectiveDate,
+                infoMessage = appContext.documentImportStrings().previewApplied,
+                errorMessage = null
+            )
     }
 
     fun updateDisplayName(value: String) {
@@ -172,52 +190,91 @@ class OnboardingViewModel @Inject constructor(
     fun completeOnboarding() {
         val current = _uiState.value
         val taxRate = current.taxRatePercent.toBigDecimalOrNull()
-        val registrationDateResult = DateInputParser.parseOptionalIsoDate(current.registrationDate)
-        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(current.certificateIssuedDate)
+        val registrationDateResult = DateInputParser.parseOptionalIsoDate(
+            current.registrationDate
+        )
+        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(
+            current.certificateIssuedDate
+        )
         val registrationDate = registrationDateResult.dateOrNull()
         val certificateIssuedDate = certificateIssuedDateResult.dateOrNull()
         when {
             current.displayName.isBlank() ->
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_display_name_required))
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_error_display_name_required
+                        )
+                    )
             current.registrationId.isBlank() ->
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_registration_id_required))
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_error_registration_id_required
+                        )
+                    )
             taxRate == null || taxRate < BigDecimal.ZERO ->
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_tax_rate_invalid))
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_error_tax_rate_invalid
+                        )
+                    )
             registrationDateResult is DateParseResult.Invalid ->
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_registration_date_invalid))
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_error_registration_date_invalid
+                        )
+                    )
             certificateIssuedDateResult is DateParseResult.Invalid ->
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.onboarding_error_certificate_issued_date_invalid))
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.onboarding_error_certificate_issued_date_invalid
+                        )
+                    )
             else -> {
                 viewModelScope.launch {
                     _uiState.value = current.copy(isSaving = true, errorMessage = null)
                     runCatching {
                         completeOnboardingUseCase(
-                            profile = TaxpayerProfile(
+                            profile =
+                            TaxpayerProfile(
                                 registrationId = current.registrationId.trim(),
                                 displayName = current.displayName.trim(),
                                 legalForm = current.legalForm.trim().ifBlank { null },
                                 registrationDate = registrationDate,
                                 legalAddress = current.legalAddress.trim().ifBlank { null },
-                                activityType = current.activityType.trim().ifBlank { null },
+                                activityType = current.activityType.trim().ifBlank { null }
                             ),
-                            config = SmallBusinessStatusConfig(
+                            config =
+                            SmallBusinessStatusConfig(
                                 effectiveDate = current.effectiveDate,
                                 defaultTaxRatePercent = taxRate,
-                                certificateNumber = current.certificateNumber.trim().ifBlank { null },
-                                certificateIssuedDate = certificateIssuedDate,
-                            ),
+                                certificateNumber = current.certificateNumber.trim().ifBlank {
+                                    null
+                                },
+                                certificateIssuedDate = certificateIssuedDate
+                            )
                         )
                     }.onSuccess {
-                        _uiState.value = current.copy(
-                            isSaving = false,
-                            infoMessage = appContext.getString(R.string.onboarding_completed),
-                            errorMessage = null,
-                        )
+                        _uiState.value =
+                            current.copy(
+                                isSaving = false,
+                                infoMessage = appContext.getString(
+                                    R.string.onboarding_completed
+                                ),
+                                errorMessage = null
+                            )
                     }.onFailure {
-                        _uiState.value = current.copy(
-                            isSaving = false,
-                            errorMessage = appContext.getString(R.string.onboarding_error_save_failed),
-                        )
+                        _uiState.value =
+                            current.copy(
+                                isSaving = false,
+                                errorMessage = appContext.getString(
+                                    R.string.onboarding_error_save_failed
+                                )
+                            )
                     }
                 }
             }
@@ -227,27 +284,28 @@ class OnboardingViewModel @Inject constructor(
     private suspend fun loadExistingValues(
         infoMessage: String? = _uiState.value.infoMessage,
         errorMessage: String? = _uiState.value.errorMessage,
-        isRestoringBackup: Boolean = _uiState.value.isRestoringBackup,
+        isRestoringBackup: Boolean = _uiState.value.isRestoringBackup
     ) {
         val profile = settingsRepository.observeTaxpayerProfile().first()
         val config = settingsRepository.observeStatusConfig().first()
-        _uiState.value = _uiState.value.copy(
-            preview = null,
-            hasExistingSetupData = profile != null || config != null,
-            displayName = profile?.displayName.orEmpty(),
-            legalForm = profile?.legalForm.orEmpty(),
-            registrationId = profile?.registrationId.orEmpty(),
-            registrationDate = profile?.registrationDate?.toString().orEmpty(),
-            legalAddress = profile?.legalAddress.orEmpty(),
-            activityType = profile?.activityType.orEmpty(),
-            certificateNumber = config?.certificateNumber.orEmpty(),
-            certificateIssuedDate = config?.certificateIssuedDate?.toString().orEmpty(),
-            effectiveDate = config?.effectiveDate ?: LocalDate.now(clock),
-            taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
-            infoMessage = infoMessage,
-            errorMessage = errorMessage,
-            isRestoringBackup = isRestoringBackup,
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                preview = null,
+                hasExistingSetupData = profile != null || config != null,
+                displayName = profile?.displayName.orEmpty(),
+                legalForm = profile?.legalForm.orEmpty(),
+                registrationId = profile?.registrationId.orEmpty(),
+                registrationDate = profile?.registrationDate?.toString().orEmpty(),
+                legalAddress = profile?.legalAddress.orEmpty(),
+                activityType = profile?.activityType.orEmpty(),
+                certificateNumber = config?.certificateNumber.orEmpty(),
+                certificateIssuedDate = config?.certificateIssuedDate?.toString().orEmpty(),
+                effectiveDate = config?.effectiveDate ?: LocalDate.now(clock),
+                taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
+                infoMessage = infoMessage,
+                errorMessage = errorMessage,
+                isRestoringBackup = isRestoringBackup
+            )
     }
 }
 
@@ -260,5 +318,5 @@ private fun OnboardingUiState.toDocumentImportFormState(): DocumentImportFormSta
     activityType = activityType,
     certificateNumber = certificateNumber,
     certificateIssuedDate = certificateIssuedDate,
-    effectiveDate = effectiveDate,
+    effectiveDate = effectiveDate
 )

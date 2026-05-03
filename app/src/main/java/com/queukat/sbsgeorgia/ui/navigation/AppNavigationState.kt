@@ -14,16 +14,27 @@ import java.time.YearMonth
 interface AppNavigator {
     val currentTopLevelDestination: TopLevelDestination
     val shouldShowBottomBar: Boolean
+
     fun selectTopLevel(destination: TopLevelDestination)
+
     fun openMonths()
+
     fun openSettings()
+
     fun openCharts()
+
     fun openMonthDetails(yearMonth: YearMonth)
+
     fun openManualEntry(entryId: Long? = null, initialDate: LocalDate? = null)
+
     fun openImportStatement()
+
     fun openPaymentHelper(yearMonth: YearMonth)
+
     fun openFxOverride(entryId: Long)
+
     fun openWorkflowStatus(yearMonth: YearMonth)
+
     fun pop()
 }
 
@@ -32,9 +43,11 @@ class AppNavigationState internal constructor(
     internal val homeBackStack: MutableList<NavKey>,
     internal val monthsBackStack: MutableList<NavKey>,
     internal val settingsBackStack: MutableList<NavKey>,
-    initialTopLevelDestination: TopLevelDestination = TopLevelDestination.Home,
+    initialTopLevelDestination: TopLevelDestination = TopLevelDestination.Home
 ) : AppNavigator {
-    override var currentTopLevelDestination: TopLevelDestination by mutableStateOf(initialTopLevelDestination)
+    override var currentTopLevelDestination: TopLevelDestination by mutableStateOf(
+        initialTopLevelDestination
+    )
         private set
 
     val currentBackStack: MutableList<NavKey>
@@ -72,8 +85,8 @@ class AppNavigationState internal constructor(
         currentBackStack.add(
             ManualEntryDestination(
                 entryId = entryId,
-                initialDate = initialDate?.toString(),
-            ),
+                initialDate = initialDate?.toString()
+            )
         )
     }
 
@@ -122,7 +135,7 @@ fun rememberAppNavigationState(): AppNavigationState {
         AppNavigationState(
             homeBackStack = homeBackStack,
             monthsBackStack = monthsBackStack,
-            settingsBackStack = settingsBackStack,
+            settingsBackStack = settingsBackStack
         )
     }
 }

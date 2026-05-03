@@ -52,33 +52,34 @@ internal object SettingsFormReducer {
     fun startDocumentLoading(state: SettingsUiState): SettingsUiState = state.copy(
         isDocumentLoading = true,
         documentInfoMessage = null,
-        documentErrorMessage = null,
+        documentErrorMessage = null
     )
 
-    fun applyDocumentLoadResult(
-        state: SettingsUiState,
-        result: DocumentImportLoadResult,
-    ): SettingsUiState = when (result) {
-        is DocumentImportLoadResult.Success -> state.copy(
-            isDocumentLoading = false,
-            preview = result.preview,
-            documentInfoMessage = result.infoMessage,
-        )
-        is DocumentImportLoadResult.Error -> state.copy(
-            isDocumentLoading = false,
-            preview = null,
-            documentErrorMessage = result.errorMessage,
-        )
-    }
+    fun applyDocumentLoadResult(state: SettingsUiState, result: DocumentImportLoadResult): SettingsUiState =
+        when (result) {
+            is DocumentImportLoadResult.Success ->
+                state.copy(
+                    isDocumentLoading = false,
+                    preview = result.preview,
+                    documentInfoMessage = result.infoMessage
+                )
+            is DocumentImportLoadResult.Error ->
+                state.copy(
+                    isDocumentLoading = false,
+                    preview = null,
+                    documentErrorMessage = result.errorMessage
+                )
+        }
 
     fun applyPreview(
         state: SettingsUiState,
         preview: OnboardingImportPreview,
-        previewAppliedMessage: String,
+        previewAppliedMessage: String
     ): SettingsUiState {
-        val patchedFormState = state
-            .toDocumentImportFormState()
-            .applyDocumentImportPreview(preview)
+        val patchedFormState =
+            state
+                .toDocumentImportFormState()
+                .applyDocumentImportPreview(preview)
         return state.copy(
             displayName = patchedFormState.displayName,
             legalForm = patchedFormState.legalForm,
@@ -91,7 +92,7 @@ internal object SettingsFormReducer {
             effectiveDate = patchedFormState.effectiveDate,
             documentInfoMessage = previewAppliedMessage,
             documentErrorMessage = null,
-            errorMessage = null,
+            errorMessage = null
         )
     }
 
@@ -100,7 +101,7 @@ internal object SettingsFormReducer {
         profile: TaxpayerProfile?,
         config: SmallBusinessStatusConfig?,
         reminderConfig: ReminderConfig?,
-        today: LocalDate,
+        today: LocalDate
     ): SettingsUiState = currentState.copy(
         preview = null,
         registrationId = profile?.registrationId.orEmpty(),
@@ -114,9 +115,11 @@ internal object SettingsFormReducer {
         effectiveDate = config?.effectiveDate ?: today,
         taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
         defaultReminderTime = reminderConfig?.defaultReminderTime?.toString() ?: "09:00",
-        declarationReminderDays = reminderConfig?.declarationReminderDays?.joinToString(",")
+        declarationReminderDays =
+        reminderConfig?.declarationReminderDays?.joinToString(",")
             ?: settingsDefaultReminderDays.joinToString(","),
-        paymentReminderDays = reminderConfig?.paymentReminderDays?.joinToString(",")
+        paymentReminderDays =
+        reminderConfig?.paymentReminderDays?.joinToString(",")
             ?: settingsDefaultReminderDays.joinToString(","),
         declarationRemindersEnabled = reminderConfig?.declarationRemindersEnabled ?: true,
         paymentRemindersEnabled = reminderConfig?.paymentRemindersEnabled ?: true,
@@ -124,7 +127,7 @@ internal object SettingsFormReducer {
         isDocumentLoading = false,
         documentInfoMessage = null,
         documentErrorMessage = null,
-        errorMessage = null,
+        errorMessage = null
     )
 }
 
@@ -137,5 +140,5 @@ private fun SettingsUiState.toDocumentImportFormState(): DocumentImportFormState
     activityType = activityType,
     certificateNumber = certificateNumber,
     certificateIssuedDate = certificateIssuedDate,
-    effectiveDate = effectiveDate,
+    effectiveDate = effectiveDate
 )

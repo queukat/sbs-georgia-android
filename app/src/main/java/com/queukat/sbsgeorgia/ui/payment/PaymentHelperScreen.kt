@@ -39,11 +39,7 @@ import java.time.YearMonth
 import kotlinx.coroutines.launch
 
 @Composable
-fun PaymentHelperRoute(
-    innerPadding: PaddingValues,
-    yearMonth: YearMonth,
-    onBack: () -> Unit,
-) {
+fun PaymentHelperRoute(innerPadding: PaddingValues, yearMonth: YearMonth, onBack: () -> Unit) {
     val viewModel: PaymentHelperViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -54,16 +50,12 @@ fun PaymentHelperRoute(
     PaymentHelperScreen(
         innerPadding = innerPadding,
         uiState = uiState,
-        onBack = onBack,
+        onBack = onBack
     )
 }
 
 @Composable
-fun PaymentHelperScreen(
-    innerPadding: PaddingValues,
-    uiState: PaymentHelperUiState,
-    onBack: () -> Unit,
-) {
+fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiState, onBack: () -> Unit) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
@@ -71,8 +63,10 @@ fun PaymentHelperScreen(
     val treasuryCodeLabel = stringResource(R.string.payment_helper_treasury_code)
     val paymentCommentLabel = stringResource(R.string.payment_helper_comment)
     val taxAmountLabel = stringResource(R.string.payment_helper_tax_amount)
-    val treasuryCodeCopiedMessage = stringResource(R.string.common_copied_template, treasuryCodeLabel)
-    val paymentCommentCopiedMessage = stringResource(R.string.common_copied_template, paymentCommentLabel)
+    val treasuryCodeCopiedMessage =
+        stringResource(R.string.common_copied_template, treasuryCodeLabel)
+    val paymentCommentCopiedMessage =
+        stringResource(R.string.common_copied_template, paymentCommentLabel)
     val taxAmountCopiedMessage = stringResource(R.string.common_copied_template, taxAmountLabel)
 
     fun copy(label: String, value: String, copiedMessage: String) {
@@ -88,16 +82,19 @@ fun PaymentHelperScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SbsTopAppBar(
-                title = data?.incomeMonth?.formatMonthYear() ?: stringResource(R.string.payment_helper_title),
-                onBack = onBack,
+                title =
+                data?.incomeMonth?.formatMonthYear()
+                    ?: stringResource(R.string.payment_helper_title),
+                onBack = onBack
             )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        },
+        }
     ) { contentPadding ->
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -105,9 +102,9 @@ fun PaymentHelperScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.payment_helper_section_readiness)) {
                 Text(
@@ -120,8 +117,8 @@ fun PaymentHelperScreen(
                             PaymentHelperReadinessState.UNRESOLVED_FX -> R.string.payment_helper_unresolved_fx
                             PaymentHelperReadinessState.ZERO_DECLARATION -> R.string.payment_helper_zero_declaration
                             PaymentHelperReadinessState.READY -> R.string.payment_helper_ready
-                        },
-                    ),
+                        }
+                    )
                 )
             }
             if (data != null) {
@@ -134,7 +131,13 @@ fun PaymentHelperScreen(
                     KeyValueRow(treasuryCodeLabel, data.treasuryCode)
                     KeyValueRow(
                         paymentCommentLabel,
-                        if (data.comment.isBlank()) stringResource(R.string.payment_helper_complete_settings_first) else data.comment,
+                        if (data.comment.isBlank()) {
+                            stringResource(
+                                R.string.payment_helper_complete_settings_first
+                            )
+                        } else {
+                            data.comment
+                        }
                     )
                     KeyValueRow(taxAmountLabel, formatAmount(data.estimatedTaxAmountGel, "GEL"))
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -143,9 +146,9 @@ fun PaymentHelperScreen(
                                 copy(
                                     label = treasuryCodeLabel,
                                     value = data.treasuryCode,
-                                    copiedMessage = treasuryCodeCopiedMessage,
+                                    copiedMessage = treasuryCodeCopiedMessage
                                 )
-                            },
+                            }
                         ) {
                             Text(stringResource(R.string.common_copy_code))
                         }
@@ -154,9 +157,9 @@ fun PaymentHelperScreen(
                                 copy(
                                     label = paymentCommentLabel,
                                     value = data.comment,
-                                    copiedMessage = paymentCommentCopiedMessage,
+                                    copiedMessage = paymentCommentCopiedMessage
                                 )
-                            },
+                            }
                         ) {
                             Text(stringResource(R.string.common_copy_comment))
                         }
@@ -165,9 +168,9 @@ fun PaymentHelperScreen(
                                 copy(
                                     label = taxAmountLabel,
                                     value = data.estimatedTaxAmountGel.toPlainString(),
-                                    copiedMessage = taxAmountCopiedMessage,
+                                    copiedMessage = taxAmountCopiedMessage
                                 )
-                            },
+                            }
                         ) {
                             Text(stringResource(R.string.common_copy_amount))
                         }

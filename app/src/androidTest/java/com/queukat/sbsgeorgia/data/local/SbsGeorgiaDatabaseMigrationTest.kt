@@ -13,12 +13,13 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class SbsGeorgiaDatabaseMigrationTest {
     @get:Rule
-    val helper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(),
-        SbsGeorgiaDatabase::class.java,
-        emptyList(),
-        FrameworkSQLiteOpenHelperFactory(),
-    )
+    val helper =
+        MigrationTestHelper(
+            InstrumentationRegistry.getInstrumentation(),
+            SbsGeorgiaDatabase::class.java,
+            emptyList(),
+            FrameworkSQLiteOpenHelperFactory()
+        )
 
     @Test
     @Throws(IOException::class)
@@ -34,12 +35,13 @@ class SbsGeorgiaDatabaseMigrationTest {
                     paymentRemindersEnabled,
                     themeMode
                 ) VALUES(1, '[10,13,15]', '[10,13,15]', 1, 1, 'SYSTEM')
-                """.trimIndent(),
+                """.trimIndent()
             )
             close()
         }
 
-        helper.runMigrationsAndValidate(TEST_DB, 2, true, SbsGeorgiaDatabase.MIGRATION_1_2)
+        helper
+            .runMigrationsAndValidate(TEST_DB, 2, true, SbsGeorgiaDatabase.MIGRATION_1_2)
             .query("SELECT defaultReminderTime FROM reminder_config WHERE singletonId = 1")
             .use { cursor ->
                 assertEquals(1, cursor.count)
@@ -60,7 +62,7 @@ class SbsGeorgiaDatabaseMigrationTest {
                     displayName,
                     baseCurrencyView
                 ) VALUES(1, '306449082', 'Jane Doe', 'GEL')
-                """.trimIndent(),
+                """.trimIndent()
             )
             execSQL(
                 """
@@ -69,29 +71,30 @@ class SbsGeorgiaDatabaseMigrationTest {
                     effectiveDate,
                     defaultTaxRatePercent
                 ) VALUES(1, '2026-03-07', '1.0')
-                """.trimIndent(),
+                """.trimIndent()
             )
             close()
         }
 
-        helper.runMigrationsAndValidate(
-            TEST_DB,
-            3,
-            true,
-            SbsGeorgiaDatabase.MIGRATION_2_3,
-        ).query(
-            """
-            SELECT legalForm, registrationDate, legalAddress, activityType
-            FROM taxpayer_profile WHERE singletonId = 1
-            """.trimIndent(),
-        ).use { cursor ->
-            assertEquals(1, cursor.count)
-            cursor.moveToFirst()
-            assertEquals(null, cursor.getString(0))
-            assertEquals(null, cursor.getString(1))
-            assertEquals(null, cursor.getString(2))
-            assertEquals(null, cursor.getString(3))
-        }
+        helper
+            .runMigrationsAndValidate(
+                TEST_DB,
+                3,
+                true,
+                SbsGeorgiaDatabase.MIGRATION_2_3
+            ).query(
+                """
+                SELECT legalForm, registrationDate, legalAddress, activityType
+                FROM taxpayer_profile WHERE singletonId = 1
+                """.trimIndent()
+            ).use { cursor ->
+                assertEquals(1, cursor.count)
+                cursor.moveToFirst()
+                assertEquals(null, cursor.getString(0))
+                assertEquals(null, cursor.getString(1))
+                assertEquals(null, cursor.getString(2))
+                assertEquals(null, cursor.getString(3))
+            }
     }
 
     private companion object {

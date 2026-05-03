@@ -6,7 +6,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class GeorgiaTaxBusinessCalendar @Inject constructor() {
+class GeorgiaTaxBusinessCalendar
+@Inject
+constructor() {
     fun adjustToNextBusinessDay(date: LocalDate): LocalDate {
         var candidate = date
         while (isNonBusinessDay(candidate)) {
@@ -15,8 +17,7 @@ class GeorgiaTaxBusinessCalendar @Inject constructor() {
         return candidate
     }
 
-    fun isNonBusinessDay(date: LocalDate): Boolean =
-        date.dayOfWeek in weekendDays || date in holidays(date.year)
+    fun isNonBusinessDay(date: LocalDate): Boolean = date.dayOfWeek in weekendDays || date in holidays(date.year)
 
     internal fun holidays(year: Int): Set<LocalDate> =
         fixedHolidays(year) + orthodoxEasterHolidays(year) + governmentOverrideDaysOff(year)
@@ -35,7 +36,7 @@ class GeorgiaTaxBusinessCalendar @Inject constructor() {
         LocalDate.of(year, 5, 26),
         LocalDate.of(year, 8, 28),
         LocalDate.of(year, 10, 14),
-        LocalDate.of(year, 11, 23),
+        LocalDate.of(year, 11, 23)
     )
 
     private fun orthodoxEasterHolidays(year: Int): Set<LocalDate> {
@@ -44,7 +45,7 @@ class GeorgiaTaxBusinessCalendar @Inject constructor() {
             easterSunday.minusDays(2),
             easterSunday.minusDays(1),
             easterSunday,
-            easterSunday.plusDays(1),
+            easterSunday.plusDays(1)
         )
     }
 
@@ -62,8 +63,7 @@ class GeorgiaTaxBusinessCalendar @Inject constructor() {
         return LocalDate.of(year, month, day).plusDays(13)
     }
 
-    private fun governmentOverrideDaysOff(year: Int): Set<LocalDate> =
-        additionalGovernmentDaysOff[year].orEmpty()
+    private fun governmentOverrideDaysOff(year: Int): Set<LocalDate> = additionalGovernmentDaysOff[year].orEmpty()
 
     private companion object {
         val weekendDays = setOf(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY)

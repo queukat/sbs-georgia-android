@@ -7,9 +7,9 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PdfBoxInitializer @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-) {
+class PdfBoxInitializer
+@Inject
+constructor(@param:ApplicationContext private val context: Context) {
     @Volatile
     private var initialized = false
 

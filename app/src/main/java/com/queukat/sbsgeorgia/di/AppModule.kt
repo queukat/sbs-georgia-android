@@ -3,16 +3,16 @@ package com.queukat.sbsgeorgia.di
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
+import com.queukat.sbsgeorgia.data.export.AndroidTextDocumentStore
+import com.queukat.sbsgeorgia.data.export.TextDocumentStore
 import com.queukat.sbsgeorgia.data.importer.AndroidStatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.PdfBoxStatementTextExtractor
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
-import com.queukat.sbsgeorgia.data.export.AndroidTextDocumentStore
-import com.queukat.sbsgeorgia.data.export.TextDocumentStore
 import com.queukat.sbsgeorgia.data.local.FxRateDao
-import com.queukat.sbsgeorgia.data.local.IncomeEntryDao
 import com.queukat.sbsgeorgia.data.local.ImportedStatementDao
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
+import com.queukat.sbsgeorgia.data.local.IncomeEntryDao
 import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordDao
 import com.queukat.sbsgeorgia.data.local.ReminderConfigDao
 import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
@@ -88,19 +88,17 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): SbsGeorgiaDatabase =
-        Room.databaseBuilder(
+    fun provideDatabase(@ApplicationContext context: Context): SbsGeorgiaDatabase = Room
+        .databaseBuilder(
             context,
             SbsGeorgiaDatabase::class.java,
-            "sbs_georgia.db",
-        )
-            .addMigrations(
-                SbsGeorgiaDatabase.MIGRATION_1_2,
-                SbsGeorgiaDatabase.MIGRATION_2_3,
-                SbsGeorgiaDatabase.MIGRATION_3_4,
-                SbsGeorgiaDatabase.MIGRATION_4_5,
-            )
-            .build()
+            "sbs_georgia.db"
+        ).addMigrations(
+            SbsGeorgiaDatabase.MIGRATION_1_2,
+            SbsGeorgiaDatabase.MIGRATION_2_3,
+            SbsGeorgiaDatabase.MIGRATION_3_4,
+            SbsGeorgiaDatabase.MIGRATION_4_5
+        ).build()
 
     @Provides
     fun provideTaxpayerProfileDao(database: SbsGeorgiaDatabase): TaxpayerProfileDao = database.taxpayerProfileDao()
@@ -123,7 +121,8 @@ object AppModule {
     fun provideFxRateDao(database: SbsGeorgiaDatabase): FxRateDao = database.fxRateDao()
 
     @Provides
-    fun provideImportedStatementDao(database: SbsGeorgiaDatabase): ImportedStatementDao = database.importedStatementDao()
+    fun provideImportedStatementDao(database: SbsGeorgiaDatabase): ImportedStatementDao =
+        database.importedStatementDao()
 
     @Provides
     fun provideImportedTransactionDao(database: SbsGeorgiaDatabase): ImportedTransactionDao =

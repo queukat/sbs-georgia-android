@@ -7,13 +7,13 @@ import java.time.LocalTime
 import java.time.YearMonth
 
 enum class BaseCurrencyView(val dbCode: String) {
-    GEL("gel"),
+    GEL("gel")
     ;
 
     companion object {
         fun fromPersisted(value: String): BaseCurrencyView = persistedEnumValue(
             rawValue = value,
-            dbCode = BaseCurrencyView::dbCode,
+            dbCode = BaseCurrencyView::dbCode
         )
     }
 }
@@ -21,26 +21,26 @@ enum class BaseCurrencyView(val dbCode: String) {
 enum class ThemeMode(val dbCode: String) {
     SYSTEM("system"),
     LIGHT("light"),
-    DARK("dark"),
+    DARK("dark")
     ;
 
     companion object {
         fun fromPersisted(value: String): ThemeMode = persistedEnumValue(
             rawValue = value,
-            dbCode = ThemeMode::dbCode,
+            dbCode = ThemeMode::dbCode
         )
     }
 }
 
 enum class IncomeSourceType(val dbCode: String) {
     MANUAL("manual"),
-    IMPORTED_STATEMENT("imported_statement"),
+    IMPORTED_STATEMENT("imported_statement")
     ;
 
     companion object {
         fun fromPersisted(value: String): IncomeSourceType = persistedEnumValue(
             rawValue = value,
-            dbCode = IncomeSourceType::dbCode,
+            dbCode = IncomeSourceType::dbCode
         )
     }
 }
@@ -48,13 +48,13 @@ enum class IncomeSourceType(val dbCode: String) {
 enum class DeclarationInclusion(val dbCode: String) {
     INCLUDED("included"),
     EXCLUDED("excluded"),
-    REVIEW_REQUIRED("review_required"),
+    REVIEW_REQUIRED("review_required")
     ;
 
     companion object {
         fun fromPersisted(value: String): DeclarationInclusion = persistedEnumValue(
             rawValue = value,
-            dbCode = DeclarationInclusion::dbCode,
+            dbCode = DeclarationInclusion::dbCode
         )
     }
 }
@@ -62,13 +62,13 @@ enum class DeclarationInclusion(val dbCode: String) {
 enum class FxRateSource(val dbCode: String) {
     NONE("none"),
     OFFICIAL_NBG_JSON("official_nbg_json"),
-    MANUAL_OVERRIDE("manual_override"),
+    MANUAL_OVERRIDE("manual_override")
     ;
 
     companion object {
         fun fromPersisted(value: String): FxRateSource = persistedEnumValue(
             rawValue = value,
-            dbCode = FxRateSource::dbCode,
+            dbCode = FxRateSource::dbCode
         )
     }
 }
@@ -81,13 +81,13 @@ enum class MonthlyWorkflowStatus(val dbCode: String) {
     PAYMENT_SENT("payment_sent"),
     PAYMENT_CREDITED("payment_credited"),
     SETTLED("settled"),
-    OVERDUE("overdue"),
+    OVERDUE("overdue")
     ;
 
     companion object {
         fun fromPersisted(value: String): MonthlyWorkflowStatus = persistedEnumValue(
             rawValue = value,
-            dbCode = MonthlyWorkflowStatus::dbCode,
+            dbCode = MonthlyWorkflowStatus::dbCode
         )
     }
 }
@@ -98,7 +98,7 @@ enum class TaxPaymentStatus {
     SENT,
     CREDITED,
     SETTLED,
-    OVERDUE,
+    OVERDUE
 }
 
 data class TaxpayerProfile(
@@ -108,14 +108,14 @@ data class TaxpayerProfile(
     val legalForm: String? = null,
     val registrationDate: LocalDate? = null,
     val legalAddress: String? = null,
-    val activityType: String? = null,
+    val activityType: String? = null
 )
 
 data class SmallBusinessStatusConfig(
     val effectiveDate: LocalDate,
     val defaultTaxRatePercent: BigDecimal,
     val certificateNumber: String? = null,
-    val certificateIssuedDate: LocalDate? = null,
+    val certificateIssuedDate: LocalDate? = null
 )
 
 data class ReminderConfig(
@@ -124,14 +124,14 @@ data class ReminderConfig(
     val declarationRemindersEnabled: Boolean,
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: LocalTime,
-    val themeMode: ThemeMode,
+    val themeMode: ThemeMode
 )
 
 data class ImportedStatement(
     val id: Long,
     val sourceFileName: String,
     val sourceFingerprint: String,
-    val importedAtEpochMillis: Long,
+    val importedAtEpochMillis: Long
 )
 
 data class ImportedTransaction(
@@ -145,7 +145,7 @@ data class ImportedTransaction(
     val paidIn: BigDecimal?,
     val balance: BigDecimal?,
     val suggestedInclusion: DeclarationInclusion,
-    val finalInclusion: DeclarationInclusion,
+    val finalInclusion: DeclarationInclusion
 )
 
 data class IncomeEntry(
@@ -163,7 +163,7 @@ data class IncomeEntry(
     val sourceStatementId: Long? = null,
     val sourceTransactionFingerprint: String? = null,
     val createdAtEpochMillis: Long,
-    val updatedAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long
 )
 
 fun IncomeEntry.requiresFxResolution(): Boolean =
@@ -175,7 +175,7 @@ data class FxRate(
     val units: Int,
     val rateToGel: BigDecimal,
     val source: FxRateSource,
-    val manualOverride: Boolean,
+    val manualOverride: Boolean
 )
 
 data class MonthlyDeclarationRecord(
@@ -186,25 +186,18 @@ data class MonthlyDeclarationRecord(
     val paymentSentDate: LocalDate? = null,
     val paymentCreditedDate: LocalDate? = null,
     val paymentAmountGel: BigDecimal? = null,
-    val notes: String = "",
+    val notes: String = ""
 )
 
-data class FilingWindow(
-    val start: LocalDate,
-    val endInclusive: LocalDate,
-    val dueDate: LocalDate,
-)
+data class FilingWindow(val start: LocalDate, val endInclusive: LocalDate, val dueDate: LocalDate)
 
-data class MonthlyCurrencyTotal(
-    val currencyCode: String,
-    val amount: BigDecimal,
-)
+data class MonthlyCurrencyTotal(val currencyCode: String, val amount: BigDecimal)
 
 data class MonthlyDeclarationPeriod(
     val incomeMonth: YearMonth,
     val filingWindow: FilingWindow,
     val inScope: Boolean,
-    val outOfScope: Boolean,
+    val outOfScope: Boolean
 )
 
 data class MonthlyDeclarationSnapshot(
@@ -219,7 +212,7 @@ data class MonthlyDeclarationSnapshot(
     val zeroDeclarationPrepared: Boolean,
     val reviewNeeded: Boolean,
     val setupRequired: Boolean,
-    val record: MonthlyDeclarationRecord?,
+    val record: MonthlyDeclarationRecord?
 ) {
     val paidTaxAmountGel: BigDecimal?
         get() = record?.paymentAmountGel
@@ -248,13 +241,10 @@ data class DashboardSummary(
     val paidTaxAmountGel: BigDecimal,
     val paymentMismatchMonthsCount: Int,
     val currentDuePeriod: MonthlyDeclarationSnapshot?,
-    val nextReminderDay: Int?,
+    val nextReminderDay: Int?
 )
 
-private inline fun <reified T : Enum<T>> persistedEnumValue(
-    rawValue: String,
-    dbCode: (T) -> String,
-): T {
+private inline fun <reified T : Enum<T>> persistedEnumValue(rawValue: String, dbCode: (T) -> String): T {
     val normalized = rawValue.trim()
     return enumValues<T>().firstOrNull { value ->
         dbCode(value).equals(normalized, ignoreCase = true) ||

@@ -20,11 +20,13 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class StatementImportRepositoryImpl @Inject constructor(
+class StatementImportRepositoryImpl
+@Inject
+constructor(
     private val database: SbsGeorgiaDatabase,
     private val importedStatementDao: ImportedStatementDao,
     private val importedTransactionDao: ImportedTransactionDao,
-    private val incomeEntryDao: IncomeEntryDao,
+    private val incomeEntryDao: IncomeEntryDao
 ) : StatementImportRepository {
     override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean =
         importedStatementDao.existsBySourceFingerprint(sourceFingerprint)
@@ -34,7 +36,7 @@ class StatementImportRepositoryImpl @Inject constructor(
             ImportedStatementImportInfo(
                 sourceFileName = entity.sourceFileName,
                 sourceFingerprint = entity.sourceFingerprint,
-                importedAtEpochMillis = entity.importedAtEpochMillis,
+                importedAtEpochMillis = entity.importedAtEpochMillis
             )
         }
 
@@ -46,34 +48,36 @@ class StatementImportRepositoryImpl @Inject constructor(
         sourceFileName: String,
         sourceFingerprint: String,
         rows: List<ApprovedImportedStatementRow>,
-        importedAtEpochMillis: Long,
+        importedAtEpochMillis: Long
     ): ConfirmImportedStatementResult = database.withTransaction {
-        val statementId = importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.id
-            ?: importedStatementDao.insert(
-                ImportedStatementEntity(
-                    sourceFileName = sourceFileName,
-                    sourceFingerprint = sourceFingerprint,
-                    importedAtEpochMillis = importedAtEpochMillis,
-                ),
-            )
+        val statementId =
+            importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.id
+                ?: importedStatementDao.insert(
+                    ImportedStatementEntity(
+                        sourceFileName = sourceFileName,
+                        sourceFingerprint = sourceFingerprint,
+                        importedAtEpochMillis = importedAtEpochMillis
+                    )
+                )
 
         val nonPreviewDuplicates = rows.filterNot { it.duplicate }
-        val insertResults = importedTransactionDao.insertAll(
-            nonPreviewDuplicates.map { row ->
-                ImportedTransactionEntity(
-                    statementId = statementId,
-                    transactionFingerprint = row.transactionFingerprint,
-                    incomeDate = row.incomeDate,
-                    description = row.description,
-                    additionalInformation = row.additionalInformation,
-                    paidOut = row.paidOut?.amount,
-                    paidIn = row.paidIn?.amount,
-                    balance = row.balance?.amount,
-                    suggestedInclusion = row.suggestedInclusion,
-                    finalInclusion = row.finalInclusion,
-                )
-            },
-        )
+        val insertResults =
+            importedTransactionDao.insertAll(
+                nonPreviewDuplicates.map { row ->
+                    ImportedTransactionEntity(
+                        statementId = statementId,
+                        transactionFingerprint = row.transactionFingerprint,
+                        incomeDate = row.incomeDate,
+                        description = row.description,
+                        additionalInformation = row.additionalInformation,
+                        paidOut = row.paidOut?.amount,
+                        paidIn = row.paidIn?.amount,
+                        balance = row.balance?.amount,
+                        suggestedInclusion = row.suggestedInclusion,
+                        finalInclusion = row.finalInclusion
+                    )
+                }
+            )
 
         var storedTransactionCount = 0
         var importedIncomeCount = 0
@@ -87,9 +91,10 @@ class StatementImportRepositoryImpl @Inject constructor(
 
             storedTransactionCount += 1
             if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
-                val incomeDate = requireNotNull(row.incomeDate) {
-                    "Included imported income rows must have an income date."
-                }
+                val incomeDate =
+                    requireNotNull(row.incomeDate) {
+                        "Included imported income rows must have an income date."
+                    }
                 incomeEntryDao.upsert(
                     IncomeEntryEntity(
                         sourceType = IncomeSourceType.IMPORTED_STATEMENT,
@@ -105,8 +110,8 @@ class StatementImportRepositoryImpl @Inject constructor(
                         sourceStatementId = statementId,
                         sourceTransactionFingerprint = row.transactionFingerprint,
                         createdAtEpochMillis = importedAtEpochMillis,
-                        updatedAtEpochMillis = importedAtEpochMillis,
-                    ),
+                        updatedAtEpochMillis = importedAtEpochMillis
+                    )
                 )
                 importedIncomeCount += 1
             }
@@ -116,7 +121,9 @@ class StatementImportRepositoryImpl @Inject constructor(
             importedIncomeCount = importedIncomeCount,
             storedTransactionCount = storedTransactionCount,
             skippedDuplicateCount = skippedDuplicateCount,
-            excludedCount = rows.count { it.finalInclusion != DeclarationInclusion.INCLUDED },
+            excludedCount = rows.count {
+                it.finalInclusion != DeclarationInclusion.INCLUDED
+            }
         )
     }
 

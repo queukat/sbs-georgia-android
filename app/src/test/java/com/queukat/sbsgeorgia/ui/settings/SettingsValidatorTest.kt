@@ -7,38 +7,41 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SettingsValidatorTest {
-    private val validator = SettingsValidator(
-        strings = SettingsValidationStrings(
-            registrationIdRequired = "registrationIdRequired",
-            displayNameRequired = "displayNameRequired",
-            taxRateInvalid = "taxRateInvalid",
-            registrationDateInvalid = "registrationDateInvalid",
-            certificateIssuedDateInvalid = "certificateIssuedDateInvalid",
-            reminderTimeInvalid = "reminderTimeInvalid",
-            declarationDaysInvalid = "declarationDaysInvalid",
-            paymentDaysInvalid = "paymentDaysInvalid",
-        ),
-    )
+    private val validator =
+        SettingsValidator(
+            strings =
+            SettingsValidationStrings(
+                registrationIdRequired = "registrationIdRequired",
+                displayNameRequired = "displayNameRequired",
+                taxRateInvalid = "taxRateInvalid",
+                registrationDateInvalid = "registrationDateInvalid",
+                certificateIssuedDateInvalid = "certificateIssuedDateInvalid",
+                reminderTimeInvalid = "reminderTimeInvalid",
+                declarationDaysInvalid = "declarationDaysInvalid",
+                paymentDaysInvalid = "paymentDaysInvalid"
+            )
+        )
 
     @Test
     fun validateReturnsParsedPayloadForValidState() {
-        val result = validator.validate(
-            SettingsUiState(
-                registrationId = " 306449082 ",
-                displayName = " Test Entrepreneur ",
-                legalForm = " IE ",
-                registrationDate = "2026-03-07",
-                legalAddress = " Tbilisi ",
-                activityType = " Software services ",
-                certificateNumber = " CERT-1 ",
-                certificateIssuedDate = "2026-03-08",
-                effectiveDate = LocalDate.of(2026, 3, 7),
-                taxRatePercent = "1.0",
-                defaultReminderTime = "09:30",
-                declarationReminderDays = "10, 13, 13",
-                paymentReminderDays = "15, 10",
-            ),
-        )
+        val result =
+            validator.validate(
+                SettingsUiState(
+                    registrationId = " 306449082 ",
+                    displayName = " Test Entrepreneur ",
+                    legalForm = " IE ",
+                    registrationDate = "2026-03-07",
+                    legalAddress = " Tbilisi ",
+                    activityType = " Software services ",
+                    certificateNumber = " CERT-1 ",
+                    certificateIssuedDate = "2026-03-08",
+                    effectiveDate = LocalDate.of(2026, 3, 7),
+                    taxRatePercent = "1.0",
+                    defaultReminderTime = "09:30",
+                    declarationReminderDays = "10, 13, 13",
+                    paymentReminderDays = "15, 10"
+                )
+            )
 
         assertTrue(result is SettingsValidationResult.Valid)
         val value = (result as SettingsValidationResult.Valid).value
@@ -57,17 +60,18 @@ class SettingsValidatorTest {
 
     @Test
     fun validateRejectsInvalidReminderDays() {
-        val result = validator.validate(
-            SettingsUiState(
-                registrationId = "306449082",
-                displayName = "Test Entrepreneur",
-                declarationReminderDays = "0,16",
-            ),
-        )
+        val result =
+            validator.validate(
+                SettingsUiState(
+                    registrationId = "306449082",
+                    displayName = "Test Entrepreneur",
+                    declarationReminderDays = "0,16"
+                )
+            )
 
         assertEquals(
             SettingsValidationResult.Invalid("declarationDaysInvalid"),
-            result,
+            result
         )
     }
 }

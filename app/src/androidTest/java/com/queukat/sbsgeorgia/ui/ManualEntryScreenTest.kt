@@ -18,8 +18,8 @@ import com.queukat.sbsgeorgia.ui.manualentry.ManualEntryScreen
 import com.queukat.sbsgeorgia.ui.manualentry.ManualEntryUiState
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.time.LocalDate
-import org.junit.Before
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,8 +38,8 @@ class ManualEntryScreenTest {
     fun manualEntryCreateFlowCallsSaveWithUpdatedState() {
         var uiState by mutableStateOf(
             ManualEntryUiState(
-                incomeDate = LocalDate.of(2026, 4, 2),
-            ),
+                incomeDate = LocalDate.of(2026, 4, 2)
+            )
         )
         var saveClicked = false
 
@@ -55,7 +55,7 @@ class ManualEntryScreenTest {
                     onCategoryChanged = { uiState = uiState.copy(sourceCategory = it) },
                     onNoteChanged = { uiState = uiState.copy(note = it) },
                     onIncludedChanged = { uiState = uiState.copy(declarationIncluded = it) },
-                    onSave = { saveClicked = true },
+                    onSave = { saveClicked = true }
                 )
             }
         }
@@ -75,10 +75,11 @@ class ManualEntryScreenTest {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
                 ManualEntryScreen(
                     innerPadding = PaddingValues(),
-                    uiState = ManualEntryUiState(
+                    uiState =
+                    ManualEntryUiState(
                         entryId = 42L,
                         incomeDate = LocalDate.of(2026, 4, 2),
-                        amount = "200",
+                        amount = "200"
                     ),
                     onBack = {},
                     onDateChanged = {},
@@ -87,7 +88,7 @@ class ManualEntryScreenTest {
                     onCategoryChanged = {},
                     onNoteChanged = {},
                     onIncludedChanged = {},
-                    onSave = {},
+                    onSave = {}
                 )
             }
         }

@@ -14,24 +14,26 @@ import org.junit.Test
 class ManualEntryViewModelTest {
     @Test
     fun resolvedManualEntrySourceTypeRepairsLegacyManualImportedEntry() {
-        val result = resolvedManualEntrySourceType(
-            existingEntry().copy(
-                sourceType = IncomeSourceType.MANUAL,
-                sourceTransactionFingerprint = "tx-fingerprint",
-            ),
-        )
+        val result =
+            resolvedManualEntrySourceType(
+                existingEntry().copy(
+                    sourceType = IncomeSourceType.MANUAL,
+                    sourceTransactionFingerprint = "tx-fingerprint"
+                )
+            )
 
         assertEquals(IncomeSourceType.IMPORTED_STATEMENT, result)
     }
 
     @Test
     fun resolveManualEntryFxPersistenceClearsStaleFxWhenAmountChanges() {
-        val result = resolveManualEntryFxPersistence(
-            currency = " usd ",
-            amount = BigDecimal("200.00"),
-            incomeDate = LocalDate.of(2026, 3, 15),
-            existing = existingEntry(),
-        )
+        val result =
+            resolveManualEntryFxPersistence(
+                currency = " usd ",
+                amount = BigDecimal("200.00"),
+                incomeDate = LocalDate.of(2026, 3, 15),
+                existing = existingEntry()
+            )
 
         assertEquals("USD", result.normalizedCurrency)
         assertNull(result.gelEquivalent)
@@ -43,12 +45,13 @@ class ManualEntryViewModelTest {
     fun resolveManualEntryFxPersistenceResetsManualFxWhenCurrencyChangesToGel() {
         val amount = BigDecimal("200.00")
 
-        val result = resolveManualEntryFxPersistence(
-            currency = "gel",
-            amount = amount,
-            incomeDate = LocalDate.of(2026, 3, 15),
-            existing = existingEntry(),
-        )
+        val result =
+            resolveManualEntryFxPersistence(
+                currency = "gel",
+                amount = amount,
+                incomeDate = LocalDate.of(2026, 3, 15),
+                existing = existingEntry()
+            )
 
         assertEquals("GEL", result.normalizedCurrency)
         assertEquals(amount, result.gelEquivalent)
@@ -60,12 +63,13 @@ class ManualEntryViewModelTest {
     fun resolveManualEntryFxPersistenceKeepsExistingFxWhenFxFieldsStayTheSame() {
         val existing = existingEntry()
 
-        val result = resolveManualEntryFxPersistence(
-            currency = "USD",
-            amount = BigDecimal("100.00"),
-            incomeDate = LocalDate.of(2026, 3, 15),
-            existing = existing,
-        )
+        val result =
+            resolveManualEntryFxPersistence(
+                currency = "USD",
+                amount = BigDecimal("100.00"),
+                incomeDate = LocalDate.of(2026, 3, 15),
+                existing = existing
+            )
 
         assertEquals("USD", result.normalizedCurrency)
         assertEquals(existing.gelEquivalent, result.gelEquivalent)
@@ -87,6 +91,6 @@ class ManualEntryViewModelTest {
         manualFxOverride = true,
         sourceTransactionFingerprint = null,
         createdAtEpochMillis = 1L,
-        updatedAtEpochMillis = 2L,
+        updatedAtEpochMillis = 2L
     )
 }

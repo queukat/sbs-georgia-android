@@ -33,11 +33,7 @@ import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 
 @Composable
-fun FxOverrideRoute(
-    innerPadding: PaddingValues,
-    entryId: Long,
-    onBack: () -> Unit,
-) {
+fun FxOverrideRoute(innerPadding: PaddingValues, entryId: Long, onBack: () -> Unit) {
     val viewModel: FxOverrideViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -58,7 +54,7 @@ fun FxOverrideRoute(
         onBack = onBack,
         onUnitsChanged = viewModel::updateUnits,
         onRateToGelChanged = viewModel::updateRateToGel,
-        onSave = viewModel::save,
+        onSave = viewModel::save
     )
 }
 
@@ -69,19 +65,20 @@ fun FxOverrideScreen(
     onBack: () -> Unit,
     onUnitsChanged: (String) -> Unit,
     onRateToGelChanged: (String) -> Unit,
-    onSave: () -> Unit,
+    onSave: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SbsTopAppBar(
                 title = stringResource(R.string.fx_override_title),
-                onBack = onBack,
+                onBack = onBack
             )
-        },
+        }
     ) { contentPadding ->
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -89,18 +86,19 @@ fun FxOverrideScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 16.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.fx_override_section_entry)) {
                 KeyValueRow(
                     stringResource(R.string.fx_override_date),
-                    uiState.incomeDate?.formatIsoDate() ?: stringResource(R.string.fx_override_unknown),
+                    uiState.incomeDate?.formatIsoDate()
+                        ?: stringResource(R.string.fx_override_unknown)
                 )
                 KeyValueRow(
                     stringResource(R.string.fx_override_original_amount),
-                    "${uiState.originalAmount} ${uiState.originalCurrency}",
+                    "${uiState.originalAmount} ${uiState.originalCurrency}"
                 )
             }
             AppSection(title = stringResource(R.string.fx_override_section_override)) {
@@ -109,12 +107,12 @@ fun FxOverrideScreen(
                     onValueChange = onUnitsChanged,
                     label = { Text(stringResource(R.string.fx_override_units)) },
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
                 DecimalField(
                     label = stringResource(R.string.fx_override_rate_to_gel),
                     value = uiState.rateToGel,
-                    onValueChange = onRateToGelChanged,
+                    onValueChange = onRateToGelChanged
                 )
                 uiState.previewGelEquivalent?.let {
                     KeyValueRow(stringResource(R.string.fx_override_preview_gel_equivalent), it)
@@ -129,8 +127,8 @@ fun FxOverrideScreen(
                                 R.string.fx_override_saving
                             } else {
                                 R.string.fx_override_save
-                            },
-                        ),
+                            }
+                        )
                     )
                 }
             }

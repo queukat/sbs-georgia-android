@@ -67,7 +67,7 @@ interface IncomeEntryDao {
         SELECT * FROM income_entry
         WHERE incomeDate >= :startDate AND incomeDate <= :endDate
         ORDER BY incomeDate DESC, id DESC
-        """,
+        """
     )
     fun observeByMonth(startDate: String, endDate: String): Flow<List<IncomeEntryEntity>>
 
@@ -81,7 +81,7 @@ interface IncomeEntryDao {
             WHERE sourceTransactionFingerprint = :transactionFingerprint
             LIMIT 1
         )
-        """,
+        """
     )
     suspend fun existsBySourceTransactionFingerprint(transactionFingerprint: String): Boolean
 
@@ -130,7 +130,7 @@ interface FxRateDao {
         WHERE rateDate = :rateDate AND currencyCode = :currencyCode
         ORDER BY manualOverride DESC, id DESC
         LIMIT 1
-        """,
+        """
     )
     suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRateEntity?
 
@@ -139,13 +139,9 @@ interface FxRateDao {
         SELECT * FROM fx_rate
         WHERE rateDate = :rateDate AND currencyCode = :currencyCode AND manualOverride = :manualOverride
         LIMIT 1
-        """,
+        """
     )
-    suspend fun getRate(
-        rateDate: LocalDate,
-        currencyCode: String,
-        manualOverride: Boolean,
-    ): FxRateEntity?
+    suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRateEntity?
 
     @Upsert
     suspend fun upsert(entity: FxRateEntity): Long
@@ -172,7 +168,7 @@ interface ImportedStatementDao {
             WHERE sourceFingerprint = :sourceFingerprint
             LIMIT 1
         )
-        """,
+        """
     )
     suspend fun existsBySourceFingerprint(sourceFingerprint: String): Boolean
 
@@ -198,7 +194,7 @@ interface ImportedTransactionDao {
             WHERE transactionFingerprint = :transactionFingerprint
             LIMIT 1
         )
-        """,
+        """
     )
     suspend fun existsByFingerprint(transactionFingerprint: String): Boolean
 
@@ -207,11 +203,11 @@ interface ImportedTransactionDao {
         UPDATE imported_transaction
         SET finalInclusion = :finalInclusion
         WHERE transactionFingerprint = :transactionFingerprint
-        """,
+        """
     )
     suspend fun updateFinalInclusionByFingerprint(
         transactionFingerprint: String,
-        finalInclusion: DeclarationInclusion,
+        finalInclusion: DeclarationInclusion
     ): Int
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

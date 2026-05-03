@@ -40,20 +40,18 @@ import com.queukat.sbsgeorgia.ui.common.DecimalField
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 
 @Composable
-fun ImportStatementRoute(
-    innerPadding: PaddingValues,
-    onBack: () -> Unit,
-) {
+fun ImportStatementRoute(innerPadding: PaddingValues, onBack: () -> Unit) {
     val viewModel: ImportStatementViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val pickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        if (uri != null) {
-            viewModel.loadDocument(uri)
+    val pickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+            if (uri != null) {
+                viewModel.loadDocument(uri)
+            }
         }
-    }
 
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
@@ -74,7 +72,7 @@ fun ImportStatementRoute(
         onAmountChanged = viewModel::updateAmount,
         onCurrencyChanged = viewModel::updateCurrency,
         onSourceCategoryChanged = viewModel::updateSourceCategory,
-        onImportApproved = viewModel::importApprovedRows,
+        onImportApproved = viewModel::importApprovedRows
     )
 }
 
@@ -90,7 +88,7 @@ fun ImportStatementScreen(
     onAmountChanged: (String, String) -> Unit,
     onCurrencyChanged: (String, String) -> Unit,
     onSourceCategoryChanged: (String, String) -> Unit,
-    onImportApproved: () -> Unit,
+    onImportApproved: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -106,15 +104,16 @@ fun ImportStatementScreen(
                                     R.string.import_statement_parsing
                                 } else {
                                     R.string.import_statement_pick_pdf
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                     if (uiState.rows.isNotEmpty()) {
                         TextButton(
                             onClick = onImportApproved,
-                            enabled = uiState.canImport && !uiState.isImporting && !uiState.isLoading,
-                            modifier = Modifier.testTag("import-statement-import-button"),
+                            enabled =
+                            uiState.canImport && !uiState.isImporting && !uiState.isLoading,
+                            modifier = Modifier.testTag("import-statement-import-button")
                         ) {
                             Text(
                                 stringResource(
@@ -122,27 +121,29 @@ fun ImportStatementScreen(
                                         R.string.import_statement_importing
                                     } else {
                                         R.string.import_statement_import
-                                    },
-                                ),
+                                    }
+                                )
                             )
                         }
                     }
-                },
+                }
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { contentPadding ->
         LazyColumn(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(
+            contentPadding =
+            PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
                 top = contentPadding.calculateTopPadding() + 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + 16.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 AppSection(title = stringResource(R.string.import_statement_section_flow)) {
@@ -153,7 +154,7 @@ fun ImportStatementScreen(
                     uiState.sourceFileName?.let {
                         Text(
                             stringResource(R.string.import_statement_file_selected, it),
-                            modifier = Modifier.testTag("import-selected-file"),
+                            modifier = Modifier.testTag("import-selected-file")
                         )
                     }
                     uiState.infoMessage?.let { Text(it) }
@@ -161,21 +162,27 @@ fun ImportStatementScreen(
                     if (uiState.rows.isEmpty()) {
                         Text(stringResource(R.string.import_statement_pick_hint))
                     } else {
-                        Text(stringResource(R.string.import_statement_rows_recognized, uiState.rows.size, uiState.selectedIncomeCount))
+                        Text(
+                            stringResource(
+                                R.string.import_statement_rows_recognized,
+                                uiState.rows.size,
+                                uiState.selectedIncomeCount
+                            )
+                        )
                         Text(
                             stringResource(
                                 R.string.import_statement_tax_payment_rows_recognized,
                                 uiState.detectedTaxPaymentCount,
-                                uiState.recognizedOutgoingCount,
-                            ),
+                                uiState.recognizedOutgoingCount
+                            )
                         )
                         if (uiState.invalidIncludedCount > 0) {
                             Text(
                                 stringResource(
                                     R.string.import_statement_invalid_rows_blocking_import,
-                                    uiState.invalidIncludedCount,
+                                    uiState.invalidIncludedCount
                                 ),
-                                color = MaterialTheme.colorScheme.error,
+                                color = MaterialTheme.colorScheme.error
                             )
                         }
                     }
@@ -184,22 +191,38 @@ fun ImportStatementScreen(
             items(uiState.rows, key = { it.transactionFingerprint }) { row ->
                 AppSection(title = row.description) {
                     row.additionalInformation?.takeIf { it.isNotBlank() }?.let { Text(it) }
-                    row.paidInLabel?.let { Text(stringResource(R.string.import_statement_paid_in, it)) }
-                    row.paidOutLabel?.let { Text(stringResource(R.string.import_statement_paid_out, it)) }
-                    row.balanceLabel?.let { Text(stringResource(R.string.import_statement_balance, it)) }
+                    row.paidInLabel?.let {
+                        Text(stringResource(R.string.import_statement_paid_in, it))
+                    }
+                    row.paidOutLabel?.let {
+                        Text(stringResource(R.string.import_statement_paid_out, it))
+                    }
+                    row.balanceLabel?.let {
+                        Text(stringResource(R.string.import_statement_balance, it))
+                    }
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         FilterChip(
                             selected = row.finalInclusion == DeclarationInclusion.INCLUDED,
-                            onClick = { onIncludeAsTaxableChanged(row.transactionFingerprint, true) },
+                            onClick = {
+                                onIncludeAsTaxableChanged(row.transactionFingerprint, true)
+                            },
                             enabled = !row.duplicate,
-                            modifier = Modifier.testTag("import-taxable-${row.transactionFingerprint}"),
-                            label = { Text(stringResource(R.string.import_statement_taxable_income)) },
+                            modifier = Modifier.testTag(
+                                "import-taxable-${row.transactionFingerprint}"
+                            ),
+                            label = {
+                                Text(stringResource(R.string.import_statement_taxable_income))
+                            }
                         )
                         FilterChip(
                             selected = row.finalInclusion == DeclarationInclusion.EXCLUDED,
-                            onClick = { onIncludeAsTaxableChanged(row.transactionFingerprint, false) },
+                            onClick = {
+                                onIncludeAsTaxableChanged(row.transactionFingerprint, false)
+                            },
                             enabled = !row.duplicate,
-                            modifier = Modifier.testTag("import-exclude-${row.transactionFingerprint}"),
+                            modifier = Modifier.testTag(
+                                "import-exclude-${row.transactionFingerprint}"
+                            ),
                             label = {
                                 Text(
                                     stringResource(
@@ -207,60 +230,74 @@ fun ImportStatementScreen(
                                             R.string.import_statement_duplicate
                                         } else {
                                             R.string.import_statement_exclude
-                                        },
-                                    ),
+                                        }
+                                    )
                                 )
-                            },
+                            }
                         )
                     }
                     Text(
                         when {
-                            row.duplicate -> stringResource(R.string.import_statement_duplicate_hint)
-                            row.incomeDate == null -> stringResource(R.string.import_statement_missing_date_hint)
-                            row.isTaxPaymentCandidate -> stringResource(R.string.import_statement_tax_payment_hint)
-                            row.suggestedInclusion == DeclarationInclusion.INCLUDED -> stringResource(R.string.import_statement_taxable_hint)
-                            row.suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED -> stringResource(R.string.import_statement_review_hint)
+                            row.duplicate -> stringResource(
+                                R.string.import_statement_duplicate_hint
+                            )
+                            row.incomeDate == null -> stringResource(
+                                R.string.import_statement_missing_date_hint
+                            )
+                            row.isTaxPaymentCandidate -> stringResource(
+                                R.string.import_statement_tax_payment_hint
+                            )
+                            row.suggestedInclusion == DeclarationInclusion.INCLUDED ->
+                                stringResource(
+                                    R.string.import_statement_taxable_hint
+                                )
+                            row.suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED ->
+                                stringResource(
+                                    R.string.import_statement_review_hint
+                                )
                             else -> stringResource(R.string.import_statement_excluded_hint)
-                        },
+                        }
                     )
                     DatePickerField(
                         label = stringResource(R.string.import_statement_income_date),
                         value = row.incomeDate,
                         onValueChange = { onDateChanged(row.transactionFingerprint, it) },
                         placeholderText = stringResource(R.string.common_select_date),
-                        enabled = !row.duplicate,
+                        enabled = !row.duplicate
                     )
                     DecimalField(
                         label = stringResource(R.string.import_statement_amount),
                         value = row.amount,
                         onValueChange = { onAmountChanged(row.transactionFingerprint, it) },
                         testTag = "import-amount-${row.transactionFingerprint}",
-                        enabled = !row.duplicate,
+                        enabled = !row.duplicate
                     )
                     OutlinedTextField(
                         value = row.currency,
                         onValueChange = { onCurrencyChanged(row.transactionFingerprint, it) },
                         enabled = !row.duplicate,
                         label = { Text(stringResource(R.string.import_statement_currency)) },
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxWidth()
                             .testTag("import-currency-${row.transactionFingerprint}"),
-                        singleLine = true,
+                        singleLine = true
                     )
                     OutlinedTextField(
                         value = row.sourceCategory,
                         onValueChange = { onSourceCategoryChanged(row.transactionFingerprint, it) },
                         enabled = !row.duplicate,
                         label = { Text(stringResource(R.string.import_statement_source_category)) },
-                        modifier = Modifier
+                        modifier =
+                        Modifier
                             .fillMaxWidth()
                             .testTag("import-category-${row.transactionFingerprint}"),
-                        singleLine = true,
+                        singleLine = true
                     )
                     if (row.isInvalidForIncludedImport()) {
                         Text(
                             stringResource(R.string.import_statement_row_invalid_hint),
-                            color = MaterialTheme.colorScheme.error,
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }

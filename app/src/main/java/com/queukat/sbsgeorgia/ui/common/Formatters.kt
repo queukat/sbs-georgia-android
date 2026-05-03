@@ -19,13 +19,14 @@ fun LocalDate.formatIsoDate(): String = format(dateFormatter)
 
 fun formatAmount(amount: BigDecimal, currencyCode: String): String {
     val normalizedCurrencyCode = currencyCode.trim().uppercase()
-    val currency = normalizedCurrencyCode
-        .takeIf(String::isNotBlank)
-        ?.let { code -> runCatching { Currency.getInstance(code) }.getOrNull() }
+    val currency =
+        normalizedCurrencyCode
+            .takeIf(String::isNotBlank)
+            ?.let { code -> runCatching { Currency.getInstance(code) }.getOrNull() }
     if (currency == null) {
         return listOf(
             amount.setScale(2, RoundingMode.HALF_UP).toPlainString(),
-            normalizedCurrencyCode,
+            normalizedCurrencyCode
         ).filter(String::isNotBlank).joinToString(" ")
     }
 

@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class AppThemeViewModel @Inject constructor(
-    settingsRepository: SettingsRepository,
-) : ViewModel() {
-    val themeMode: StateFlow<ThemeMode> = settingsRepository.observeReminderConfig()
-        .map { it?.themeMode ?: ThemeMode.SYSTEM }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
+class AppThemeViewModel
+@Inject
+constructor(settingsRepository: SettingsRepository) : ViewModel() {
+    val themeMode: StateFlow<ThemeMode> =
+        settingsRepository
+            .observeReminderConfig()
+            .map { it?.themeMode ?: ThemeMode.SYSTEM }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ThemeMode.SYSTEM)
 }

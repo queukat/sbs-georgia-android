@@ -9,9 +9,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 
 @Singleton
-class AppPreferencesRepositoryImpl @Inject constructor(
-    private val sharedPreferences: SharedPreferences,
-) : AppPreferencesRepository {
+class AppPreferencesRepositoryImpl
+@Inject
+constructor(private val sharedPreferences: SharedPreferences) :
+    AppPreferencesRepository {
     private val quickStartGuideState = MutableStateFlow(readQuickStartGuideState())
 
     override fun observeQuickStartGuideState(): Flow<QuickStartGuideState> = quickStartGuideState
@@ -21,23 +22,28 @@ class AppPreferencesRepositoryImpl @Inject constructor(
         updateQuickStartGuideState(
             QuickStartGuideState(
                 initialized = true,
-                dismissed = hasCompletedSetup,
-            ),
+                dismissed = hasCompletedSetup
+            )
         )
     }
 
     override suspend fun markQuickStartGuideDismissed() {
-        if (quickStartGuideState.value.dismissed && quickStartGuideState.value.initialized) return
+        if (quickStartGuideState.value.dismissed &&
+            quickStartGuideState.value.initialized
+        ) {
+            return
+        }
         updateQuickStartGuideState(
             QuickStartGuideState(
                 initialized = true,
-                dismissed = true,
-            ),
+                dismissed = true
+            )
         )
     }
 
     private fun updateQuickStartGuideState(state: QuickStartGuideState) {
-        sharedPreferences.edit()
+        sharedPreferences
+            .edit()
             .putBoolean(KEY_QUICK_START_INITIALIZED, state.initialized)
             .putBoolean(KEY_QUICK_START_DISMISSED, state.dismissed)
             .apply()
@@ -46,7 +52,7 @@ class AppPreferencesRepositoryImpl @Inject constructor(
 
     private fun readQuickStartGuideState(): QuickStartGuideState = QuickStartGuideState(
         initialized = sharedPreferences.getBoolean(KEY_QUICK_START_INITIALIZED, false),
-        dismissed = sharedPreferences.getBoolean(KEY_QUICK_START_DISMISSED, false),
+        dismissed = sharedPreferences.getBoolean(KEY_QUICK_START_DISMISSED, false)
     )
 
     private companion object {

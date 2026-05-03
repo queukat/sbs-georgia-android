@@ -15,6 +15,6 @@ fun assumePhoneLikeComposeTestDevice() {
     val isTelevisionMode = uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
     assumeFalse(
         "Compose UI tests are validated on phone/emulator devices. Android TV devices are skipped intentionally.",
-        isLeanback || isTelevisionMode,
+        isLeanback || isTelevisionMode
     )
 }

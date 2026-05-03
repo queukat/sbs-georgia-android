@@ -24,7 +24,7 @@ data class TaxpayerProfileEntity(
     val legalForm: String?,
     val registrationDate: LocalDate?,
     val legalAddress: String?,
-    val activityType: String?,
+    val activityType: String?
 )
 
 @Entity(tableName = "small_business_status_config")
@@ -33,7 +33,7 @@ data class SmallBusinessStatusConfigEntity(
     val effectiveDate: LocalDate,
     val defaultTaxRatePercent: BigDecimal,
     val certificateNumber: String?,
-    val certificateIssuedDate: LocalDate?,
+    val certificateIssuedDate: LocalDate?
 )
 
 @Entity(tableName = "reminder_config")
@@ -44,15 +44,15 @@ data class ReminderConfigEntity(
     val declarationRemindersEnabled: Boolean,
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: LocalTime,
-    val themeMode: ThemeMode,
+    val themeMode: ThemeMode
 )
 
 @Entity(
     tableName = "income_entry",
     indices = [
         Index(value = ["incomeDate"]),
-        Index(value = ["sourceTransactionFingerprint"]),
-    ],
+        Index(value = ["sourceTransactionFingerprint"])
+    ]
 )
 data class IncomeEntryEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
@@ -69,12 +69,12 @@ data class IncomeEntryEntity(
     val sourceStatementId: Long?,
     val sourceTransactionFingerprint: String?,
     val createdAtEpochMillis: Long,
-    val updatedAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long
 )
 
 @Entity(
     tableName = "monthly_declaration_record",
-    indices = [Index(value = ["year", "month"], unique = true)],
+    indices = [Index(value = ["year", "month"], unique = true)]
 )
 data class MonthlyDeclarationRecordEntity(
     @PrimaryKey val periodKey: String,
@@ -86,26 +86,26 @@ data class MonthlyDeclarationRecordEntity(
     val paymentSentDate: LocalDate?,
     val paymentCreditedDate: LocalDate?,
     val paymentAmountGel: BigDecimal?,
-    val notes: String,
+    val notes: String
 )
 
 @Entity(
     tableName = "imported_statement",
-    indices = [Index(value = ["sourceFingerprint"], unique = true)],
+    indices = [Index(value = ["sourceFingerprint"], unique = true)]
 )
 data class ImportedStatementEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
     val sourceFileName: String,
     val sourceFingerprint: String,
-    val importedAtEpochMillis: Long,
+    val importedAtEpochMillis: Long
 )
 
 @Entity(
     tableName = "imported_transaction",
     indices = [
         Index(value = ["transactionFingerprint"], unique = true),
-        Index(value = ["statementId"]),
-    ],
+        Index(value = ["statementId"])
+    ]
 )
 data class ImportedTransactionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
@@ -118,12 +118,12 @@ data class ImportedTransactionEntity(
     val paidIn: BigDecimal?,
     val balance: BigDecimal?,
     val suggestedInclusion: DeclarationInclusion,
-    val finalInclusion: DeclarationInclusion,
+    val finalInclusion: DeclarationInclusion
 )
 
 @Entity(
     tableName = "fx_rate",
-    indices = [Index(value = ["rateDate", "currencyCode", "manualOverride"], unique = true)],
+    indices = [Index(value = ["rateDate", "currencyCode", "manualOverride"], unique = true)]
 )
 data class FxRateEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0L,
@@ -132,7 +132,7 @@ data class FxRateEntity(
     val units: Int,
     val rateToGel: BigDecimal,
     val source: FxRateSource,
-    val manualOverride: Boolean,
+    val manualOverride: Boolean
 )
 
 fun TaxpayerProfileEntity.toDomain(): TaxpayerProfile = TaxpayerProfile(
@@ -142,7 +142,7 @@ fun TaxpayerProfileEntity.toDomain(): TaxpayerProfile = TaxpayerProfile(
     legalForm = legalForm,
     registrationDate = registrationDate,
     legalAddress = legalAddress,
-    activityType = activityType,
+    activityType = activityType
 )
 
 fun TaxpayerProfile.toEntity(): TaxpayerProfileEntity = TaxpayerProfileEntity(
@@ -152,21 +152,21 @@ fun TaxpayerProfile.toEntity(): TaxpayerProfileEntity = TaxpayerProfileEntity(
     legalForm = legalForm,
     registrationDate = registrationDate,
     legalAddress = legalAddress,
-    activityType = activityType,
+    activityType = activityType
 )
 
 fun SmallBusinessStatusConfigEntity.toDomain(): SmallBusinessStatusConfig = SmallBusinessStatusConfig(
     effectiveDate = effectiveDate,
     defaultTaxRatePercent = defaultTaxRatePercent,
     certificateNumber = certificateNumber,
-    certificateIssuedDate = certificateIssuedDate,
+    certificateIssuedDate = certificateIssuedDate
 )
 
 fun SmallBusinessStatusConfig.toEntity(): SmallBusinessStatusConfigEntity = SmallBusinessStatusConfigEntity(
     effectiveDate = effectiveDate,
     defaultTaxRatePercent = defaultTaxRatePercent,
     certificateNumber = certificateNumber,
-    certificateIssuedDate = certificateIssuedDate,
+    certificateIssuedDate = certificateIssuedDate
 )
 
 fun ReminderConfigEntity.toDomain(): ReminderConfig = ReminderConfig(
@@ -175,7 +175,7 @@ fun ReminderConfigEntity.toDomain(): ReminderConfig = ReminderConfig(
     declarationRemindersEnabled = declarationRemindersEnabled,
     paymentRemindersEnabled = paymentRemindersEnabled,
     defaultReminderTime = defaultReminderTime,
-    themeMode = themeMode,
+    themeMode = themeMode
 )
 
 fun ReminderConfig.toEntity(): ReminderConfigEntity = ReminderConfigEntity(
@@ -184,5 +184,5 @@ fun ReminderConfig.toEntity(): ReminderConfigEntity = ReminderConfigEntity(
     declarationRemindersEnabled = declarationRemindersEnabled,
     paymentRemindersEnabled = paymentRemindersEnabled,
     defaultReminderTime = defaultReminderTime,
-    themeMode = themeMode,
+    themeMode = themeMode
 )

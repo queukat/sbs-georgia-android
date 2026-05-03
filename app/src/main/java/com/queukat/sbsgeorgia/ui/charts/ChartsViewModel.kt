@@ -17,26 +17,29 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
-class ChartsViewModel @Inject constructor(
-    observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
-    clock: Clock,
-) : ViewModel() {
+class ChartsViewModel
+@Inject
+constructor(observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase, clock: Clock) :
+    ViewModel() {
     private val initialYear = YearMonth.now(clock).year
     private val selectedYear = MutableStateFlow(initialYear)
 
-    val uiState = combine(
-        observeAllSnapshotsUseCase(),
-        selectedYear,
-    ) { snapshots, selectedYear ->
-            val availableYears = snapshots
-                .map { it.period.incomeMonth.year }
-                .distinct()
-                .sortedDescending()
-            val effectiveYear = if (selectedYear in availableYears) {
-                selectedYear
-            } else {
-                availableYears.firstOrNull() ?: selectedYear
-            }
+    val uiState =
+        combine(
+            observeAllSnapshotsUseCase(),
+            selectedYear
+        ) { snapshots, selectedYear ->
+            val availableYears =
+                snapshots
+                    .map { it.period.incomeMonth.year }
+                    .distinct()
+                    .sortedDescending()
+            val effectiveYear =
+                if (selectedYear in availableYears) {
+                    selectedYear
+                } else {
+                    availableYears.firstOrNull() ?: selectedYear
+                }
             val yearSnapshots = snapshots.filter { it.period.incomeMonth.year == effectiveYear }
             val peakMonth = yearSnapshots.maxByOrNull { it.graph20TotalGel }
             ChartsUiState(
@@ -45,15 +48,15 @@ class ChartsViewModel @Inject constructor(
                 snapshots = yearSnapshots,
                 monthlyIncomePoints = chartMonthlyIncomePoints(yearSnapshots),
                 cumulativePoints = chartCumulativePoints(yearSnapshots),
-                ytdIncomeGel = yearSnapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
+                ytdIncomeGel =
+                yearSnapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
                 peakMonthLabel = peakMonth?.period?.incomeMonth?.formatMonthYear(),
-                unresolvedMonthsCount = yearSnapshots.count { it.unresolvedFxCount > 0 },
+                unresolvedMonthsCount = yearSnapshots.count { it.unresolvedFxCount > 0 }
             )
-        }
-        .stateIn(
+        }.stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            ChartsUiState(year = initialYear),
+            ChartsUiState(year = initialYear)
         )
 
     fun selectYear(year: Int) {

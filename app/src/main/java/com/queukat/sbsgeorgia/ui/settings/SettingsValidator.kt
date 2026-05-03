@@ -15,7 +15,7 @@ internal data class SettingsValidationStrings(
     val certificateIssuedDateInvalid: String,
     val reminderTimeInvalid: String,
     val declarationDaysInvalid: String,
-    val paymentDaysInvalid: String,
+    val paymentDaysInvalid: String
 )
 
 internal data class SettingsValidatedInput(
@@ -31,7 +31,7 @@ internal data class SettingsValidatedInput(
     val taxRatePercent: BigDecimal,
     val defaultReminderTime: LocalTime,
     val declarationReminderDays: List<Int>,
-    val paymentReminderDays: List<Int>,
+    val paymentReminderDays: List<Int>
 )
 
 internal sealed interface SettingsValidationResult {
@@ -40,43 +40,62 @@ internal sealed interface SettingsValidationResult {
     data class Invalid(val errorMessage: String) : SettingsValidationResult
 }
 
-internal class SettingsValidator(
-    private val strings: SettingsValidationStrings,
-) {
+internal class SettingsValidator(private val strings: SettingsValidationStrings) {
     fun validate(state: SettingsUiState): SettingsValidationResult {
         val taxRate = runCatching { BigDecimal(state.taxRatePercent) }.getOrNull()
-        val defaultReminderTime = runCatching { LocalTime.parse(state.defaultReminderTime) }.getOrNull()
+        val defaultReminderTime = runCatching {
+            LocalTime.parse(state.defaultReminderTime)
+        }.getOrNull()
         val registrationDateResult = DateInputParser.parseOptionalIsoDate(state.registrationDate)
-        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(state.certificateIssuedDate)
+        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(
+            state.certificateIssuedDate
+        )
         val declarationReminderDays = parseReminderDays(state.declarationReminderDays)
         val paymentReminderDays = parseReminderDays(state.paymentReminderDays)
 
         return when {
-            state.registrationId.isBlank() -> SettingsValidationResult.Invalid(strings.registrationIdRequired)
-            state.displayName.isBlank() -> SettingsValidationResult.Invalid(strings.displayNameRequired)
-            taxRate == null || taxRate < BigDecimal.ZERO -> SettingsValidationResult.Invalid(strings.taxRateInvalid)
-            registrationDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(strings.registrationDateInvalid)
-            certificateIssuedDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(strings.certificateIssuedDateInvalid)
-            defaultReminderTime == null -> SettingsValidationResult.Invalid(strings.reminderTimeInvalid)
-            declarationReminderDays == null -> SettingsValidationResult.Invalid(strings.declarationDaysInvalid)
-            paymentReminderDays == null -> SettingsValidationResult.Invalid(strings.paymentDaysInvalid)
-            else -> SettingsValidationResult.Valid(
-                SettingsValidatedInput(
-                    registrationId = state.registrationId.trim(),
-                    displayName = state.displayName.trim(),
-                    legalForm = state.legalForm.trim().ifBlank { null },
-                    registrationDate = registrationDateResult.dateOrNull(),
-                    legalAddress = state.legalAddress.trim().ifBlank { null },
-                    activityType = state.activityType.trim().ifBlank { null },
-                    certificateNumber = state.certificateNumber.trim().ifBlank { null },
-                    certificateIssuedDate = certificateIssuedDateResult.dateOrNull(),
-                    effectiveDate = state.effectiveDate,
-                    taxRatePercent = taxRate,
-                    defaultReminderTime = defaultReminderTime,
-                    declarationReminderDays = declarationReminderDays,
-                    paymentReminderDays = paymentReminderDays,
-                ),
+            state.registrationId.isBlank() -> SettingsValidationResult.Invalid(
+                strings.registrationIdRequired
             )
+            state.displayName.isBlank() -> SettingsValidationResult.Invalid(
+                strings.displayNameRequired
+            )
+            taxRate == null || taxRate < BigDecimal.ZERO -> SettingsValidationResult.Invalid(
+                strings.taxRateInvalid
+            )
+            registrationDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(
+                strings.registrationDateInvalid
+            )
+            certificateIssuedDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(
+                strings.certificateIssuedDateInvalid
+            )
+            defaultReminderTime == null -> SettingsValidationResult.Invalid(
+                strings.reminderTimeInvalid
+            )
+            declarationReminderDays == null -> SettingsValidationResult.Invalid(
+                strings.declarationDaysInvalid
+            )
+            paymentReminderDays == null -> SettingsValidationResult.Invalid(
+                strings.paymentDaysInvalid
+            )
+            else ->
+                SettingsValidationResult.Valid(
+                    SettingsValidatedInput(
+                        registrationId = state.registrationId.trim(),
+                        displayName = state.displayName.trim(),
+                        legalForm = state.legalForm.trim().ifBlank { null },
+                        registrationDate = registrationDateResult.dateOrNull(),
+                        legalAddress = state.legalAddress.trim().ifBlank { null },
+                        activityType = state.activityType.trim().ifBlank { null },
+                        certificateNumber = state.certificateNumber.trim().ifBlank { null },
+                        certificateIssuedDate = certificateIssuedDateResult.dateOrNull(),
+                        effectiveDate = state.effectiveDate,
+                        taxRatePercent = taxRate,
+                        defaultReminderTime = defaultReminderTime,
+                        declarationReminderDays = declarationReminderDays,
+                        paymentReminderDays = paymentReminderDays
+                    )
+                )
         }
     }
 }

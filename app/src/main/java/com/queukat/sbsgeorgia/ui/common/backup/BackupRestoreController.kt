@@ -11,17 +11,16 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
-data class BackupRestoreUiResult(
-    val message: String,
-    val setupComplete: Boolean,
-)
+data class BackupRestoreUiResult(val message: String, val setupComplete: Boolean)
 
-class BackupRestoreController @Inject constructor(
+class BackupRestoreController
+@Inject
+constructor(
     private val textDocumentStore: TextDocumentStore,
     private val importBackupJsonUseCase: ImportBackupJsonUseCase,
     private val settingsRepository: SettingsRepository,
     private val reminderScheduler: ReminderScheduler,
-    @param:ApplicationContext private val context: Context,
+    @param:ApplicationContext private val context: Context
 ) {
     suspend fun restore(uriString: String): BackupRestoreUiResult {
         val content = textDocumentStore.readText(uriString)
@@ -35,14 +34,15 @@ class BackupRestoreController @Inject constructor(
 
         val profile = settingsRepository.observeTaxpayerProfile().first()
         val config = settingsRepository.observeStatusConfig().first()
-        val setupComplete = profile != null &&
-            config != null &&
-            profile.registrationId.isNotBlank() &&
-            profile.displayName.isNotBlank()
+        val setupComplete =
+            profile != null &&
+                config != null &&
+                profile.registrationId.isNotBlank() &&
+                profile.displayName.isNotBlank()
 
         return BackupRestoreUiResult(
             message = result.toSummaryMessage(context),
-            setupComplete = setupComplete,
+            setupComplete = setupComplete
         )
     }
 }
@@ -52,5 +52,5 @@ fun BackupRestoreResult.toSummaryMessage(context: Context): String = context.get
     incomeEntryCount,
     monthlyRecordCount,
     importedStatementCount,
-    importedTransactionCount,
+    importedTransactionCount
 )

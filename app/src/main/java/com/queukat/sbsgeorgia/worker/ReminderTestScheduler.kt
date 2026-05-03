@@ -13,43 +13,39 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ReminderTestScheduler @Inject constructor(
-    @param:ApplicationContext private val context: Context,
-) {
-    fun schedule(
-        reminderNotification: ReminderNotification,
-        delaySeconds: Long,
-    ) {
-        val request = OneTimeWorkRequestBuilder<ReminderTestWorker>()
-            .setInitialDelay(delaySeconds, TimeUnit.SECONDS)
-            .setInputData(
-                Data.Builder()
-                    .putString(ReminderTestWorker.KEY_TYPE, reminderNotification.type.name)
-                    .putString(ReminderTestWorker.KEY_TITLE, reminderNotification.title)
-                    .putString(ReminderTestWorker.KEY_BODY, reminderNotification.body)
-                    .putInt(
-                        ReminderTestWorker.KEY_NOTIFICATION_ID,
-                        reminderNotification.notificationId ?: defaultNotificationId(),
-                    )
-                    .build(),
-            )
-            .addTag(ReminderTestWorker.TAG)
-            .build()
+class ReminderTestScheduler
+@Inject
+constructor(@param:ApplicationContext private val context: Context) {
+    fun schedule(reminderNotification: ReminderNotification, delaySeconds: Long) {
+        val request =
+            OneTimeWorkRequestBuilder<ReminderTestWorker>()
+                .setInitialDelay(delaySeconds, TimeUnit.SECONDS)
+                .setInputData(
+                    Data
+                        .Builder()
+                        .putString(ReminderTestWorker.KEY_TYPE, reminderNotification.type.name)
+                        .putString(ReminderTestWorker.KEY_TITLE, reminderNotification.title)
+                        .putString(ReminderTestWorker.KEY_BODY, reminderNotification.body)
+                        .putInt(
+                            ReminderTestWorker.KEY_NOTIFICATION_ID,
+                            reminderNotification.notificationId ?: defaultNotificationId()
+                        ).build()
+                ).addTag(ReminderTestWorker.TAG)
+                .build()
         WorkManager.getInstance(context).enqueue(request)
     }
 
-    private fun defaultNotificationId(): Int =
-        (System.currentTimeMillis() and 0x7fffffff).toInt()
+    private fun defaultNotificationId(): Int = (System.currentTimeMillis() and 0x7fffffff).toInt()
 }
 
-class ReminderTestWorker(
-    appContext: Context,
-    workerParams: androidx.work.WorkerParameters,
-) : androidx.work.CoroutineWorker(appContext, workerParams) {
+class ReminderTestWorker(appContext: Context, workerParams: androidx.work.WorkerParameters) :
+    androidx.work.CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
-        val type = inputData.getString(KEY_TYPE)
-            ?.let(ReminderType::valueOf)
-            ?: return Result.failure()
+        val type =
+            inputData
+                .getString(KEY_TYPE)
+                ?.let(ReminderType::valueOf)
+                ?: return Result.failure()
         val title = inputData.getString(KEY_TITLE).orEmpty()
         val body = inputData.getString(KEY_BODY).orEmpty()
         val notificationId = inputData.getInt(KEY_NOTIFICATION_ID, 0).takeIf { it != 0 }
@@ -59,8 +55,8 @@ class ReminderTestWorker(
                 type = type,
                 title = title,
                 body = body,
-                notificationId = notificationId,
-            ),
+                notificationId = notificationId
+            )
         )
         return Result.success()
     }

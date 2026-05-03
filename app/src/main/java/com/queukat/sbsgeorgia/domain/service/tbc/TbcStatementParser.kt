@@ -7,12 +7,10 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class TbcStatementParser @Inject constructor() {
-    fun parse(
-        sourceFileName: String,
-        sourceFingerprint: String,
-        extractedText: String,
-    ): ImportedStatementPreview {
+class TbcStatementParser
+@Inject
+constructor() {
+    fun parse(sourceFileName: String, sourceFingerprint: String, extractedText: String): ImportedStatementPreview {
         val lines = normalizeTbcStatementLines(extractedText)
         val logicalLines = buildLogicalTransactionLines(lines)
         val openingBalance = detectOpeningBalance(lines)
@@ -24,11 +22,12 @@ class TbcStatementParser @Inject constructor() {
 
         logicalLines.forEach { line ->
             val sanitizedLine = sanitizeLogicalLine(line)
-            val row = parseTransactionLine(
-                line = sanitizedLine,
-                statementCurrency = statementCurrency,
-                previousBalance = previousBalance,
-            )
+            val row =
+                parseTransactionLine(
+                    line = sanitizedLine,
+                    statementCurrency = statementCurrency,
+                    previousBalance = previousBalance
+                )
             if (row != null) {
                 rows += row
                 previousBalance = row.balance?.amount ?: previousBalance
@@ -38,14 +37,15 @@ class TbcStatementParser @Inject constructor() {
         }
 
         require(rows.isNotEmpty()) {
-            "No TBC statement transaction rows were recognized. This importer only supports the current TBC v1 statement layout."
+            "No TBC statement transaction rows were recognized. This importer only supports the " +
+                "current TBC v1 statement layout."
         }
 
         return ImportedStatementPreview(
             sourceFileName = sourceFileName,
             sourceFingerprint = sourceFingerprint,
             rows = rows,
-            skippedLineCount = skippedLineCount,
+            skippedLineCount = skippedLineCount
         )
     }
 }

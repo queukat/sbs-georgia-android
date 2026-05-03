@@ -27,10 +27,11 @@ data class SettingsUiState(
     val documentErrorMessage: String? = null,
     val isSaving: Boolean = false,
     val isDataOperationInProgress: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 sealed interface SettingsEffect {
     data object Saved : SettingsEffect
+
     data class Message(val text: String) : SettingsEffect
 }

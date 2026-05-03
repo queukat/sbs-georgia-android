@@ -12,7 +12,7 @@ data class ManualEntryUiState(
     val note: String = "",
     val declarationIncluded: Boolean = true,
     val isSaving: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 sealed interface ManualEntryEffect {

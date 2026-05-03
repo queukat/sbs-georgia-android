@@ -14,16 +14,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -52,33 +52,33 @@ import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 
 @Composable
-fun OnboardingRoute(
-    innerPadding: PaddingValues = PaddingValues(),
-) {
+fun OnboardingRoute(innerPadding: PaddingValues = PaddingValues()) {
     val viewModel: OnboardingViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var pendingImportAction by remember { mutableStateOf<DocumentImportAction?>(null) }
     var pendingRestoreBackupUri by rememberSaveable { mutableStateOf<String?>(null) }
-    val pickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        val action = pendingImportAction
-        if (uri != null && action != null) {
-            viewModel.loadDocument(uri, action)
+    val pickerLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+            val action = pendingImportAction
+            if (uri != null && action != null) {
+                viewModel.loadDocument(uri, action)
+            }
+            pendingImportAction = null
         }
-        pendingImportAction = null
-    }
-    val restoreBackupLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-    ) { uri: Uri? ->
-        if (uri != null) {
-            if (uiState.hasExistingSetupData) {
-                pendingRestoreBackupUri = uri.toString()
-            } else {
-                viewModel.restoreBackup(uri)
+    val restoreBackupLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument()
+        ) { uri: Uri? ->
+            if (uri != null) {
+                if (uiState.hasExistingSetupData) {
+                    pendingRestoreBackupUri = uri.toString()
+                } else {
+                    viewModel.restoreBackup(uri)
+                }
             }
         }
-    }
 
     OnboardingScreen(
         innerPadding = innerPadding,
@@ -93,7 +93,7 @@ fun OnboardingRoute(
         },
         onRestoreBackup = {
             restoreBackupLauncher.launch(
-                arrayOf("application/json", "text/plain", "application/octet-stream"),
+                arrayOf("application/json", "text/plain", "application/octet-stream")
             )
         },
         onApplyPreview = viewModel::applyPreview,
@@ -107,7 +107,7 @@ fun OnboardingRoute(
         onCertificateIssuedDateChanged = viewModel::updateCertificateIssuedDate,
         onEffectiveDateChanged = viewModel::updateEffectiveDate,
         onTaxRatePercentChanged = viewModel::updateTaxRatePercent,
-        onComplete = viewModel::completeOnboarding,
+        onComplete = viewModel::completeOnboarding
     )
 
     pendingRestoreBackupUri?.let { uriString ->
@@ -126,11 +126,11 @@ fun OnboardingRoute(
                         pendingRestoreBackupUri = null
                         viewModel.restoreBackup(Uri.parse(uriString))
                     },
-                    enabled = !uiState.isRestoringBackup && !uiState.isLoading && !uiState.isSaving,
+                    enabled = !uiState.isRestoringBackup && !uiState.isLoading && !uiState.isSaving
                 ) {
                     Text(stringResource(R.string.onboarding_restore_backup_confirm_action))
                 }
-            },
+            }
         )
     }
 }
@@ -153,31 +153,34 @@ fun OnboardingScreen(
     onCertificateIssuedDateChanged: (String) -> Unit,
     onEffectiveDateChanged: (java.time.LocalDate) -> Unit,
     onTaxRatePercentChanged: (String) -> Unit,
-    onComplete: () -> Unit,
+    onComplete: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             Surface(
                 color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp,
+                tonalElevation = 3.dp
             ) {
                 Column(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     if (uiState.isLoading || uiState.isSaving || uiState.isRestoringBackup) {
                         LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
                     }
                     Button(
                         onClick = onComplete,
-                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
-                        modifier = Modifier
+                        enabled =
+                        !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier =
+                        Modifier
                             .fillMaxWidth()
-                            .testTag("onboarding-complete-button"),
+                            .testTag("onboarding-complete-button")
                     ) {
                         Text(
                             stringResource(
@@ -187,16 +190,17 @@ fun OnboardingScreen(
                                     R.string.workflow_saving
                                 } else {
                                     R.string.onboarding_continue_to_app
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                 }
             }
-        },
+        }
     ) { contentPadding ->
         Column(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
@@ -204,49 +208,50 @@ fun OnboardingScreen(
                     start = 16.dp,
                     end = 16.dp,
                     top = contentPadding.calculateTopPadding() + 16.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 24.dp,
+                    bottom = contentPadding.calculateBottomPadding() + 24.dp
                 ),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = stringResource(R.string.onboarding_title),
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineMedium
             )
             Text(
                 text = stringResource(R.string.onboarding_subtitle),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             AppSection(title = stringResource(R.string.onboarding_section_intro)) {
                 Text(
                     text = stringResource(R.string.onboarding_intro_body),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 IntroStepRow(
                     number = "1",
                     title = stringResource(R.string.onboarding_intro_step_one_title),
-                    body = stringResource(R.string.onboarding_intro_step_one_body),
+                    body = stringResource(R.string.onboarding_intro_step_one_body)
                 )
                 IntroStepRow(
                     number = "2",
                     title = stringResource(R.string.onboarding_intro_step_two_title),
-                    body = stringResource(R.string.onboarding_intro_step_two_body),
+                    body = stringResource(R.string.onboarding_intro_step_two_body)
                 )
                 IntroStepRow(
                     number = "3",
                     title = stringResource(R.string.onboarding_intro_step_three_title),
-                    body = stringResource(R.string.onboarding_intro_step_three_body),
+                    body = stringResource(R.string.onboarding_intro_step_three_body)
                 )
             }
 
             AppSection(title = stringResource(R.string.onboarding_section_options)) {
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Button(
                         onClick = onImportRegistryExtract,
-                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
-                        modifier = Modifier.testTag("onboarding-import-registry-button"),
+                        enabled =
+                        !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier = Modifier.testTag("onboarding-import-registry-button")
                     ) {
                         Text(
                             stringResource(
@@ -254,14 +259,15 @@ fun OnboardingScreen(
                                     R.string.import_statement_parsing
                                 } else {
                                     R.string.onboarding_import_registration_pdf
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                     Button(
                         onClick = onImportCertificate,
-                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
-                        modifier = Modifier.testTag("onboarding-import-certificate-button"),
+                        enabled =
+                        !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier = Modifier.testTag("onboarding-import-certificate-button")
                     ) {
                         Text(
                             stringResource(
@@ -269,14 +275,15 @@ fun OnboardingScreen(
                                     R.string.import_statement_parsing
                                 } else {
                                     R.string.onboarding_import_sbs_certificate_pdf
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                     OutlinedButton(
                         onClick = onRestoreBackup,
-                        enabled = !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
-                        modifier = Modifier.testTag("onboarding-restore-backup-button"),
+                        enabled =
+                        !uiState.isLoading && !uiState.isSaving && !uiState.isRestoringBackup,
+                        modifier = Modifier.testTag("onboarding-restore-backup-button")
                     ) {
                         Text(
                             stringResource(
@@ -284,8 +291,8 @@ fun OnboardingScreen(
                                     R.string.onboarding_restoring_backup
                                 } else {
                                     R.string.onboarding_restore_backup_json
-                                },
-                            ),
+                                }
+                            )
                         )
                     }
                 }
@@ -304,32 +311,65 @@ fun OnboardingScreen(
             uiState.preview?.let { preview ->
                 AppSection(title = stringResource(R.string.onboarding_section_preview)) {
                     PreviewHeader(preview = preview)
-                    PreviewField(stringResource(R.string.onboarding_display_name), preview.displayName.value, preview.displayName.confidence)
-                    PreviewField(stringResource(R.string.onboarding_legal_form), preview.legalForm.value, preview.legalForm.confidence)
-                    PreviewField(stringResource(R.string.onboarding_registration_id), preview.registrationId.value, preview.registrationId.confidence)
-                    PreviewField(stringResource(R.string.onboarding_registration_date), preview.registrationDate.value?.toString(), preview.registrationDate.confidence)
-                    PreviewField(stringResource(R.string.onboarding_legal_address), preview.legalAddress.value, preview.legalAddress.confidence)
-                    if (preview.documentType == OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE) {
-                        PreviewField(stringResource(R.string.onboarding_activity_type), preview.activityType.value, preview.activityType.confidence)
-                        PreviewField(stringResource(R.string.onboarding_certificate_number), preview.certificateNumber.value, preview.certificateNumber.confidence)
+                    PreviewField(
+                        stringResource(R.string.onboarding_display_name),
+                        preview.displayName.value,
+                        preview.displayName.confidence
+                    )
+                    PreviewField(
+                        stringResource(R.string.onboarding_legal_form),
+                        preview.legalForm.value,
+                        preview.legalForm.confidence
+                    )
+                    PreviewField(
+                        stringResource(R.string.onboarding_registration_id),
+                        preview.registrationId.value,
+                        preview.registrationId.confidence
+                    )
+                    PreviewField(
+                        stringResource(R.string.onboarding_registration_date),
+                        preview.registrationDate.value?.toString(),
+                        preview.registrationDate.confidence
+                    )
+                    PreviewField(
+                        stringResource(R.string.onboarding_legal_address),
+                        preview.legalAddress.value,
+                        preview.legalAddress.confidence
+                    )
+                    if (preview.documentType ==
+                        OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE
+                    ) {
+                        PreviewField(
+                            stringResource(R.string.onboarding_activity_type),
+                            preview.activityType.value,
+                            preview.activityType.confidence
+                        )
+                        PreviewField(
+                            stringResource(R.string.onboarding_certificate_number),
+                            preview.certificateNumber.value,
+                            preview.certificateNumber.confidence
+                        )
                         PreviewField(
                             stringResource(R.string.onboarding_certificate_issued_date),
                             preview.certificateIssuedDate.value?.toString(),
-                            preview.certificateIssuedDate.confidence,
+                            preview.certificateIssuedDate.confidence
                         )
                         PreviewField(
                             stringResource(R.string.onboarding_effective_date),
                             preview.effectiveDate.value?.toString(),
-                            preview.effectiveDate.confidence,
+                            preview.effectiveDate.confidence
                         )
                     }
                     preview.notes.forEach { note ->
-                        Text(previewNoteLabel(note), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(
+                            previewNoteLabel(note),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                     Button(
                         onClick = onApplyPreview,
                         enabled = !uiState.isSaving && !uiState.isRestoringBackup,
-                        modifier = Modifier.testTag("onboarding-apply-preview-button"),
+                        modifier = Modifier.testTag("onboarding-apply-preview-button")
                     ) {
                         Text(stringResource(R.string.onboarding_apply_preview))
                     }
@@ -341,43 +381,47 @@ fun OnboardingScreen(
                     value = uiState.displayName,
                     onValueChange = onDisplayNameChanged,
                     label = { Text(stringResource(R.string.onboarding_display_name)) },
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
-                        .testTag("onboarding-display-name-field"),
+                        .testTag("onboarding-display-name-field")
                 )
                 OutlinedTextField(
                     value = uiState.legalForm,
                     onValueChange = onLegalFormChanged,
                     label = { Text(stringResource(R.string.onboarding_legal_form)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = uiState.registrationId,
                     onValueChange = onRegistrationIdChanged,
                     label = { Text(stringResource(R.string.onboarding_registration_id)) },
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxWidth()
-                        .testTag("onboarding-registration-id-field"),
+                        .testTag("onboarding-registration-id-field")
                 )
                 OutlinedTextField(
                     value = uiState.registrationDate,
                     onValueChange = onRegistrationDateChanged,
                     label = { Text(stringResource(R.string.onboarding_registration_date)) },
-                    supportingText = { Text(stringResource(R.string.onboarding_optional_iso_date_hint)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text(stringResource(R.string.onboarding_optional_iso_date_hint))
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = uiState.legalAddress,
                     onValueChange = onLegalAddressChanged,
                     label = { Text(stringResource(R.string.onboarding_legal_address)) },
                     modifier = Modifier.fillMaxWidth(),
-                    minLines = 2,
+                    minLines = 2
                 )
                 OutlinedTextField(
                     value = uiState.activityType,
                     onValueChange = onActivityTypeChanged,
                     label = { Text(stringResource(R.string.onboarding_activity_type)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -386,66 +430,63 @@ fun OnboardingScreen(
                     value = uiState.certificateNumber,
                     onValueChange = onCertificateNumberChanged,
                     label = { Text(stringResource(R.string.onboarding_certificate_number)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = uiState.certificateIssuedDate,
                     onValueChange = onCertificateIssuedDateChanged,
                     label = { Text(stringResource(R.string.onboarding_certificate_issued_date)) },
-                    supportingText = { Text(stringResource(R.string.onboarding_optional_iso_date_hint)) },
-                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text(stringResource(R.string.onboarding_optional_iso_date_hint))
+                    },
+                    modifier = Modifier.fillMaxWidth()
                 )
                 DatePickerField(
                     label = stringResource(R.string.onboarding_effective_date),
                     value = uiState.effectiveDate,
                     onValueChange = onEffectiveDateChanged,
-                    testTag = "onboarding-effective-date-field",
+                    testTag = "onboarding-effective-date-field"
                 )
                 DecimalField(
                     label = stringResource(R.string.onboarding_default_tax_rate),
                     value = uiState.taxRatePercent,
                     onValueChange = onTaxRatePercentChanged,
-                    testTag = "onboarding-tax-rate-field",
+                    testTag = "onboarding-tax-rate-field"
                 )
             }
-
         }
     }
 }
 
 @Composable
-private fun IntroStepRow(
-    number: String,
-    title: String,
-    body: String,
-) {
+private fun IntroStepRow(number: String, title: String, body: String) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.padding(top = 2.dp),
+            modifier = Modifier.padding(top = 2.dp)
         ) {
             Text(
                 text = number,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
         Column(
-            verticalArrangement = Arrangement.spacedBy(2.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
+                style = MaterialTheme.typography.titleSmall
             )
             Text(
                 text = body,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -457,9 +498,13 @@ private fun PreviewHeader(preview: OnboardingImportPreview) {
     KeyValueRow(
         stringResource(R.string.onboarding_detected_document),
         when (preview.documentType) {
-            OnboardingDocumentType.REGISTRY_EXTRACT -> stringResource(R.string.onboarding_document_registry_extract)
-            OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE -> stringResource(R.string.onboarding_document_sbs_certificate)
-        },
+            OnboardingDocumentType.REGISTRY_EXTRACT -> stringResource(
+                R.string.onboarding_document_registry_extract
+            )
+            OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE -> stringResource(
+                R.string.onboarding_document_sbs_certificate
+            )
+        }
     )
 }
 
@@ -472,26 +517,22 @@ private fun previewNoteLabel(note: OnboardingPreviewNote): String = stringResour
             R.string.onboarding_note_certificate_effective_date_autofilled
         OnboardingPreviewNote.REVIEW_BEFORE_APPLY ->
             R.string.onboarding_note_review_before_apply
-    },
+    }
 )
 
 @Composable
-private fun PreviewField(
-    label: String,
-    value: String?,
-    confidence: ExtractionConfidence,
-) {
+private fun PreviewField(label: String, value: String?, confidence: ExtractionConfidence) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = label,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium
         )
         Text(
             text = value ?: stringResource(R.string.common_not_detected),
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyLarge
         )
     }
     if (!value.isNullOrBlank()) {
@@ -505,10 +546,10 @@ private fun PreviewField(
                             R.string.common_confident
                         } else {
                             R.string.common_needs_review
-                        },
-                    ),
+                        }
+                    )
                 )
-            },
+            }
         )
     }
 }

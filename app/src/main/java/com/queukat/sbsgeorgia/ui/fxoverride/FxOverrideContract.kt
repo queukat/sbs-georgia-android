@@ -11,7 +11,7 @@ data class FxOverrideUiState(
     val rateToGel: String = "",
     val previewGelEquivalent: String? = null,
     val isSaving: Boolean = false,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 sealed interface FxOverrideEffect {

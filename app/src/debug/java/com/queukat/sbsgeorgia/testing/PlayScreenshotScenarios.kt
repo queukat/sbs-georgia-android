@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Settings
@@ -49,6 +48,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ChartPoint
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
 import com.queukat.sbsgeorgia.ui.charts.ChartsScreen
 import com.queukat.sbsgeorgia.ui.charts.ChartsUiState
+import com.queukat.sbsgeorgia.ui.common.sbsNavigationBarItemColors
 import com.queukat.sbsgeorgia.ui.home.HomeDuePeriodQuickAccess
 import com.queukat.sbsgeorgia.ui.home.HomeScreen
 import com.queukat.sbsgeorgia.ui.home.HomeUiState
@@ -63,72 +63,67 @@ import com.queukat.sbsgeorgia.ui.months.MonthsUiState
 import com.queukat.sbsgeorgia.ui.months.MonthsYearSection
 import com.queukat.sbsgeorgia.ui.onboarding.OnboardingScreen
 import com.queukat.sbsgeorgia.ui.onboarding.OnboardingUiState
-import com.queukat.sbsgeorgia.ui.common.sbsNavigationBarItemColors
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
 
-enum class PlayScreenshotScenario(
-    val id: String,
-    val fileName: String,
-) {
+enum class PlayScreenshotScenario(val id: String, val fileName: String) {
     OnboardingRegistry(
         id = "onboarding-registry",
-        fileName = "01-onboarding-registry-preview",
+        fileName = "01-onboarding-registry-preview"
     ),
     HomeDashboard(
         id = "home-dashboard",
-        fileName = "02-home-dashboard",
+        fileName = "02-home-dashboard"
     ),
     MonthsOverview(
         id = "months-overview",
-        fileName = "03-months-overview",
+        fileName = "03-months-overview"
     ),
     MonthDetail(
         id = "month-detail",
-        fileName = "04-month-detail-copy-tools",
+        fileName = "04-month-detail-copy-tools"
     ),
     ImportPreview(
         id = "import-preview",
-        fileName = "05-import-preview",
+        fileName = "05-import-preview"
     ),
     Charts(
         id = "charts",
-        fileName = "06-charts",
-    ),
+        fileName = "06-charts"
+    )
     ;
 
     companion object {
-        fun fromId(id: String?): PlayScreenshotScenario =
-            entries.firstOrNull { it.id == id } ?: HomeDashboard
+        fun fromId(id: String?): PlayScreenshotScenario = entries.firstOrNull { it.id == id } ?: HomeDashboard
     }
 }
 
 @Composable
-fun PlayScreenshotContent(
-    scenario: PlayScreenshotScenario,
-    localeTag: String,
-) {
+fun PlayScreenshotContent(scenario: PlayScreenshotScenario, localeTag: String) {
     val baseContext = LocalContext.current
-    val localizedContext = remember(baseContext, localeTag) {
-        baseContext.withLocale(localeTag)
-    }
-    val localizedConfiguration = remember(localizedContext) {
-        Configuration(localizedContext.resources.configuration)
-    }
+    val localizedContext =
+        remember(baseContext, localeTag) {
+            baseContext.withLocale(localeTag)
+        }
+    val localizedConfiguration =
+        remember(localizedContext) {
+            Configuration(localizedContext.resources.configuration)
+        }
 
     CompositionLocalProvider(
         LocalContext provides localizedContext,
-        LocalConfiguration provides localizedConfiguration,
+        LocalConfiguration provides localizedConfiguration
     ) {
         SbsGeorgiaTheme(themeMode = ThemeMode.LIGHT) {
             Box(
-                modifier = Modifier
+                modifier =
+                Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
-                    .testTag("screenshot-ready-${scenario.id}"),
+                    .testTag("screenshot-ready-${scenario.id}")
             ) {
                 when (scenario) {
                     PlayScreenshotScenario.OnboardingRegistry -> OnboardingRegistryScenario()
@@ -147,42 +142,50 @@ fun PlayScreenshotContent(
 private fun OnboardingRegistryScenario() {
     OnboardingScreen(
         innerPadding = PaddingValues(),
-        uiState = OnboardingUiState(
-            preview = OnboardingImportPreview(
+        uiState =
+        OnboardingUiState(
+            preview =
+            OnboardingImportPreview(
                 sourceFileName = "registry-extract.pdf",
                 sourceFingerprint = "registry-demo",
                 documentType = OnboardingDocumentType.REGISTRY_EXTRACT,
-                displayName = ParsedTextField(
+                displayName =
+                ParsedTextField(
                     value = "Individual Entrepreneur Iaroslav Rychenkov",
-                    confidence = ExtractionConfidence.CONFIDENT,
+                    confidence = ExtractionConfidence.CONFIDENT
                 ),
-                legalForm = ParsedTextField(
+                legalForm =
+                ParsedTextField(
                     value = "Individual Entrepreneur",
-                    confidence = ExtractionConfidence.CONFIDENT,
+                    confidence = ExtractionConfidence.CONFIDENT
                 ),
-                registrationId = ParsedTextField(
+                registrationId =
+                ParsedTextField(
                     value = "306449082",
-                    confidence = ExtractionConfidence.CONFIDENT,
+                    confidence = ExtractionConfidence.CONFIDENT
                 ),
-                registrationDate = ParsedDateField(
+                registrationDate =
+                ParsedDateField(
                     value = LocalDate.of(2023, 11, 24),
-                    confidence = ExtractionConfidence.CONFIDENT,
+                    confidence = ExtractionConfidence.CONFIDENT
                 ),
-                legalAddress = ParsedTextField(
+                legalAddress =
+                ParsedTextField(
                     value = "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
-                    confidence = ExtractionConfidence.REVIEW_REQUIRED,
+                    confidence = ExtractionConfidence.REVIEW_REQUIRED
                 ),
-                notes = listOf(
+                notes =
+                listOf(
                     OnboardingPreviewNote.REGISTRY_EFFECTIVE_DATE_MANUAL,
-                    OnboardingPreviewNote.REVIEW_BEFORE_APPLY,
-                ),
+                    OnboardingPreviewNote.REVIEW_BEFORE_APPLY
+                )
             ),
             displayName = "Individual Entrepreneur Iaroslav Rychenkov",
             legalForm = "Individual Entrepreneur",
             registrationId = "306449082",
             registrationDate = "2023-11-24",
             legalAddress = "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
-            effectiveDate = LocalDate.of(2026, 3, 7),
+            effectiveDate = LocalDate.of(2026, 3, 7)
         ),
         onImportRegistryExtract = {},
         onImportCertificate = {},
@@ -198,7 +201,7 @@ private fun OnboardingRegistryScenario() {
         onCertificateIssuedDateChanged = {},
         onEffectiveDateChanged = {},
         onTaxRatePercentChanged = {},
-        onComplete = {},
+        onComplete = {}
     )
 }
 
@@ -214,7 +217,7 @@ private fun HomeDashboardScenario() {
             onAddIncome = {},
             onImportStatement = {},
             onOpenSettings = {},
-            onSettleCurrentDuePeriod = {},
+            onSettleCurrentDuePeriod = {}
         )
     }
 }
@@ -224,63 +227,71 @@ private fun MonthsOverviewScenario() {
     TopLevelScreenshotFrame(selectedIndex = 1) { innerPadding ->
         MonthsScreen(
             innerPadding = innerPadding,
-            uiState = MonthsUiState(
-                sections = listOf(
+            uiState =
+            MonthsUiState(
+                sections =
+                listOf(
                     MonthsYearSection(
                         year = 2026,
-                        items = listOf(
+                        items =
+                        listOf(
                             MonthsMonthItemUiState(
-                                snapshot = sampleSnapshot(
+                                snapshot =
+                                sampleSnapshot(
                                     month = YearMonth.of(2026, 3),
                                     graph20 = "8450.00",
                                     graph15 = "18450.00",
                                     tax = "84.50",
                                     originalTotal = "3000.00",
-                                    workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
+                                    workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE
                                 ),
                                 canQuickSettleMonth = true,
-                                monthAlreadySettled = false,
+                                monthAlreadySettled = false
                             ),
                             MonthsMonthItemUiState(
-                                snapshot = sampleSnapshot(
+                                snapshot =
+                                sampleSnapshot(
                                     month = YearMonth.of(2026, 2),
                                     graph20 = "10000.00",
                                     graph15 = "10000.00",
                                     tax = "100.00",
                                     originalTotal = "3500.00",
-                                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                                    workflowStatus = MonthlyWorkflowStatus.FILED
                                 ),
                                 canQuickSettleMonth = false,
-                                monthAlreadySettled = true,
-                            ),
-                        ),
-                    ),
-                ),
+                                monthAlreadySettled = true
+                            )
+                        )
+                    )
+                )
             ),
             onMonthClick = {},
             onSettleMonth = {},
             onAddIncome = {},
-            onImportStatement = {},
+            onImportStatement = {}
         )
     }
 }
 
 @Composable
 private fun MonthDetailScenario() {
-    val snapshot = sampleSnapshot(
-        month = YearMonth.of(2026, 3),
-        graph20 = "8450.00",
-        graph15 = "18450.00",
-        tax = "84.50",
-        originalTotal = "3000.00",
-        workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
-    )
+    val snapshot =
+        sampleSnapshot(
+            month = YearMonth.of(2026, 3),
+            graph20 = "8450.00",
+            graph15 = "18450.00",
+            tax = "84.50",
+            originalTotal = "3000.00",
+            workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE
+        )
     MonthDetailScreen(
         innerPadding = PaddingValues(),
-        uiState = MonthDetailUiState(
+        uiState =
+        MonthDetailUiState(
             yearMonth = snapshot.period.incomeMonth,
             snapshot = snapshot,
-            entries = listOf(
+            entries =
+            listOf(
                 IncomeEntry(
                     id = 1L,
                     sourceType = IncomeSourceType.IMPORTED_STATEMENT,
@@ -294,26 +305,26 @@ private fun MonthDetailScenario() {
                     rateSource = FxRateSource.OFFICIAL_NBG_JSON,
                     manualFxOverride = false,
                     createdAtEpochMillis = 1L,
-                    updatedAtEpochMillis = 1L,
-                ),
+                    updatedAtEpochMillis = 1L
+                )
             ),
-            copyBundle = buildDeclarationCopyBundle(
+            copyBundle =
+            buildDeclarationCopyBundle(
                 snapshot = snapshot,
                 registrationId = "306449082",
-                yearMonth = snapshot.period.incomeMonth,
+                yearMonth = snapshot.period.incomeMonth
             ),
-            isFilingWindowOpen = true,
+            isFilingWindowOpen = true
         ),
         snackbarHostState = SnackbarHostState(),
         onBack = {},
         onAddIncome = {},
         onEditEntry = {},
-        onOpenPaymentHelper = {},
         onOpenFxOverride = {},
         onOpenWorkflowStatus = {},
         onDeleteEntry = {},
         onResolveOfficialRates = {},
-        onToggleZeroPrepared = {},
+        onToggleZeroPrepared = {}
     )
 }
 
@@ -321,9 +332,11 @@ private fun MonthDetailScenario() {
 private fun ImportPreviewScenario() {
     ImportStatementScreen(
         innerPadding = PaddingValues(),
-        uiState = ImportStatementUiState(
+        uiState =
+        ImportStatementUiState(
             sourceFileName = "statement-818670212_260402_120010.pdf",
-            rows = listOf(
+            rows =
+            listOf(
                 ImportStatementRowUiState(
                     transactionFingerprint = "tx-1",
                     incomeDate = LocalDate.of(2026, 3, 15),
@@ -338,7 +351,7 @@ private fun ImportPreviewScenario() {
                     currency = "USD",
                     sourceCategory = "Software services",
                     isTaxPaymentCandidate = false,
-                    duplicate = false,
+                    duplicate = false
                 ),
                 ImportStatementRowUiState(
                     transactionFingerprint = "tx-2",
@@ -354,14 +367,14 @@ private fun ImportPreviewScenario() {
                     currency = "USD",
                     sourceCategory = "Own transfer",
                     isTaxPaymentCandidate = false,
-                    duplicate = false,
-                ),
+                    duplicate = false
+                )
             ),
             selectedIncomeCount = 1,
             detectedTaxPaymentCount = 0,
             recognizedOutgoingCount = 0,
             invalidIncludedCount = 0,
-            canImport = true,
+            canImport = true
         ),
         snackbarHostState = SnackbarHostState(),
         onBack = {},
@@ -371,7 +384,7 @@ private fun ImportPreviewScenario() {
         onAmountChanged = { _, _ -> },
         onCurrencyChanged = { _, _ -> },
         onSourceCategoryChanged = { _, _ -> },
-        onImportApproved = {},
+        onImportApproved = {}
     )
 }
 
@@ -379,74 +392,77 @@ private fun ImportPreviewScenario() {
 private fun ChartsScenario() {
     ChartsScreen(
         innerPadding = PaddingValues(),
-        uiState = ChartsUiState(
+        uiState =
+        ChartsUiState(
             year = 2026,
             availableYears = listOf(2026, 2025),
-            monthlyIncomePoints = listOf(
+            monthlyIncomePoints =
+            listOf(
                 ChartPoint("Jan", BigDecimal("4200.00")),
                 ChartPoint("Feb", BigDecimal("5800.00")),
                 ChartPoint("Mar", BigDecimal("8450.00")),
-                ChartPoint("Apr", BigDecimal("6250.00")),
+                ChartPoint("Apr", BigDecimal("6250.00"))
             ),
-            cumulativePoints = listOf(
+            cumulativePoints =
+            listOf(
                 ChartPoint("Jan", BigDecimal("4200.00")),
                 ChartPoint("Feb", BigDecimal("10000.00")),
                 ChartPoint("Mar", BigDecimal("18450.00")),
-                ChartPoint("Apr", BigDecimal("24700.00")),
+                ChartPoint("Apr", BigDecimal("24700.00"))
             ),
             ytdIncomeGel = BigDecimal("24700.00"),
             peakMonthLabel = "March 2026",
-            unresolvedMonthsCount = 0,
+            unresolvedMonthsCount = 0
         ),
         onYearSelected = {},
-        onBack = {},
+        onBack = {}
     )
 }
 
 @Composable
-private fun TopLevelScreenshotFrame(
-    selectedIndex: Int,
-    content: @Composable (PaddingValues) -> Unit,
-) {
+private fun TopLevelScreenshotFrame(selectedIndex: Int, content: @Composable (PaddingValues) -> Unit) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
-                val labels = listOf(
-                    stringResource(R.string.nav_home),
-                    stringResource(R.string.nav_months),
-                    stringResource(R.string.nav_settings),
-                )
-                val icons = listOf(
-                    Icons.Outlined.Home,
-                    Icons.Outlined.CalendarMonth,
-                    Icons.Outlined.Settings,
-                )
+                val labels =
+                    listOf(
+                        stringResource(R.string.nav_home),
+                        stringResource(R.string.nav_months),
+                        stringResource(R.string.nav_settings)
+                    )
+                val icons =
+                    listOf(
+                        Icons.Outlined.Home,
+                        Icons.Outlined.CalendarMonth,
+                        Icons.Outlined.Settings
+                    )
                 labels.forEachIndexed { index, label ->
                     NavigationBarItem(
                         selected = selectedIndex == index,
                         onClick = {},
                         icon = { Icon(imageVector = icons[index], contentDescription = null) },
                         label = { Text(label) },
-                        colors = sbsNavigationBarItemColors(),
+                        colors = sbsNavigationBarItemColors()
                     )
                 }
             }
-        },
+        }
     ) { innerPadding ->
         content(innerPadding)
     }
 }
 
 private fun sampleDashboardSummary(): DashboardSummary {
-    val currentDuePeriod = sampleSnapshot(
-        month = YearMonth.of(2026, 3),
-        graph20 = "8450.00",
-        graph15 = "18450.00",
-        tax = "84.50",
-        originalTotal = "3000.00",
-        workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
-    )
+    val currentDuePeriod =
+        sampleSnapshot(
+            month = YearMonth.of(2026, 3),
+            graph20 = "8450.00",
+            graph15 = "18450.00",
+            tax = "84.50",
+            originalTotal = "3000.00",
+            workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE
+        )
     return DashboardSummary(
         taxpayerName = "Iaroslav Rychenkov",
         registrationId = "306449082",
@@ -457,7 +473,7 @@ private fun sampleDashboardSummary(): DashboardSummary {
         paidTaxAmountGel = BigDecimal("184.50"),
         paymentMismatchMonthsCount = 0,
         currentDuePeriod = currentDuePeriod,
-        nextReminderDay = 13,
+        nextReminderDay = 13
     )
 }
 
@@ -466,18 +482,20 @@ private fun sampleHomeUiState(): HomeUiState {
     val duePeriod = summary.currentDuePeriod ?: return HomeUiState(summary = summary)
     return HomeUiState(
         summary = summary,
-        duePeriodQuickAccess = HomeDuePeriodQuickAccess(
+        duePeriodQuickAccess =
+        HomeDuePeriodQuickAccess(
             snapshot = duePeriod,
-            copyBundle = buildDeclarationCopyBundle(
+            copyBundle =
+            buildDeclarationCopyBundle(
                 snapshot = duePeriod,
                 registrationId = summary.registrationId,
-                yearMonth = duePeriod.period.incomeMonth,
+                yearMonth = duePeriod.period.incomeMonth
             ),
             canCopyDeclarationValues = true,
             canQuickSettleMonth = true,
             monthAlreadySettled = false,
-            filingOpensOn = null,
-        ),
+            filingOpensOn = null
+        )
     )
 }
 
@@ -487,17 +505,19 @@ private fun sampleSnapshot(
     graph15: String,
     tax: String,
     originalTotal: String,
-    workflowStatus: MonthlyWorkflowStatus,
+    workflowStatus: MonthlyWorkflowStatus
 ): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(
-    period = MonthlyDeclarationPeriod(
+    period =
+    MonthlyDeclarationPeriod(
         incomeMonth = month,
-        filingWindow = FilingWindow(
+        filingWindow =
+        FilingWindow(
             start = month.plusMonths(1).atDay(1),
             endInclusive = month.plusMonths(1).atDay(15),
-            dueDate = month.plusMonths(1).atDay(15),
+            dueDate = month.plusMonths(1).atDay(15)
         ),
         inScope = true,
-        outOfScope = false,
+        outOfScope = false
     ),
     workflowStatus = workflowStatus,
     graph20TotalGel = BigDecimal(graph20),
@@ -509,7 +529,7 @@ private fun sampleSnapshot(
     zeroDeclarationPrepared = false,
     reviewNeeded = false,
     setupRequired = false,
-    record = null,
+    record = null
 )
 
 private fun Context.withLocale(localeTag: String): Context {

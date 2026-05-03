@@ -35,7 +35,7 @@ fun MonthsRoute(
     innerPadding: PaddingValues,
     onMonthClick: (YearMonth) -> Unit,
     onAddIncome: () -> Unit,
-    onImportStatement: () -> Unit,
+    onImportStatement: () -> Unit
 ) {
     val viewModel: MonthsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -45,7 +45,7 @@ fun MonthsRoute(
         onMonthClick = onMonthClick,
         onSettleMonth = viewModel::settleMonth,
         onAddIncome = onAddIncome,
-        onImportStatement = onImportStatement,
+        onImportStatement = onImportStatement
     )
 }
 
@@ -56,7 +56,7 @@ fun MonthsScreen(
     onMonthClick: (YearMonth) -> Unit,
     onSettleMonth: (YearMonth) -> Unit,
     onAddIncome: () -> Unit,
-    onImportStatement: () -> Unit,
+    onImportStatement: () -> Unit
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -70,21 +70,23 @@ fun MonthsScreen(
                     TextButton(onClick = onAddIncome) {
                         Text(stringResource(R.string.months_add_income))
                     }
-                },
+                }
             )
-        },
+        }
     ) { contentPadding ->
         LazyColumn(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(
+            contentPadding =
+            PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
                 top = contentPadding.calculateTopPadding() + 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + 16.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (uiState.sections.isEmpty()) {
                 item {
@@ -96,12 +98,15 @@ fun MonthsScreen(
                     Text(
                         text = section.year.toString(),
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 items(
                     items = section.items,
-                    key = { item -> item.snapshot.period.incomeMonth.toString() },
+                    key = { item ->
+                        item.snapshot.period.incomeMonth
+                            .toString()
+                    }
                 ) { item ->
                     val snapshot = item.snapshot
                     AppSection(title = snapshot.period.incomeMonth.formatMonthYear()) {
@@ -116,7 +121,9 @@ fun MonthsScreen(
                                     SimpleChip(stringResource(R.string.months_month_settled))
                                 }
                                 item.canQuickSettleMonth -> {
-                                    OutlinedButton(onClick = { onSettleMonth(snapshot.period.incomeMonth) }) {
+                                    OutlinedButton(onClick = {
+                                        onSettleMonth(snapshot.period.incomeMonth)
+                                    }) {
                                         Text(stringResource(R.string.months_mark_month_settled))
                                     }
                                 }
@@ -125,8 +132,8 @@ fun MonthsScreen(
                                         SimpleChip(
                                             stringResource(
                                                 R.string.months_filing_opens_on,
-                                                filingOpenDate.formatIsoDate(),
-                                            ),
+                                                filingOpenDate.formatIsoDate()
+                                            )
                                         )
                                     }
                                 }

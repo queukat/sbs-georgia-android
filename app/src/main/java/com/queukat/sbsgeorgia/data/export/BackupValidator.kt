@@ -23,59 +23,73 @@ internal data class BackupRestorePlan(
     val monthlyDeclarationRecords: List<MonthlyDeclarationRecordEntity>,
     val fxRates: List<FxRateEntity>,
     val importedStatements: List<ImportedStatementEntity>,
-    val importedTransactions: List<ImportedTransactionEntity>,
+    val importedTransactions: List<ImportedTransactionEntity>
 ) {
     fun toRestoreResult(): BackupRestoreResult = BackupRestoreResult(
         reminderConfigImported = reminderConfig != null,
         incomeEntryCount = incomeEntries.size,
         monthlyRecordCount = monthlyDeclarationRecords.size,
         importedStatementCount = importedStatements.size,
-        importedTransactionCount = importedTransactions.size,
+        importedTransactionCount = importedTransactions.size
     )
 }
 
-class BackupValidator @Inject constructor(
-    private val json: Json,
-) {
+class BackupValidator
+@Inject
+constructor(private val json: Json) {
     internal fun buildRestorePlan(content: String): BackupRestorePlan {
-        val document = runCatching { json.decodeFromString<AppBackupDocument>(content) }
-            .getOrElse { error -> throw IllegalArgumentException("Backup JSON is invalid.", error) }
+        val document =
+            runCatching { json.decodeFromString<AppBackupDocument>(content) }
+                .getOrElse { error ->
+                    throw IllegalArgumentException("Backup JSON is invalid.", error)
+                }
 
         require(document.formatVersion == 1) {
             "Unsupported backup format version ${document.formatVersion}."
         }
 
-        val restorePlan = BackupRestorePlan(
-            taxpayerProfile = document.taxpayerProfile?.validateAs("taxpayer profile") { toEntity() },
-            statusConfig = document.statusConfig?.validateAs("status config") { toEntity() },
-            reminderConfig = document.reminderConfig?.validateAs("reminder config") { toEntity() },
-            incomeEntries = document.incomeEntries.mapIndexed { index, payload ->
-                payload.validateAs("income entry #$index") { toEntity() }
-            },
-            monthlyDeclarationRecords = document.monthlyDeclarationRecords.mapIndexed { index, payload ->
-                payload.validateAs("monthly declaration record #$index") { toEntity() }
-            },
-            fxRates = document.fxRates.mapIndexed { index, payload ->
-                payload.validateAs("FX rate #$index") { toEntity() }
-            },
-            importedStatements = document.importedStatements.mapIndexed { index, payload ->
-                payload.validateAs("imported statement #$index") { toEntity() }
-            },
-            importedTransactions = document.importedTransactions.mapIndexed { index, payload ->
-                payload.validateAs("imported transaction #$index") { toEntity() }
-            },
-        )
+        val restorePlan =
+            BackupRestorePlan(
+                taxpayerProfile = document.taxpayerProfile?.validateAs("taxpayer profile") {
+                    toEntity()
+                },
+                statusConfig = document.statusConfig?.validateAs("status config") {
+                    toEntity()
+                },
+                reminderConfig = document.reminderConfig?.validateAs("reminder config") {
+                    toEntity()
+                },
+                incomeEntries =
+                document.incomeEntries.mapIndexed { index, payload ->
+                    payload.validateAs("income entry #$index") { toEntity() }
+                },
+                monthlyDeclarationRecords =
+                document.monthlyDeclarationRecords.mapIndexed { index, payload ->
+                    payload.validateAs("monthly declaration record #$index") { toEntity() }
+                },
+                fxRates =
+                document.fxRates.mapIndexed { index, payload ->
+                    payload.validateAs("FX rate #$index") { toEntity() }
+                },
+                importedStatements =
+                document.importedStatements.mapIndexed { index, payload ->
+                    payload.validateAs("imported statement #$index") { toEntity() }
+                },
+                importedTransactions =
+                document.importedTransactions.mapIndexed { index, payload ->
+                    payload.validateAs("imported transaction #$index") { toEntity() }
+                }
+            )
 
         restorePlan.validateIntegrity()
         return restorePlan
     }
 }
 
-private inline fun <T, R> T.validateAs(
-    label: String,
-    block: T.() -> R,
-): R = runCatching { block() }
-    .getOrElse { error -> throw IllegalArgumentException("Backup contains invalid $label.", error) }
+private inline fun <T, R> T.validateAs(label: String, block: T.() -> R): R = runCatching { block() }
+    .getOrElse { error ->
+        throw IllegalArgumentException("Backup contains invalid $label.", error)
+    }
 
 private fun BackupRestorePlan.validateIntegrity() {
     incomeEntries.requireUniqueBy("income entry ids") { it.id }
@@ -87,7 +101,9 @@ private fun BackupRestorePlan.validateIntegrity() {
     importedStatements.requireUniqueBy("imported statement ids") { it.id }
     importedStatements.requireUniqueBy("imported statement fingerprints") { it.sourceFingerprint }
     importedTransactions.requireUniqueBy("imported transaction ids") { it.id }
-    importedTransactions.requireUniqueBy("imported transaction fingerprints") { it.transactionFingerprint }
+    importedTransactions.requireUniqueBy("imported transaction fingerprints") {
+        it.transactionFingerprint
+    }
     incomeEntries
         .filter { !it.sourceTransactionFingerprint.isNullOrBlank() }
         .requireUniqueBy("income entry sourceTransactionFingerprint values") {
@@ -118,18 +134,23 @@ private fun BackupRestorePlan.validateIntegrity() {
     monthlyDeclarationRecords.forEach { entity ->
         val expectedPeriodKey = YearMonth.of(entity.year, entity.month).toString()
         require(entity.periodKey == expectedPeriodKey) {
-            "Backup monthly declaration record '${entity.periodKey}' does not match year=${entity.year}, month=${entity.month}."
+            "Backup monthly declaration record '${entity.periodKey}' does not match " +
+                "year=${entity.year}, month=${entity.month}."
         }
     }
 
     val importedStatementIds = importedStatements.map(ImportedStatementEntity::id).toSet()
-    val incomeEntriesBySourceFingerprint = incomeEntries
-        .filter { !it.sourceTransactionFingerprint.isNullOrBlank() }
-        .associateBy { requireNotNull(it.sourceTransactionFingerprint) }
-    val importedTransactionsByFingerprint = importedTransactions.associateBy(ImportedTransactionEntity::transactionFingerprint)
+    val incomeEntriesBySourceFingerprint =
+        incomeEntries
+            .filter { !it.sourceTransactionFingerprint.isNullOrBlank() }
+            .associateBy { requireNotNull(it.sourceTransactionFingerprint) }
+    val importedTransactionsByFingerprint = importedTransactions.associateBy(
+        ImportedTransactionEntity::transactionFingerprint
+    )
     importedTransactions.forEach { entity ->
         require(entity.statementId in importedStatementIds) {
-            "Backup imported transaction '${entity.transactionFingerprint}' references missing statementId ${entity.statementId}."
+            "Backup imported transaction '${entity.transactionFingerprint}' references missing " +
+                "statementId ${entity.statementId}."
         }
         if (entity.finalInclusion == DeclarationInclusion.INCLUDED) {
             require(entity.incomeDate != null) {
@@ -137,10 +158,12 @@ private fun BackupRestorePlan.validateIntegrity() {
             }
             val linkedIncomeEntry = incomeEntriesBySourceFingerprint[entity.transactionFingerprint]
             require(linkedIncomeEntry != null) {
-                "Backup imported transaction '${entity.transactionFingerprint}' is included but has no linked income entry."
+                "Backup imported transaction '${entity.transactionFingerprint}' is included but has " +
+                    "no linked income entry."
             }
             require(linkedIncomeEntry.originalAmount.signum() > 0) {
-                "Backup imported transaction '${entity.transactionFingerprint}' has linked income entry without positive originalAmount."
+                "Backup imported transaction '${entity.transactionFingerprint}' has linked income entry " +
+                    "without positive originalAmount."
             }
         }
     }
@@ -150,7 +173,8 @@ private fun BackupRestorePlan.validateIntegrity() {
         val hasSourceTransactionFingerprint = !entity.sourceTransactionFingerprint.isNullOrBlank()
         if (hasSourceStatementId || hasSourceTransactionFingerprint) {
             require(hasSourceStatementId && hasSourceTransactionFingerprint) {
-                "Backup income entry '${entity.id}' must provide both sourceStatementId and sourceTransactionFingerprint."
+                "Backup income entry '${entity.id}' must provide both sourceStatementId and " +
+                    "sourceTransactionFingerprint."
             }
             val sourceStatementId = requireNotNull(entity.sourceStatementId)
             val sourceTransactionFingerprint = requireNotNull(entity.sourceTransactionFingerprint)
@@ -159,19 +183,18 @@ private fun BackupRestorePlan.validateIntegrity() {
             }
             val importedTransaction = importedTransactionsByFingerprint[sourceTransactionFingerprint]
             require(importedTransaction != null) {
-                "Backup income entry '${entity.id}' references missing sourceTransactionFingerprint '$sourceTransactionFingerprint'."
+                "Backup income entry '${entity.id}' references missing sourceTransactionFingerprint " +
+                    "'$sourceTransactionFingerprint'."
             }
             require(importedTransaction.statementId == sourceStatementId) {
-                "Backup income entry '${entity.id}' has conflicting sourceStatementId/sourceTransactionFingerprint linkage."
+                "Backup income entry '${entity.id}' has conflicting sourceStatementId/" +
+                    "sourceTransactionFingerprint linkage."
             }
         }
     }
 }
 
-private inline fun <T, K> List<T>.requireUniqueBy(
-    label: String,
-    keySelector: (T) -> K,
-) {
+private inline fun <T, K> List<T>.requireUniqueBy(label: String, keySelector: (T) -> K) {
     val uniqueCount = map(keySelector).toSet().size
     require(uniqueCount == size) { "Backup contains duplicate $label." }
 }

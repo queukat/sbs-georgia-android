@@ -21,10 +21,12 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class WorkflowStatusViewModel @Inject constructor(
+class WorkflowStatusViewModel
+@Inject
+constructor(
     private val observeMonthDetailUseCase: ObserveMonthDetailUseCase,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
-    @param:ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
     private var initializedYearMonth: YearMonth? = null
 
@@ -40,48 +42,59 @@ class WorkflowStatusViewModel @Inject constructor(
         viewModelScope.launch {
             val (snapshot, _) = observeMonthDetailUseCase(yearMonth).first()
             val baseStatus = snapshot?.record?.workflowStatus ?: MonthlyWorkflowStatus.DRAFT
-            _uiState.value = WorkflowStatusUiState(
-                yearMonth = yearMonth,
-                dueDate = snapshot?.period?.filingWindow?.dueDate,
-                derivedStatus = snapshot?.workflowStatus,
-                baseStatus = baseStatus,
-                editableStatuses = editableStatuses,
-                zeroDeclarationPrepared = snapshot?.zeroDeclarationPrepared ?: false,
-                declarationFiledDate = snapshot?.record?.declarationFiledDate,
-                paymentSentDate = snapshot?.record?.paymentSentDate,
-                paymentCreditedDate = snapshot?.record?.paymentCreditedDate,
-                paymentAmount = snapshot?.record?.paymentAmountGel?.toPlainString().orEmpty(),
-                notes = snapshot?.record?.notes.orEmpty(),
-            )
+            _uiState.value =
+                WorkflowStatusUiState(
+                    yearMonth = yearMonth,
+                    dueDate = snapshot?.period?.filingWindow?.dueDate,
+                    derivedStatus = snapshot?.workflowStatus,
+                    baseStatus = baseStatus,
+                    editableStatuses = editableStatuses,
+                    zeroDeclarationPrepared = snapshot?.zeroDeclarationPrepared ?: false,
+                    declarationFiledDate = snapshot?.record?.declarationFiledDate,
+                    paymentSentDate = snapshot?.record?.paymentSentDate,
+                    paymentCreditedDate = snapshot?.record?.paymentCreditedDate,
+                    paymentAmount =
+                    snapshot
+                        ?.record
+                        ?.paymentAmountGel
+                        ?.toPlainString()
+                        .orEmpty(),
+                    notes = snapshot?.record?.notes.orEmpty()
+                )
         }
     }
 
     fun updateStatus(status: MonthlyWorkflowStatus) {
         val current = _uiState.value
-        _uiState.value = current.copy(
-            baseStatus = status,
-            declarationFiledDate = if (status.ordinal >= MonthlyWorkflowStatus.FILED.ordinal) {
-                current.declarationFiledDate
-            } else {
-                null
-            },
-            paymentSentDate = if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
-                current.paymentSentDate
-            } else {
-                null
-            },
-            paymentCreditedDate = if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_CREDITED.ordinal) {
-                current.paymentCreditedDate
-            } else {
-                null
-            },
-            paymentAmount = if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
-                current.paymentAmount
-            } else {
-                ""
-            },
-            errorMessage = null,
-        )
+        _uiState.value =
+            current.copy(
+                baseStatus = status,
+                declarationFiledDate =
+                if (status.ordinal >= MonthlyWorkflowStatus.FILED.ordinal) {
+                    current.declarationFiledDate
+                } else {
+                    null
+                },
+                paymentSentDate =
+                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
+                    current.paymentSentDate
+                } else {
+                    null
+                },
+                paymentCreditedDate =
+                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_CREDITED.ordinal) {
+                    current.paymentCreditedDate
+                } else {
+                    null
+                },
+                paymentAmount =
+                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
+                    current.paymentAmount
+                } else {
+                    ""
+                },
+                errorMessage = null
+            )
     }
 
     fun updateDeclarationFiledDate(value: java.time.LocalDate) {
@@ -113,7 +126,8 @@ class WorkflowStatusViewModel @Inject constructor(
     }
 
     fun updateZeroDeclarationPrepared(value: Boolean) {
-        _uiState.value = _uiState.value.copy(zeroDeclarationPrepared = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(zeroDeclarationPrepared = value, errorMessage = null)
     }
 
     fun updateNotes(value: String) {
@@ -123,21 +137,46 @@ class WorkflowStatusViewModel @Inject constructor(
     fun save() {
         val current = _uiState.value
         val yearMonth = current.yearMonth ?: return
-        val paymentAmount = current.paymentAmount.trim().takeIf { it.isNotBlank() }?.let {
-            runCatching { BigDecimal(it) }.getOrNull()
-        }
+        val paymentAmount =
+            current.paymentAmount.trim().takeIf { it.isNotBlank() }?.let {
+                runCatching { BigDecimal(it) }.getOrNull()
+            }
         when {
-            current.baseStatus in declarationDateRequiredStatuses && current.declarationFiledDate == null -> {
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_declaration_date_required))
+            current.baseStatus in declarationDateRequiredStatuses &&
+                current.declarationFiledDate == null -> {
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.workflow_error_declaration_date_required
+                        )
+                    )
             }
-            current.baseStatus in paymentSentDateRequiredStatuses && current.paymentSentDate == null -> {
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_payment_sent_date_required))
+            current.baseStatus in paymentSentDateRequiredStatuses &&
+                current.paymentSentDate == null -> {
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.workflow_error_payment_sent_date_required
+                        )
+                    )
             }
-            current.baseStatus in paymentCreditedDateRequiredStatuses && current.paymentCreditedDate == null -> {
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_payment_credited_date_required))
+            current.baseStatus in paymentCreditedDateRequiredStatuses &&
+                current.paymentCreditedDate == null -> {
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.workflow_error_payment_credited_date_required
+                        )
+                    )
             }
-            current.paymentAmount.isNotBlank() && (paymentAmount == null || paymentAmount.signum() != 1) -> {
-                _uiState.value = current.copy(errorMessage = appContext.getString(R.string.workflow_error_payment_amount_invalid))
+            current.paymentAmount.isNotBlank() &&
+                (paymentAmount == null || paymentAmount.signum() != 1) -> {
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(
+                            R.string.workflow_error_payment_amount_invalid
+                        )
+                    )
             }
             else -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
@@ -151,8 +190,8 @@ class WorkflowStatusViewModel @Inject constructor(
                             paymentSentDate = current.paymentSentDate,
                             paymentCreditedDate = current.paymentCreditedDate,
                             paymentAmountGel = paymentAmount,
-                            notes = current.notes.trim(),
-                        ),
+                            notes = current.notes.trim()
+                        )
                     )
                     _uiState.value = _uiState.value.copy(isSaving = false)
                     _effects.emit(WorkflowStatusEffect.Saved)
@@ -162,22 +201,28 @@ class WorkflowStatusViewModel @Inject constructor(
     }
 
     private companion object {
-        val editableStatuses = MonthlyWorkflowStatus.entries.filter { it != MonthlyWorkflowStatus.OVERDUE }
-        val declarationDateRequiredStatuses = setOf(
-            MonthlyWorkflowStatus.FILED,
-            MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-            MonthlyWorkflowStatus.PAYMENT_SENT,
-            MonthlyWorkflowStatus.PAYMENT_CREDITED,
-            MonthlyWorkflowStatus.SETTLED,
-        )
-        val paymentSentDateRequiredStatuses = setOf(
-            MonthlyWorkflowStatus.PAYMENT_SENT,
-            MonthlyWorkflowStatus.PAYMENT_CREDITED,
-            MonthlyWorkflowStatus.SETTLED,
-        )
-        val paymentCreditedDateRequiredStatuses = setOf(
-            MonthlyWorkflowStatus.PAYMENT_CREDITED,
-            MonthlyWorkflowStatus.SETTLED,
-        )
+        val editableStatuses = MonthlyWorkflowStatus.entries.filter {
+            it !=
+                MonthlyWorkflowStatus.OVERDUE
+        }
+        val declarationDateRequiredStatuses =
+            setOf(
+                MonthlyWorkflowStatus.FILED,
+                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
+                MonthlyWorkflowStatus.PAYMENT_SENT,
+                MonthlyWorkflowStatus.PAYMENT_CREDITED,
+                MonthlyWorkflowStatus.SETTLED
+            )
+        val paymentSentDateRequiredStatuses =
+            setOf(
+                MonthlyWorkflowStatus.PAYMENT_SENT,
+                MonthlyWorkflowStatus.PAYMENT_CREDITED,
+                MonthlyWorkflowStatus.SETTLED
+            )
+        val paymentCreditedDateRequiredStatuses =
+            setOf(
+                MonthlyWorkflowStatus.PAYMENT_CREDITED,
+                MonthlyWorkflowStatus.SETTLED
+            )
     }
 }

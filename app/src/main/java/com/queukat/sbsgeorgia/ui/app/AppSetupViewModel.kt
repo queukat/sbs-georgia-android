@@ -12,50 +12,56 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class AppSetupViewModel @Inject constructor(
+class AppSetupViewModel
+@Inject
+constructor(
     settingsRepository: SettingsRepository,
-    private val appPreferencesRepository: AppPreferencesRepository,
+    private val appPreferencesRepository: AppPreferencesRepository
 ) : ViewModel() {
     init {
         viewModelScope.launch {
             combine(
                 settingsRepository.observeTaxpayerProfile(),
                 settingsRepository.observeStatusConfig(),
-                appPreferencesRepository.observeQuickStartGuideState(),
+                appPreferencesRepository.observeQuickStartGuideState()
             ) { profile, config, guideState ->
-                val needsOnboarding = profile == null ||
-                    config == null ||
-                    profile.registrationId.isBlank() ||
-                    profile.displayName.isBlank()
+                val needsOnboarding =
+                    profile == null ||
+                        config == null ||
+                        profile.registrationId.isBlank() ||
+                        profile.displayName.isBlank()
                 if (!guideState.initialized) {
                     appPreferencesRepository.initializeQuickStartGuide(
-                        hasCompletedSetup = !needsOnboarding,
+                        hasCompletedSetup = !needsOnboarding
                     )
                 }
             }.collect {}
         }
     }
 
-    val uiState = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        settingsRepository.observeStatusConfig(),
-        appPreferencesRepository.observeQuickStartGuideState(),
-    ) { profile, config, guideState ->
-        val needsOnboarding = profile == null ||
-            config == null ||
-            profile.registrationId.isBlank() ||
-            profile.displayName.isBlank()
-        AppSetupUiState(
-            needsOnboarding = needsOnboarding,
-            shouldShowQuickStartGuide = !needsOnboarding &&
-                guideState.initialized &&
-                !guideState.dismissed,
+    val uiState =
+        combine(
+            settingsRepository.observeTaxpayerProfile(),
+            settingsRepository.observeStatusConfig(),
+            appPreferencesRepository.observeQuickStartGuideState()
+        ) { profile, config, guideState ->
+            val needsOnboarding =
+                profile == null ||
+                    config == null ||
+                    profile.registrationId.isBlank() ||
+                    profile.displayName.isBlank()
+            AppSetupUiState(
+                needsOnboarding = needsOnboarding,
+                shouldShowQuickStartGuide =
+                !needsOnboarding &&
+                    guideState.initialized &&
+                    !guideState.dismissed
+            )
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5_000),
+            AppSetupUiState()
         )
-    }.stateIn(
-        viewModelScope,
-        SharingStarted.WhileSubscribed(5_000),
-        AppSetupUiState(),
-    )
 
     fun dismissQuickStartGuide() {
         viewModelScope.launch {
@@ -64,7 +70,4 @@ class AppSetupViewModel @Inject constructor(
     }
 }
 
-data class AppSetupUiState(
-    val needsOnboarding: Boolean = true,
-    val shouldShowQuickStartGuide: Boolean = false,
-)
+data class AppSetupUiState(val needsOnboarding: Boolean = true, val shouldShowQuickStartGuide: Boolean = false)

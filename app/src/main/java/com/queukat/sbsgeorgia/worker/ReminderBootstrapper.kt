@@ -10,15 +10,19 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Singleton
-class ReminderBootstrapper @Inject constructor(
+class ReminderBootstrapper
+@Inject
+constructor(
     private val settingsRepository: SettingsRepository,
-    private val reminderScheduler: ReminderScheduler,
+    private val reminderScheduler: ReminderScheduler
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun scheduleStoredConfigIfPresent() {
         scope.launch {
-            settingsRepository.observeReminderConfig().first()?.let(reminderScheduler::reschedule)
+            settingsRepository.observeReminderConfig().first()?.let(
+                reminderScheduler::reschedule
+            )
         }
     }
 }

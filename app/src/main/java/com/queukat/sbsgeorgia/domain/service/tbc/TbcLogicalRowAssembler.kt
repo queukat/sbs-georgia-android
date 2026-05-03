@@ -48,7 +48,7 @@ internal fun detectOpeningBalance(lines: List<String>): StatementMoney? {
         val amount = match.groupValues[1].replace(",", "").toBigDecimalOrNull() ?: return@forEach
         return StatementMoney(
             amount = amount,
-            currency = match.groupValues[2].uppercase(),
+            currency = match.groupValues[2].uppercase()
         )
     }
     return null

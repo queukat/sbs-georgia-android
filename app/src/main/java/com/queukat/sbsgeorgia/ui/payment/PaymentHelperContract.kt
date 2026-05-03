@@ -5,7 +5,7 @@ import com.queukat.sbsgeorgia.domain.usecase.PaymentHelperData
 data class PaymentHelperUiState(
     val data: PaymentHelperData? = null,
     val readinessState: PaymentHelperReadinessState = PaymentHelperReadinessState.LOADING,
-    val isReady: Boolean = false,
+    val isReady: Boolean = false
 )
 
 enum class PaymentHelperReadinessState {
@@ -15,5 +15,5 @@ enum class PaymentHelperReadinessState {
     REVIEW_REQUIRED,
     UNRESOLVED_FX,
     ZERO_DECLARATION,
-    READY,
+    READY
 }

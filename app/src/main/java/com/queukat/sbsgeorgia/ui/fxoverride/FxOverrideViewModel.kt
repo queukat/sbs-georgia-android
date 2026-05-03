@@ -18,10 +18,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class FxOverrideViewModel @Inject constructor(
+class FxOverrideViewModel
+@Inject
+constructor(
     private val incomeRepository: IncomeRepository,
     private val applyManualFxOverrideUseCase: ApplyManualFxOverrideUseCase,
-    @param:ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
     private var initializedEntryId: Long = Long.MIN_VALUE
 
@@ -37,26 +39,34 @@ class FxOverrideViewModel @Inject constructor(
         viewModelScope.launch {
             val entry = incomeRepository.getById(entryId)
             if (entry == null) {
-                _uiState.value = FxOverrideUiState(errorMessage = appContext.getString(R.string.fx_override_error_not_found))
+                _uiState.value =
+                    FxOverrideUiState(
+                        errorMessage = appContext.getString(R.string.fx_override_error_not_found)
+                    )
                 return@launch
             }
-            val initialRate = if (entry.manualFxOverride && entry.gelEquivalent != null && entry.originalAmount > BigDecimal.ZERO) {
-                entry.gelEquivalent
-                    .multiply(BigDecimal.ONE)
-                    .divide(entry.originalAmount, 6, RoundingMode.HALF_UP)
-                    .stripTrailingZeros()
-                    .toPlainString()
-            } else {
-                ""
-            }
-            _uiState.value = FxOverrideUiState(
-                entryId = entry.id,
-                incomeDate = entry.incomeDate,
-                originalAmount = entry.originalAmount.toPlainString(),
-                originalCurrency = entry.originalCurrency,
-                rateToGel = initialRate,
-                previewGelEquivalent = entry.gelEquivalent?.toPlainString(),
-            )
+            val initialRate =
+                if (entry.manualFxOverride &&
+                    entry.gelEquivalent != null &&
+                    entry.originalAmount > BigDecimal.ZERO
+                ) {
+                    entry.gelEquivalent
+                        .multiply(BigDecimal.ONE)
+                        .divide(entry.originalAmount, 6, RoundingMode.HALF_UP)
+                        .stripTrailingZeros()
+                        .toPlainString()
+                } else {
+                    ""
+                }
+            _uiState.value =
+                FxOverrideUiState(
+                    entryId = entry.id,
+                    incomeDate = entry.incomeDate,
+                    originalAmount = entry.originalAmount.toPlainString(),
+                    originalCurrency = entry.originalCurrency,
+                    rateToGel = initialRate,
+                    previewGelEquivalent = entry.gelEquivalent?.toPlainString()
+                )
         }
     }
 
@@ -77,9 +87,21 @@ class FxOverrideViewModel @Inject constructor(
         val rateToGel = runCatching { BigDecimal(current.rateToGel) }.getOrNull()
 
         when {
-            entryId == null -> _uiState.value = current.copy(errorMessage = appContext.getString(R.string.fx_override_error_not_found))
-            units == null || units <= 0 -> _uiState.value = current.copy(errorMessage = appContext.getString(R.string.fx_override_error_units))
-            rateToGel == null || rateToGel <= BigDecimal.ZERO -> _uiState.value = current.copy(errorMessage = appContext.getString(R.string.fx_override_error_rate))
+            entryId == null ->
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(R.string.fx_override_error_not_found)
+                    )
+            units == null || units <= 0 ->
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(R.string.fx_override_error_units)
+                    )
+            rateToGel == null || rateToGel <= BigDecimal.ZERO ->
+                _uiState.value =
+                    current.copy(
+                        errorMessage = appContext.getString(R.string.fx_override_error_rate)
+                    )
             else -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
@@ -96,11 +118,14 @@ class FxOverrideViewModel @Inject constructor(
         val amount = runCatching { BigDecimal(current.originalAmount) }.getOrNull()
         val units = current.units.toIntOrNull()
         val rateToGel = runCatching { BigDecimal(current.rateToGel) }.getOrNull()
-        val preview = if (amount == null || units == null || units <= 0 || rateToGel == null) {
-            null
-        } else {
-            amount.multiply(rateToGel).divide(BigDecimal(units), 2, RoundingMode.HALF_UP).toPlainString()
-        }
+        val preview =
+            if (amount == null || units == null || units <= 0 || rateToGel == null) {
+                null
+            } else {
+                amount.multiply(
+                    rateToGel
+                ).divide(BigDecimal(units), 2, RoundingMode.HALF_UP).toPlainString()
+            }
         _uiState.value = current.copy(previewGelEquivalent = preview)
     }
 }

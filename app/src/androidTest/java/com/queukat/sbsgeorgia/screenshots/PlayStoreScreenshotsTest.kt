@@ -56,11 +56,12 @@ class PlayStoreScreenshotsTest {
     private fun capture(scenario: PlayScreenshotScenario) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val context = ApplicationProvider.getApplicationContext<Context>()
-        val intent = Intent(context, PlayScreenshotActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra(PlayScreenshotActivity.EXTRA_SCENARIO_ID, scenario.id)
-            putExtra(PlayScreenshotActivity.EXTRA_LOCALE_TAG, localeTag)
-        }
+        val intent =
+            Intent(context, PlayScreenshotActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra(PlayScreenshotActivity.EXTRA_SCENARIO_ID, scenario.id)
+                putExtra(PlayScreenshotActivity.EXTRA_LOCALE_TAG, localeTag)
+            }
         val scenarioHandle = ActivityScenario.launch<PlayScreenshotActivity>(intent)
 
         try {
@@ -69,13 +70,14 @@ class PlayStoreScreenshotsTest {
             SystemClock.sleep(700)
             assertNoSystemCrashDialogs()
 
-            val outputFile = File(outputDirectory(), "${scenario.fileName}.png").apply {
-                parentFile?.mkdirs()
-                delete()
-            }
+            val outputFile =
+                File(outputDirectory(), "${scenario.fileName}.png").apply {
+                    parentFile?.mkdirs()
+                    delete()
+                }
             assertTrue(
                 "Failed to capture screenshot for ${scenario.id}",
-                device.takeScreenshot(outputFile),
+                device.takeScreenshot(outputFile)
             )
             assertTrue("Screenshot file not created for ${scenario.id}", outputFile.exists())
             publishScreenshot(outputFile, scenario.fileName)
@@ -85,15 +87,17 @@ class PlayStoreScreenshotsTest {
     }
 
     private fun assertNoSystemCrashDialogs() {
-        val knownCrashTexts = listOf(
-            "keeps stopping",
-            "isn't responding",
-            "continues to stop",
-            "has stopped",
-        )
-        val hasDialog = knownCrashTexts.any { text ->
-            device.hasObject(By.textContains(text))
-        }
+        val knownCrashTexts =
+            listOf(
+                "keeps stopping",
+                "isn't responding",
+                "continues to stop",
+                "has stopped"
+            )
+        val hasDialog =
+            knownCrashTexts.any { text ->
+                device.hasObject(By.textContains(text))
+            }
         assertTrue("System crash/ANR dialog is visible; screenshot capture aborted.", !hasDialog)
     }
 
@@ -106,33 +110,40 @@ class PlayStoreScreenshotsTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val contentResolver = context.contentResolver
-            val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
-            val relativePath = "${Environment.DIRECTORY_PICTURES}/SbsGeorgiaScreenshots/localized/$localeTag"
-            val values = ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, "$displayNameWithoutExtension.png")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/png")
-                put(MediaStore.Images.Media.RELATIVE_PATH, relativePath)
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-            val uri = contentResolver.insert(collection, values)
-                ?: error("Failed to create MediaStore entry for $displayNameWithoutExtension")
+            val collection = MediaStore.Images.Media.getContentUri(
+                MediaStore.VOLUME_EXTERNAL_PRIMARY
+            )
+            val relativePath =
+                "${Environment.DIRECTORY_PICTURES}/SbsGeorgiaScreenshots/localized/$localeTag"
+            val values =
+                ContentValues().apply {
+                    put(MediaStore.Images.Media.DISPLAY_NAME, "$displayNameWithoutExtension.png")
+                    put(MediaStore.Images.Media.MIME_TYPE, "image/png")
+                    put(MediaStore.Images.Media.RELATIVE_PATH, relativePath)
+                    put(MediaStore.Images.Media.IS_PENDING, 1)
+                }
+            val uri =
+                contentResolver.insert(collection, values)
+                    ?: error("Failed to create MediaStore entry for $displayNameWithoutExtension")
             writeMediaStoreFile(contentResolver, uri, sourceFile)
             values.clear()
             values.put(MediaStore.Images.Media.IS_PENDING, 0)
             contentResolver.update(uri, values, null, null)
         } else {
-            val publicDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-            val targetFile = File(publicDir, "SbsGeorgiaScreenshots/localized/$localeTag/$displayNameWithoutExtension.png")
+            val publicDir = Environment.getExternalStoragePublicDirectory(
+                Environment.DIRECTORY_PICTURES
+            )
+            val targetFile =
+                File(
+                    publicDir,
+                    "SbsGeorgiaScreenshots/localized/$localeTag/$displayNameWithoutExtension.png"
+                )
             targetFile.parentFile?.mkdirs()
             sourceFile.copyTo(targetFile, overwrite = true)
         }
     }
 
-    private fun writeMediaStoreFile(
-        contentResolver: android.content.ContentResolver,
-        uri: Uri,
-        sourceFile: File,
-    ) {
+    private fun writeMediaStoreFile(contentResolver: android.content.ContentResolver, uri: Uri, sourceFile: File) {
         contentResolver.openOutputStream(uri)?.use { output ->
             sourceFile.inputStream().use { input ->
                 input.copyTo(output)
@@ -142,7 +153,8 @@ class PlayStoreScreenshotsTest {
 
     companion object {
         private val localeTag: String by lazy {
-            InstrumentationRegistry.getArguments()
+            InstrumentationRegistry
+                .getArguments()
                 .getString("testLocale")
                 .orEmpty()
                 .ifBlank { PlayScreenshotActivity.DEFAULT_LOCALE_TAG }
@@ -152,8 +164,9 @@ class PlayStoreScreenshotsTest {
         @JvmStatic
         fun clearPreviousOutput() {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val basePicturesDir = context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                ?: return
+            val basePicturesDir =
+                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+                    ?: return
             File(basePicturesDir, "SbsGeorgiaScreenshots/localized/$localeTag")
                 .deleteRecursively()
         }

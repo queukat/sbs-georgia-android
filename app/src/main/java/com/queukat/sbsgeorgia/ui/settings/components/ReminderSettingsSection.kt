@@ -36,19 +36,21 @@ internal fun ReminderSettingsSection(
     onRequestNotificationPermission: () -> Unit,
     onTestReminderTypeChanged: (ReminderType) -> Unit,
     onTestReminderDelayChanged: (Long) -> Unit,
-    onScheduleTestReminder: (ReminderType, Long) -> Unit,
+    onScheduleTestReminder: (ReminderType, Long) -> Unit
 ) {
     val reminderDelayOptions = listOf(5L, 15L, 30L)
 
     AppSection(title = stringResource(R.string.settings_section_reminder_preferences)) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !notificationPermissionGranted) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            !notificationPermissionGranted
+        ) {
             Text(
                 stringResource(R.string.settings_notifications_blocked),
-                color = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.error
             )
             Button(
                 onClick = onRequestNotificationPermission,
-                modifier = Modifier.testTag("settings-notification-permission-button"),
+                modifier = Modifier.testTag("settings-notification-permission-button")
             ) {
                 Text(stringResource(R.string.settings_grant_notification_permission))
             }
@@ -57,26 +59,27 @@ internal fun ReminderSettingsSection(
             value = uiState.defaultReminderTime,
             onValueChange = onDefaultReminderTimeChanged,
             label = { Text(stringResource(R.string.settings_default_reminder_time)) },
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxWidth()
                 .testTag("settings-default-reminder-time-field"),
-            supportingText = { Text(stringResource(R.string.settings_default_reminder_time_hint)) },
+            supportingText = { Text(stringResource(R.string.settings_default_reminder_time_hint)) }
         )
         OutlinedTextField(
             value = uiState.declarationReminderDays,
             onValueChange = onDeclarationReminderDaysChanged,
             label = { Text(stringResource(R.string.settings_declaration_reminder_days)) },
             modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text(stringResource(R.string.settings_reminder_days_hint)) },
+            supportingText = { Text(stringResource(R.string.settings_reminder_days_hint)) }
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(stringResource(R.string.settings_enable_declaration_reminders))
             Switch(
                 checked = uiState.declarationRemindersEnabled,
-                onCheckedChange = onDeclarationEnabledChanged,
+                onCheckedChange = onDeclarationEnabledChanged
             )
         }
         HorizontalDivider()
@@ -85,30 +88,30 @@ internal fun ReminderSettingsSection(
             onValueChange = onPaymentReminderDaysChanged,
             label = { Text(stringResource(R.string.settings_payment_reminder_days)) },
             modifier = Modifier.fillMaxWidth(),
-            supportingText = { Text(stringResource(R.string.settings_reminder_days_hint)) },
+            supportingText = { Text(stringResource(R.string.settings_reminder_days_hint)) }
         )
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(stringResource(R.string.settings_enable_payment_reminders))
             Switch(
                 checked = uiState.paymentRemindersEnabled,
-                onCheckedChange = onPaymentEnabledChanged,
+                onCheckedChange = onPaymentEnabledChanged
             )
         }
         HorizontalDivider()
         Text(
             stringResource(R.string.settings_test_notifications_body),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Text(
             stringResource(R.string.settings_test_notification_type),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium
         )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             ReminderType.entries.forEach { type ->
                 FilterChip(
@@ -122,20 +125,20 @@ internal fun ReminderSettingsSection(
                                         R.string.settings_test_notification_type_declaration
                                     ReminderType.PAYMENT ->
                                         R.string.settings_test_notification_type_payment
-                                },
-                            ),
+                                }
+                            )
                         )
-                    },
+                    }
                 )
             }
         }
         Text(
             stringResource(R.string.settings_test_notification_delay),
-            style = MaterialTheme.typography.labelMedium,
+            style = MaterialTheme.typography.labelMedium
         )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             reminderDelayOptions.forEach { delaySeconds ->
                 FilterChip(
@@ -145,17 +148,17 @@ internal fun ReminderSettingsSection(
                         Text(
                             stringResource(
                                 R.string.settings_test_notification_delay_seconds,
-                                delaySeconds,
-                            ),
+                                delaySeconds
+                            )
                         )
-                    },
+                    }
                 )
             }
         }
         Button(
             onClick = { onScheduleTestReminder(testReminderType, testReminderDelaySeconds) },
             enabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
-            modifier = Modifier.testTag("settings-test-notification-button"),
+            modifier = Modifier.testTag("settings-test-notification-button")
         ) {
             Text(stringResource(R.string.settings_send_test_notification))
         }

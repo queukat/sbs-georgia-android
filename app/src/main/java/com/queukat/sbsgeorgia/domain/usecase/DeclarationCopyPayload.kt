@@ -15,7 +15,7 @@ data class DeclarationCopyBundle(
     val paymentComment: String,
     val declarationText: String,
     val paymentText: String,
-    val fullText: String,
+    val fullText: String
 )
 
 internal const val TREASURY_CODE = "101001000"
@@ -29,7 +29,7 @@ fun buildPaymentComment(registrationId: String?, yearMonth: YearMonth): String {
 fun buildDeclarationCopyBundle(
     snapshot: MonthlyDeclarationSnapshot?,
     registrationId: String?,
-    yearMonth: YearMonth,
+    yearMonth: YearMonth
 ): DeclarationCopyBundle? {
     if (snapshot == null) return null
 
@@ -38,11 +38,12 @@ fun buildDeclarationCopyBundle(
     val taxAmount = plainDecimal(snapshot.estimatedTaxAmountGel ?: BigDecimal.ZERO)
     val paymentComment = buildPaymentComment(registrationId, yearMonth)
     val declarationText = "Graph 20: $graph20\nGraph 15: $graph15"
-    val paymentText = buildString {
-        appendLine("Treasury code: $TREASURY_CODE")
-        appendLine("Tax amount: $taxAmount")
-        append("Payment comment: $paymentComment")
-    }
+    val paymentText =
+        buildString {
+            appendLine("Treasury code: $TREASURY_CODE")
+            appendLine("Tax amount: $taxAmount")
+            append("Payment comment: $paymentComment")
+        }
     return DeclarationCopyBundle(
         graph20 = graph20,
         graph15 = graph15,
@@ -51,12 +52,11 @@ fun buildDeclarationCopyBundle(
         paymentComment = paymentComment,
         declarationText = declarationText,
         paymentText = paymentText,
-        fullText = "$declarationText\n$paymentText",
+        fullText = "$declarationText\n$paymentText"
     )
 }
 
-private fun plainDecimal(value: BigDecimal): String =
-    value.setScale(2, RoundingMode.HALF_UP).toPlainString()
+private fun plainDecimal(value: BigDecimal): String = value.setScale(2, RoundingMode.HALF_UP).toPlainString()
 
 private val paymentMonthFormatter: DateTimeFormatter =
     DateTimeFormatter.ofPattern("MMMM yyyy", Locale.ENGLISH)

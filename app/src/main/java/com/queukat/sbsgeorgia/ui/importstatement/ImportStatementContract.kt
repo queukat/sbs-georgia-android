@@ -16,7 +16,7 @@ data class ImportStatementUiState(
     val isLoading: Boolean = false,
     val isImporting: Boolean = false,
     val infoMessage: String? = null,
-    val errorMessage: String? = null,
+    val errorMessage: String? = null
 )
 
 data class ImportStatementRowUiState(
@@ -33,7 +33,7 @@ data class ImportStatementRowUiState(
     val currency: String,
     val sourceCategory: String,
     val isTaxPaymentCandidate: Boolean = false,
-    val duplicate: Boolean,
+    val duplicate: Boolean
 )
 
 sealed interface ImportStatementEffect {
@@ -41,12 +41,13 @@ sealed interface ImportStatementEffect {
 }
 
 internal fun ImportStatementRowUiState.isInvalidForIncludedImport(): Boolean =
-    finalInclusion == DeclarationInclusion.INCLUDED && (
-        incomeDate == null ||
-            amount.toBigDecimalOrNull()?.signum() != 1 ||
-            !isIsoLikeCurrencyCode(currency) ||
-            sourceCategory.isBlank()
-        )
+    finalInclusion == DeclarationInclusion.INCLUDED &&
+        (
+            incomeDate == null ||
+                amount.toBigDecimalOrNull()?.signum() != 1 ||
+                !isIsoLikeCurrencyCode(currency) ||
+                sourceCategory.isBlank()
+            )
 
 internal fun List<ImportStatementRowUiState>.invalidIncludedCount(): Int =
     count(ImportStatementRowUiState::isInvalidForIncludedImport)

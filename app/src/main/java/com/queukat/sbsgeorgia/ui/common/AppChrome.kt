@@ -24,7 +24,7 @@ fun sbsTopAppBarColors(): TopAppBarColors = TopAppBarDefaults.topAppBarColors(
     scrolledContainerColor = MaterialTheme.colorScheme.surface,
     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
     titleContentColor = MaterialTheme.colorScheme.onSurface,
-    actionIconContentColor = MaterialTheme.colorScheme.primary,
+    actionIconContentColor = MaterialTheme.colorScheme.primary
 )
 
 @Composable
@@ -33,15 +33,11 @@ fun sbsNavigationBarItemColors(): NavigationBarItemColors = NavigationBarItemDef
     selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
     indicatorColor = MaterialTheme.colorScheme.secondaryContainer,
     unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
 )
 
 @Composable
-fun SbsTopAppBar(
-    title: String,
-    onBack: (() -> Unit)? = null,
-    actions: @Composable RowScope.() -> Unit = {},
-) {
+fun SbsTopAppBar(title: String, onBack: (() -> Unit)? = null, actions: @Composable RowScope.() -> Unit = {}) {
     TopAppBar(
         title = { Text(title) },
         navigationIcon = {
@@ -49,12 +45,12 @@ fun SbsTopAppBar(
                 IconButton(onClick = onBack) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.common_back),
+                        contentDescription = stringResource(R.string.common_back)
                     )
                 }
             }
         },
         actions = actions,
-        colors = sbsTopAppBarColors(),
+        colors = sbsTopAppBarColors()
     )
 }

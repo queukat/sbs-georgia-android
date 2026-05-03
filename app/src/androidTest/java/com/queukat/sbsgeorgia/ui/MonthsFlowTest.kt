@@ -62,43 +62,46 @@ class MonthsFlowTest {
                 if (selectedMonth == null) {
                     MonthsScreen(
                         innerPadding = PaddingValues(),
-                        uiState = MonthsUiState(
-                            sections = listOf(
+                        uiState =
+                        MonthsUiState(
+                            sections =
+                            listOf(
                                 MonthsYearSection(
                                     year = 2026,
-                                    items = listOf(
+                                    items =
+                                    listOf(
                                         MonthsMonthItemUiState(
                                             snapshot = snapshot,
                                             canQuickSettleMonth = true,
-                                            monthAlreadySettled = false,
-                                        ),
-                                    ),
-                                ),
-                            ),
+                                            monthAlreadySettled = false
+                                        )
+                                    )
+                                )
+                            )
                         ),
                         onMonthClick = { selectedMonth = it },
                         onSettleMonth = {},
                         onAddIncome = {},
-                        onImportStatement = {},
+                        onImportStatement = {}
                     )
                 } else {
                     MonthDetailScreen(
                         innerPadding = PaddingValues(),
-                        uiState = MonthDetailUiState(
+                        uiState =
+                        MonthDetailUiState(
                             yearMonth = selectedMonth,
                             snapshot = snapshot,
-                            entries = listOf(sampleUnresolvedEntry()),
+                            entries = listOf(sampleUnresolvedEntry())
                         ),
                         snackbarHostState = androidx.compose.material3.SnackbarHostState(),
                         onBack = { selectedMonth = null },
                         onAddIncome = {},
                         onEditEntry = {},
-                        onOpenPaymentHelper = {},
                         onOpenFxOverride = {},
                         onOpenWorkflowStatus = {},
                         onDeleteEntry = {},
                         onResolveOfficialRates = {},
-                        onToggleZeroPrepared = {},
+                        onToggleZeroPrepared = {}
                     )
                 }
             }
@@ -113,18 +116,19 @@ class MonthsFlowTest {
     @Test
     fun homeDuePeriodQuickAccessNavigatesToMonthDetails() {
         val snapshot = sampleSnapshot(unresolvedFxCount = 0)
-        val summary = DashboardSummary(
-            taxpayerName = "Demo taxpayer",
-            registrationId = "306449082",
-            setupComplete = true,
-            ytdIncomeGel = BigDecimal("350.00"),
-            unresolvedFxCount = 0,
-            unsettledMonthsCount = 1,
-            paidTaxAmountGel = BigDecimal.ZERO,
-            paymentMismatchMonthsCount = 0,
-            currentDuePeriod = snapshot,
-            nextReminderDay = null,
-        )
+        val summary =
+            DashboardSummary(
+                taxpayerName = "Demo taxpayer",
+                registrationId = "306449082",
+                setupComplete = true,
+                ytdIncomeGel = BigDecimal("350.00"),
+                unresolvedFxCount = 0,
+                unsettledMonthsCount = 1,
+                paidTaxAmountGel = BigDecimal.ZERO,
+                paymentMismatchMonthsCount = 0,
+                currentDuePeriod = snapshot,
+                nextReminderDay = null
+            )
         var selectedMonth: YearMonth? by mutableStateOf(null)
 
         composeRule.setContent {
@@ -132,20 +136,23 @@ class MonthsFlowTest {
                 if (selectedMonth == null) {
                     HomeScreen(
                         innerPadding = PaddingValues(),
-                        uiState = HomeUiState(
+                        uiState =
+                        HomeUiState(
                             summary = summary,
-                            duePeriodQuickAccess = HomeDuePeriodQuickAccess(
+                            duePeriodQuickAccess =
+                            HomeDuePeriodQuickAccess(
                                 snapshot = snapshot,
-                                copyBundle = buildDeclarationCopyBundle(
+                                copyBundle =
+                                buildDeclarationCopyBundle(
                                     snapshot = snapshot,
                                     registrationId = summary.registrationId,
-                                    yearMonth = snapshot.period.incomeMonth,
+                                    yearMonth = snapshot.period.incomeMonth
                                 ),
                                 canCopyDeclarationValues = true,
                                 canQuickSettleMonth = true,
                                 monthAlreadySettled = false,
-                                filingOpensOn = null,
-                            ),
+                                filingOpensOn = null
+                            )
                         ),
                         onOpenMonths = {},
                         onOpenDueMonth = { selectedMonth = it },
@@ -153,44 +160,49 @@ class MonthsFlowTest {
                         onAddIncome = {},
                         onImportStatement = {},
                         onOpenSettings = {},
-                        onSettleCurrentDuePeriod = {},
+                        onSettleCurrentDuePeriod = {}
                     )
                 } else {
                     MonthDetailScreen(
                         innerPadding = PaddingValues(),
-                        uiState = MonthDetailUiState(
+                        uiState =
+                        MonthDetailUiState(
                             yearMonth = selectedMonth,
                             snapshot = snapshot,
-                            entries = emptyList(),
+                            entries = emptyList()
                         ),
                         snackbarHostState = androidx.compose.material3.SnackbarHostState(),
                         onBack = { selectedMonth = null },
                         onAddIncome = {},
                         onEditEntry = {},
-                        onOpenPaymentHelper = {},
                         onOpenFxOverride = {},
                         onOpenWorkflowStatus = {},
                         onDeleteEntry = {},
                         onResolveOfficialRates = {},
-                        onToggleZeroPrepared = {},
+                        onToggleZeroPrepared = {}
                     )
                 }
             }
         }
 
-        composeRule.onNodeWithTag("home-copy-graph-20-button")
+        composeRule
+            .onNodeWithTag("home-copy-graph-20-button")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithTag("home-copy-payment-text-button")
+        composeRule
+            .onNodeWithTag("home-copy-payment-text-button")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithTag("home-copy-all-text-button")
+        composeRule
+            .onNodeWithTag("home-copy-all-text-button")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithTag("home-share-telegram-button")
+        composeRule
+            .onNodeWithTag("home-share-telegram-button")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithTag("home-open-due-month-button")
+        composeRule
+            .onNodeWithTag("home-open-due-month-button")
             .performScrollTo()
             .performClick()
 
@@ -206,73 +218,80 @@ class MonthsFlowTest {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
                 MonthDetailScreen(
                     innerPadding = PaddingValues(),
-                    uiState = MonthDetailUiState(
+                    uiState =
+                    MonthDetailUiState(
                         yearMonth = YearMonth.of(2026, 3),
                         snapshot = snapshot,
-                        entries = listOf(sampleUnresolvedEntry()),
+                        entries = listOf(sampleUnresolvedEntry())
                     ),
                     snackbarHostState = androidx.compose.material3.SnackbarHostState(),
                     onBack = {},
                     onAddIncome = {},
                     onEditEntry = {},
-                    onOpenPaymentHelper = {},
                     onOpenFxOverride = {},
                     onOpenWorkflowStatus = {},
                     onDeleteEntry = {},
                     onResolveOfficialRates = {},
-                    onToggleZeroPrepared = {},
+                    onToggleZeroPrepared = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("month-detail-unresolved-fx-message")
+        composeRule
+            .onNodeWithTag("month-detail-unresolved-fx-message")
             .performScrollTo()
             .assertIsDisplayed()
     }
 
     @Test
     fun taxPaymentMismatchIsVisibleInMonthsList() {
-        val snapshot = sampleSnapshot(
-            workflowStatus = MonthlyWorkflowStatus.SETTLED,
-            unresolvedFxCount = 0,
-            record = MonthlyDeclarationRecord(
-                yearMonth = YearMonth.of(2026, 3),
+        val snapshot =
+            sampleSnapshot(
                 workflowStatus = MonthlyWorkflowStatus.SETTLED,
-                zeroDeclarationPrepared = false,
-                declarationFiledDate = LocalDate.of(2026, 4, 10),
-                paymentSentDate = LocalDate.of(2026, 4, 10),
-                paymentCreditedDate = LocalDate.of(2026, 4, 10),
-                paymentAmountGel = BigDecimal("1.00"),
-            ),
-        )
+                unresolvedFxCount = 0,
+                record =
+                MonthlyDeclarationRecord(
+                    yearMonth = YearMonth.of(2026, 3),
+                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
+                    zeroDeclarationPrepared = false,
+                    declarationFiledDate = LocalDate.of(2026, 4, 10),
+                    paymentSentDate = LocalDate.of(2026, 4, 10),
+                    paymentCreditedDate = LocalDate.of(2026, 4, 10),
+                    paymentAmountGel = BigDecimal("1.00")
+                )
+            )
 
         composeRule.setContent {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
                 MonthsScreen(
                     innerPadding = PaddingValues(),
-                    uiState = MonthsUiState(
-                        sections = listOf(
+                    uiState =
+                    MonthsUiState(
+                        sections =
+                        listOf(
                             MonthsYearSection(
                                 year = 2026,
-                                items = listOf(
+                                items =
+                                listOf(
                                     MonthsMonthItemUiState(
                                         snapshot = snapshot,
                                         canQuickSettleMonth = false,
-                                        monthAlreadySettled = true,
-                                    ),
-                                ),
-                            ),
-                        ),
+                                        monthAlreadySettled = true
+                                    )
+                                )
+                            )
+                        )
                     ),
                     onMonthClick = {},
                     onSettleMonth = {},
                     onAddIncome = {},
-                    onImportStatement = {},
+                    onImportStatement = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("snapshot-tax-payment-mismatch")
+        composeRule
+            .onNodeWithTag("snapshot-tax-payment-mismatch")
             .performScrollTo()
             .assertIsDisplayed()
     }
@@ -280,19 +299,21 @@ class MonthsFlowTest {
     private fun sampleSnapshot(
         workflowStatus: MonthlyWorkflowStatus = MonthlyWorkflowStatus.DRAFT,
         unresolvedFxCount: Int = 1,
-        record: MonthlyDeclarationRecord? = null,
+        record: MonthlyDeclarationRecord? = null
     ): MonthlyDeclarationSnapshot {
         val month = YearMonth.of(2026, 3)
         return MonthlyDeclarationSnapshot(
-            period = MonthlyDeclarationPeriod(
+            period =
+            MonthlyDeclarationPeriod(
                 incomeMonth = month,
-                filingWindow = FilingWindow(
+                filingWindow =
+                FilingWindow(
                     start = LocalDate.of(2026, 4, 1),
                     endInclusive = LocalDate.of(2026, 4, 15),
-                    dueDate = LocalDate.of(2026, 4, 15),
+                    dueDate = LocalDate.of(2026, 4, 15)
                 ),
                 inScope = true,
-                outOfScope = false,
+                outOfScope = false
             ),
             workflowStatus = workflowStatus,
             graph20TotalGel = BigDecimal("350.00"),
@@ -304,7 +325,7 @@ class MonthsFlowTest {
             zeroDeclarationPrepared = false,
             reviewNeeded = false,
             setupRequired = false,
-            record = record,
+            record = record
         )
     }
 
@@ -321,6 +342,6 @@ class MonthsFlowTest {
         rateSource = FxRateSource.NONE,
         manualFxOverride = false,
         createdAtEpochMillis = 1L,
-        updatedAtEpochMillis = 1L,
+        updatedAtEpochMillis = 1L
     )
 }

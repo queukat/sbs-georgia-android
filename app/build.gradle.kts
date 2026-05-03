@@ -1,26 +1,31 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
+import java.util.Properties
 import org.gradle.api.GradleException
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.detekt)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ktlint)
     alias(libs.plugins.ksp)
     alias(libs.plugins.play.publisher)
 }
 
-val releaseSigningProperties = Properties().apply {
-    val signingFile = rootProject.file("keystore.properties")
-    if (signingFile.exists()) {
-        signingFile.inputStream().use(::load)
+val releaseSigningProperties =
+    Properties().apply {
+        val signingFile = rootProject.file("keystore.properties")
+        if (signingFile.exists()) {
+            signingFile.inputStream().use(::load)
+        }
     }
-}
 val playKeyFileProvider = providers.environmentVariable("PLAY_KEY_FILE")
-val requiresOfficialReleaseSigning = gradle.startParameter.taskNames.any(::requiresOfficialReleaseSigning)
+val requiresOfficialReleaseSigning = gradle.startParameter.taskNames.any(
+    ::requiresOfficialReleaseSigning
+)
 
 if (releaseSigningProperties.isEmpty() && requiresOfficialReleaseSigning) {
     throw GradleException("Release signing config is missing. Provide keystore.properties.")
@@ -58,7 +63,7 @@ android {
             isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
+                "proguard-rules.pro"
             )
         }
         create("benchmarkRelease") {
@@ -87,7 +92,7 @@ android {
 
     testOptions {
         unitTests {
-            isIncludeAndroidResources = true
+            isIncludeAndroidResources = false
         }
     }
 }
@@ -114,6 +119,26 @@ room {
 
 hilt {
     enableAggregatingTask = true
+}
+
+detekt {
+    buildUponDefaultConfig = true
+    config.setFrom(rootProject.file("config/detekt/detekt.yml"))
+    parallel = true
+    basePath.set(rootProject.projectDir)
+}
+
+ktlint {
+    android.set(true)
+    outputToConsole.set(true)
+}
+
+tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
+    jvmTarget.set("17")
+}
+
+tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
+    jvmTarget.set("17")
 }
 
 dependencies {
@@ -166,10 +191,11 @@ private fun requiresOfficialReleaseSigning(taskName: String): Boolean {
     if (simpleTaskName.contains("benchmarkRelease", ignoreCase = true)) return false
     if (simpleTaskName.contains("nonMinifiedRelease", ignoreCase = true)) return false
 
-    val touchesReleaseArtifact = simpleTaskName.contains("assemble", ignoreCase = true) ||
-        simpleTaskName.contains("bundle", ignoreCase = true) ||
-        simpleTaskName.contains("package", ignoreCase = true) ||
-        simpleTaskName.contains("publish", ignoreCase = true)
+    val touchesReleaseArtifact =
+        simpleTaskName.contains("assemble", ignoreCase = true) ||
+            simpleTaskName.contains("bundle", ignoreCase = true) ||
+            simpleTaskName.contains("package", ignoreCase = true) ||
+            simpleTaskName.contains("publish", ignoreCase = true)
 
     return touchesReleaseArtifact && simpleTaskName.contains("Release", ignoreCase = true)
 }

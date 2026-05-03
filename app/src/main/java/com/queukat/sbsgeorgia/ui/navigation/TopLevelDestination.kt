@@ -1,15 +1,13 @@
 package com.queukat.sbsgeorgia.ui.navigation
 
-enum class TopLevelDestination(
-    val root: AppDestination,
-) {
+enum class TopLevelDestination(val root: AppDestination) {
     Home(
-        root = HomeDestination,
+        root = HomeDestination
     ),
     Months(
-        root = MonthsDestination,
+        root = MonthsDestination
     ),
     Settings(
-        root = SettingsDestination,
-    ),
+        root = SettingsDestination
+    )
 }

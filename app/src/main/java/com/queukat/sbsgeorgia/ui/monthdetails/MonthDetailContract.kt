@@ -11,7 +11,7 @@ data class MonthDetailUiState(
     val entries: List<IncomeEntry> = emptyList(),
     val copyBundle: DeclarationCopyBundle? = null,
     val isFilingWindowOpen: Boolean = false,
-    val isResolvingFx: Boolean = false,
+    val isResolvingFx: Boolean = false
 )
 
 sealed interface MonthDetailEffect {

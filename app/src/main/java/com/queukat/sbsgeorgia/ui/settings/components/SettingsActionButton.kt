@@ -12,29 +12,24 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 @Composable
-internal fun SettingsActionButton(
-    label: String,
-    body: String,
-    onClick: () -> Unit,
-    enabled: Boolean,
-    testTag: String,
-) {
+internal fun SettingsActionButton(label: String, body: String, onClick: () -> Unit, enabled: Boolean, testTag: String) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Button(
             onClick = onClick,
             enabled = enabled,
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxWidth()
-                .testTag(testTag),
+                .testTag(testTag)
         ) {
             Text(label)
         }
         Text(
             text = body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyMedium
         )
     }
 }

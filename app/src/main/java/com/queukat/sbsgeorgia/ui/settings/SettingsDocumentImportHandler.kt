@@ -10,18 +10,15 @@ import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
 
 internal class SettingsDocumentImportHandler(
     private val strings: DocumentImportStrings,
-    private val loadPreview: suspend (String, OnboardingDocumentType) -> OnboardingImportPreview,
+    private val loadPreview: suspend (String, OnboardingDocumentType) -> OnboardingImportPreview
 ) {
     val previewAppliedMessage: String
         get() = strings.previewApplied
 
-    suspend fun load(
-        uri: Uri,
-        action: DocumentImportAction,
-    ): DocumentImportLoadResult = loadDocumentImportPreview(
+    suspend fun load(uri: Uri, action: DocumentImportAction): DocumentImportLoadResult = loadDocumentImportPreview(
         uriString = uri.toString(),
         action = action,
         strings = strings,
-        loadPreview = loadPreview,
+        loadPreview = loadPreview
     )
 }

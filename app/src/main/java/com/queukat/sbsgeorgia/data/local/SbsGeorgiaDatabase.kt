@@ -15,107 +15,118 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         MonthlyDeclarationRecordEntity::class,
         ImportedStatementEntity::class,
         ImportedTransactionEntity::class,
-        FxRateEntity::class,
+        FxRateEntity::class
     ],
     version = 5,
-    exportSchema = true,
+    exportSchema = true
 )
 @TypeConverters(AppTypeConverters::class)
 abstract class SbsGeorgiaDatabase : RoomDatabase() {
     abstract fun taxpayerProfileDao(): TaxpayerProfileDao
+
     abstract fun smallBusinessStatusConfigDao(): SmallBusinessStatusConfigDao
+
     abstract fun reminderConfigDao(): ReminderConfigDao
+
     abstract fun incomeEntryDao(): IncomeEntryDao
+
     abstract fun monthlyDeclarationRecordDao(): MonthlyDeclarationRecordDao
+
     abstract fun fxRateDao(): FxRateDao
+
     abstract fun importedStatementDao(): ImportedStatementDao
+
     abstract fun importedTransactionDao(): ImportedTransactionDao
 
     companion object {
-        val MIGRATION_1_2: Migration = object : Migration(1, 2) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    ALTER TABLE reminder_config
-                    ADD COLUMN defaultReminderTime TEXT NOT NULL DEFAULT '09:00'
-                    """.trimIndent(),
-                )
+        val MIGRATION_1_2: Migration =
+            object : Migration(1, 2) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        ALTER TABLE reminder_config
+                        ADD COLUMN defaultReminderTime TEXT NOT NULL DEFAULT '09:00'
+                        """.trimIndent()
+                    )
+                }
             }
-        }
 
-        val MIGRATION_2_3: Migration = object : Migration(2, 3) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    ALTER TABLE taxpayer_profile
-                    ADD COLUMN legalForm TEXT
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    ALTER TABLE taxpayer_profile
-                    ADD COLUMN registrationDate TEXT
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    ALTER TABLE taxpayer_profile
-                    ADD COLUMN legalAddress TEXT
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    ALTER TABLE taxpayer_profile
-                    ADD COLUMN activityType TEXT
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    ALTER TABLE small_business_status_config
-                    ADD COLUMN certificateNumber TEXT
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    ALTER TABLE small_business_status_config
-                    ADD COLUMN certificateIssuedDate TEXT
-                    """.trimIndent(),
-                )
+        val MIGRATION_2_3: Migration =
+            object : Migration(2, 3) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        ALTER TABLE taxpayer_profile
+                        ADD COLUMN legalForm TEXT
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        ALTER TABLE taxpayer_profile
+                        ADD COLUMN registrationDate TEXT
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        ALTER TABLE taxpayer_profile
+                        ADD COLUMN legalAddress TEXT
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        ALTER TABLE taxpayer_profile
+                        ADD COLUMN activityType TEXT
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        ALTER TABLE small_business_status_config
+                        ADD COLUMN certificateNumber TEXT
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        ALTER TABLE small_business_status_config
+                        ADD COLUMN certificateIssuedDate TEXT
+                        """.trimIndent()
+                    )
+                }
             }
-        }
 
-        val MIGRATION_3_4: Migration = object : Migration(3, 4) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    ALTER TABLE monthly_declaration_record
-                    ADD COLUMN paymentAmountGel TEXT
-                    """.trimIndent(),
-                )
+        val MIGRATION_3_4: Migration =
+            object : Migration(3, 4) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        ALTER TABLE monthly_declaration_record
+                        ADD COLUMN paymentAmountGel TEXT
+                        """.trimIndent()
+                    )
+                }
             }
-        }
 
-        val MIGRATION_4_5: Migration = object : Migration(4, 5) {
-            override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS index_income_entry_incomeDate
-                    ON income_entry (incomeDate)
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS index_income_entry_sourceTransactionFingerprint
-                    ON income_entry (sourceTransactionFingerprint)
-                    """.trimIndent(),
-                )
-                db.execSQL(
-                    """
-                    CREATE INDEX IF NOT EXISTS index_imported_transaction_statementId
-                    ON imported_transaction (statementId)
-                    """.trimIndent(),
-                )
+        val MIGRATION_4_5: Migration =
+            object : Migration(4, 5) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS index_income_entry_incomeDate
+                        ON income_entry (incomeDate)
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS index_income_entry_sourceTransactionFingerprint
+                        ON income_entry (sourceTransactionFingerprint)
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        CREATE INDEX IF NOT EXISTS index_imported_transaction_statementId
+                        ON imported_transaction (statementId)
+                        """.trimIndent()
+                    )
+                }
             }
-        }
     }
 }

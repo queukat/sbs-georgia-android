@@ -12,13 +12,23 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 
 @Composable
 fun SnapshotSummary(snapshot: MonthlyDeclarationSnapshot) {
-    KeyValueRow(stringResource(R.string.snapshot_graph_20), formatAmount(snapshot.graph20TotalGel, "GEL"))
-    KeyValueRow(stringResource(R.string.snapshot_graph_15_cumulative), formatAmount(snapshot.graph15CumulativeGel, "GEL"))
+    KeyValueRow(
+        stringResource(R.string.snapshot_graph_20),
+        formatAmount(snapshot.graph20TotalGel, "GEL")
+    )
+    KeyValueRow(
+        stringResource(R.string.snapshot_graph_15_cumulative),
+        formatAmount(snapshot.graph15CumulativeGel, "GEL")
+    )
     KeyValueRow(
         stringResource(R.string.snapshot_due_date),
-        snapshot.period.filingWindow.dueDate.formatIsoDate(),
+        snapshot.period.filingWindow.dueDate
+            .formatIsoDate()
     )
-    KeyValueRow(stringResource(R.string.snapshot_status), workflowStatusLabel(snapshot.workflowStatus))
+    KeyValueRow(
+        stringResource(R.string.snapshot_status),
+        workflowStatusLabel(snapshot.workflowStatus)
+    )
     snapshot.estimatedTaxAmountGel?.let {
         KeyValueRow(stringResource(R.string.snapshot_estimated_tax), formatAmount(it, "GEL"))
     }
@@ -27,16 +37,17 @@ fun SnapshotSummary(snapshot: MonthlyDeclarationSnapshot) {
     }
     snapshot.taxPaymentDifferenceGel?.takeIf { snapshot.taxPaymentMismatch }?.let { difference ->
         Text(
-            text = stringResource(
+            text =
+            stringResource(
                 if (snapshot.taxPaymentUnderpaid) {
                     R.string.snapshot_tax_underpaid
                 } else {
                     R.string.snapshot_tax_overpaid
                 },
-                formatAmount(difference.abs(), "GEL"),
+                formatAmount(difference.abs(), "GEL")
             ),
             color = MaterialTheme.colorScheme.error,
-            modifier = Modifier.testTag("snapshot-tax-payment-mismatch"),
+            modifier = Modifier.testTag("snapshot-tax-payment-mismatch")
         )
     }
     if (snapshot.originalCurrencyTotals.isNotEmpty()) {
@@ -66,7 +77,7 @@ fun SnapshotSummary(snapshot: MonthlyDeclarationSnapshot) {
             SimpleChip(
                 label = stringResource(R.string.snapshot_tax_mismatch),
                 containerColor = MaterialTheme.colorScheme.errorContainer,
-                labelColor = MaterialTheme.colorScheme.onErrorContainer,
+                labelColor = MaterialTheme.colorScheme.onErrorContainer
             )
         }
     }

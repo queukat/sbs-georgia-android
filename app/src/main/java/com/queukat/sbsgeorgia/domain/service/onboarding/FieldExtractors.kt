@@ -9,7 +9,7 @@ import java.time.format.DateTimeFormatter
 internal fun List<String>.extractTextField(
     primaryLabels: List<String>,
     previousLineLabels: List<String> = emptyList(),
-    fallbackPatterns: List<Regex> = emptyList(),
+    fallbackPatterns: List<Regex> = emptyList()
 ): ParsedTextField {
     extractInlineValue(primaryLabels)?.let { value ->
         return ParsedTextField(value = value, confidence = ExtractionConfidence.CONFIDENT)
@@ -28,7 +28,7 @@ internal fun List<String>.extractTextField(
 
 internal fun List<String>.extractTextFieldWithContinuation(
     primaryLabels: List<String>,
-    inlineStopLabels: List<String> = emptyList(),
+    inlineStopLabels: List<String> = emptyList()
 ): ParsedTextField {
     extractInlineValueWithContinuation(primaryLabels, inlineStopLabels)?.let { value ->
         return ParsedTextField(value = value, confidence = ExtractionConfidence.CONFIDENT)
@@ -41,7 +41,7 @@ internal fun List<String>.extractTextFieldWithContinuation(
 
 internal fun List<String>.extractRegistryAddressField(
     primaryLabels: List<String>,
-    inlineStopLabels: List<String> = emptyList(),
+    inlineStopLabels: List<String> = emptyList()
 ): ParsedTextField {
     extractInlineRegistryAddress(primaryLabels, inlineStopLabels)?.let { value ->
         return ParsedTextField(value = value, confidence = ExtractionConfidence.CONFIDENT)
@@ -54,7 +54,7 @@ internal fun List<String>.extractRegistryAddressField(
 
 internal fun List<String>.extractDateField(
     primaryLabels: List<String>,
-    fallbackPatterns: List<Regex> = emptyList(),
+    fallbackPatterns: List<Regex> = emptyList()
 ): ParsedDateField {
     extractInlineValue(primaryLabels)?.extractDateCandidate()?.parseKnownDate()?.let { value ->
         return ParsedDateField(value = value, confidence = ExtractionConfidence.CONFIDENT)
@@ -68,9 +68,7 @@ internal fun List<String>.extractDateField(
     return ParsedDateField()
 }
 
-internal fun List<String>.extractDateFromSentence(
-    sentenceMarkers: List<String>,
-): ParsedDateField {
+internal fun List<String>.extractDateFromSentence(sentenceMarkers: List<String>): ParsedDateField {
     firstOrNull { line ->
         sentenceMarkers.any { marker -> line.contains(marker, ignoreCase = true) }
     }?.let { line ->
@@ -78,15 +76,15 @@ internal fun List<String>.extractDateFromSentence(
         if (candidate != null) {
             return ParsedDateField(
                 value = candidate.parseKnownDate(),
-                confidence = ExtractionConfidence.CONFIDENT,
+                confidence = ExtractionConfidence.CONFIDENT
             )
         }
     }
     return ParsedDateField()
 }
 
-private fun List<String>.extractInlineValue(labels: List<String>): String? =
-    asSequence().mapNotNull { line ->
+private fun List<String>.extractInlineValue(labels: List<String>): String? = asSequence()
+    .mapNotNull { line ->
         labels.firstNotNullOfOrNull { label ->
             if (line.equals(label, ignoreCase = true)) {
                 null
@@ -112,19 +110,25 @@ private fun List<String>.extractNextLineValue(labels: List<String>): String? {
 
 private fun List<String>.extractInlineValueWithContinuation(
     labels: List<String>,
-    inlineStopLabels: List<String>,
+    inlineStopLabels: List<String>
 ): String? {
     forEachIndexed { index, line ->
         labels.forEach { label ->
-            val match = Regex("^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE).find(line)
+            val match = Regex(
+                "^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$",
+                RegexOption.IGNORE_CASE
+            ).find(line)
             if (match != null) {
-                val initialValue = match.groupValues.getOrNull(1)?.trim().orEmpty()
+                val initialValue =
+                    match.groupValues
+                        .getOrNull(1)
+                        ?.trim()
+                        .orEmpty()
                 return collectContinuationSegments(
                     startIndex = index + 1,
                     initialValue = initialValue,
-                    inlineStopLabels = inlineStopLabels,
-                )
-                    .joinToString(" ")
+                    inlineStopLabels = inlineStopLabels
+                ).joinToString(" ")
                     .replace(Regex("\\s+"), " ")
                     .trim()
             }
@@ -135,7 +139,7 @@ private fun List<String>.extractInlineValueWithContinuation(
 
 private fun List<String>.extractNextLineValueWithContinuation(
     labels: List<String>,
-    inlineStopLabels: List<String>,
+    inlineStopLabels: List<String>
 ): String? {
     forEachIndexed { index, line ->
         if (labels.any { label -> line.matchesStandaloneLabel(label) }) {
@@ -143,9 +147,8 @@ private fun List<String>.extractNextLineValueWithContinuation(
             return collectContinuationSegments(
                 startIndex = index + 2,
                 initialValue = nextLine,
-                inlineStopLabels = inlineStopLabels,
-            )
-                .joinToString(" ")
+                inlineStopLabels = inlineStopLabels
+            ).joinToString(" ")
                 .replace(Regex("\\s+"), " ")
                 .trim()
         }
@@ -153,22 +156,27 @@ private fun List<String>.extractNextLineValueWithContinuation(
     return null
 }
 
-private fun List<String>.extractInlineRegistryAddress(
-    labels: List<String>,
-    inlineStopLabels: List<String>,
-): String? {
+private fun List<String>.extractInlineRegistryAddress(labels: List<String>, inlineStopLabels: List<String>): String? {
     forEachIndexed { index, line ->
         labels.forEach { label ->
-            val match = Regex("^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$", RegexOption.IGNORE_CASE).find(line)
+            val match = Regex(
+                "^${Regex.escape(label)}\\s*[:\\-]?\\s*(.+)$",
+                RegexOption.IGNORE_CASE
+            ).find(line)
             if (match != null) {
-                val initialValue = match.groupValues.getOrNull(1)?.trim().orEmpty()
+                val initialValue =
+                    match.groupValues
+                        .getOrNull(1)
+                        ?.trim()
+                        .orEmpty()
                 return repairRegistryAddress(
                     labelIndex = index,
-                    segments = collectContinuationSegments(
+                    segments =
+                    collectContinuationSegments(
                         startIndex = index + 1,
                         initialValue = initialValue,
-                        inlineStopLabels = inlineStopLabels,
-                    ),
+                        inlineStopLabels = inlineStopLabels
+                    )
                 )
             }
         }
@@ -176,20 +184,18 @@ private fun List<String>.extractInlineRegistryAddress(
     return null
 }
 
-private fun List<String>.extractNextLineRegistryAddress(
-    labels: List<String>,
-    inlineStopLabels: List<String>,
-): String? {
+private fun List<String>.extractNextLineRegistryAddress(labels: List<String>, inlineStopLabels: List<String>): String? {
     forEachIndexed { index, line ->
         if (labels.any { label -> line.matchesStandaloneLabel(label) }) {
             val nextLine = getOrNull(index + 1)?.takeIf { it.isNotBlank() } ?: return null
             return repairRegistryAddress(
                 labelIndex = index,
-                segments = collectContinuationSegments(
+                segments =
+                collectContinuationSegments(
                     startIndex = index + 2,
                     initialValue = nextLine,
-                    inlineStopLabels = inlineStopLabels,
-                ),
+                    inlineStopLabels = inlineStopLabels
+                )
             )
         }
     }
@@ -199,7 +205,7 @@ private fun List<String>.extractNextLineRegistryAddress(
 private fun List<String>.collectContinuationSegments(
     startIndex: Int,
     initialValue: String,
-    inlineStopLabels: List<String>,
+    inlineStopLabels: List<String>
 ): List<String> {
     val segments = mutableListOf<String>()
     val sanitizedInitialValue = initialValue.trimAtInlineStopLabel(inlineStopLabels)
@@ -209,30 +215,33 @@ private fun List<String>.collectContinuationSegments(
     var index = startIndex
     while (index < size) {
         val candidate = this[index]
-        if (candidate.looksLikeNextFieldOrSection()) break
-        val sanitizedCandidate = candidate.trimAtInlineStopLabel(inlineStopLabels)
-        if (sanitizedCandidate.isNotBlank()) {
-            segments += sanitizedCandidate
+        var shouldStop = candidate.looksLikeNextFieldOrSection()
+        if (!shouldStop) {
+            val sanitizedCandidate = candidate.trimAtInlineStopLabel(inlineStopLabels)
+            if (sanitizedCandidate.isNotBlank()) {
+                segments += sanitizedCandidate
+            }
+            shouldStop = sanitizedCandidate != candidate
         }
-        if (sanitizedCandidate != candidate) break
+        if (shouldStop) break
         index += 1
     }
     return segments
 }
 
-private fun List<String>.repairRegistryAddress(
-    labelIndex: Int,
-    segments: List<String>,
-): String? {
+private fun List<String>.repairRegistryAddress(labelIndex: Int, segments: List<String>): String? {
     if (segments.isEmpty()) return null
 
-    val cleanedSegments = segments
-        .map { segment -> segment.replace(Regex("\\s+"), " ").trim() }
-        .filter { it.isNotBlank() }
-        .toMutableList()
+    val cleanedSegments =
+        segments
+            .map { segment -> segment.replace(Regex("\\s+"), " ").trim() }
+            .filter { it.isNotBlank() }
+            .toMutableList()
     if (cleanedSegments.isEmpty()) return null
 
-    val firstAddressSegmentIndex = cleanedSegments.indexOfFirst { registryAddressAnchorRegex.containsMatchIn(it) }
+    val firstAddressSegmentIndex = cleanedSegments.indexOfFirst {
+        registryAddressAnchorRegex.containsMatchIn(it)
+    }
     if (firstAddressSegmentIndex > 0) {
         repeat(firstAddressSegmentIndex) { cleanedSegments.removeAt(0) }
     }
@@ -274,15 +283,15 @@ private fun String.looksLikeNextFieldOrSection(): Boolean {
 
 private fun String.trimAtInlineStopLabel(stopLabels: List<String>): String {
     if (stopLabels.isEmpty()) return trim()
-    val stopIndex = stopLabels
-        .mapNotNull { label ->
-            Regex("(?<!^)${Regex.escape(label)}\\s*:", RegexOption.IGNORE_CASE)
-                .find(this)
-                ?.range
-                ?.first
-        }
-        .minOrNull()
-        ?: return trim()
+    val stopIndex =
+        stopLabels
+            .mapNotNull { label ->
+                Regex("(?<!^)${Regex.escape(label)}\\s*:", RegexOption.IGNORE_CASE)
+                    .find(this)
+                    ?.range
+                    ?.first
+            }.minOrNull()
+            ?: return trim()
     return substring(0, stopIndex).trim()
 }
 
@@ -303,10 +312,11 @@ private fun List<String>.extractPreviousLineValue(labels: List<String>): String?
     return null
 }
 
-private fun List<String>.extractPatternValue(patterns: List<Regex>): String? =
-    asSequence().mapNotNull { line ->
+private fun List<String>.extractPatternValue(patterns: List<Regex>): String? = asSequence()
+    .mapNotNull { line ->
         patterns.firstNotNullOfOrNull { pattern ->
-            pattern.find(line)
+            pattern
+                .find(line)
                 ?.groupValues
                 ?.getOrNull(1)
                 ?.trim()
@@ -314,19 +324,20 @@ private fun List<String>.extractPatternValue(patterns: List<Regex>): String? =
         }
     }.firstOrNull()
 
-private fun String.extractDateCandidate(): String? =
-    numericDateRegex.find(this)?.value
-        ?: textualDateRegex.find(this)?.value
+private fun String.extractDateCandidate(): String? = numericDateRegex.find(this)?.value
+    ?: textualDateRegex.find(this)?.value
 
 private fun String.parseKnownDate(): LocalDate? {
-    val normalized = trim()
-        .replace(Regex("\\s+"), " ")
-        .removeSuffix("წელი")
-        .trim()
+    val normalized =
+        trim()
+            .replace(Regex("\\s+"), " ")
+            .removeSuffix("წელი")
+            .trim()
 
-    knownDateFormatters.firstNotNullOfOrNull { formatter ->
-        runCatching { LocalDate.parse(normalized, formatter) }.getOrNull()
-    }?.let { return it }
+    knownDateFormatters
+        .firstNotNullOfOrNull { formatter ->
+            runCatching { LocalDate.parse(normalized, formatter) }.getOrNull()
+        }?.let { return it }
 
     textualDateRegex.matchEntire(normalized)?.let { match ->
         val day = match.groupValues[1].toIntOrNull() ?: return null
@@ -339,47 +350,52 @@ private fun String.parseKnownDate(): LocalDate? {
     return null
 }
 
-private val knownDateFormatters = listOf(
-    DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-    DateTimeFormatter.ofPattern("dd.MM.yyyy"),
-    DateTimeFormatter.ISO_LOCAL_DATE,
-)
+private val knownDateFormatters =
+    listOf(
+        DateTimeFormatter.ofPattern("dd/MM/yyyy"),
+        DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+        DateTimeFormatter.ISO_LOCAL_DATE
+    )
 
 private val numericDateRegex = Regex("\\d{2}[./]\\d{2}[./]\\d{4}|\\d{4}-\\d{2}-\\d{2}")
-private val textualDateRegex = Regex("(\\d{1,2})\\s+([\\p{L}]+)\\s+(\\d{4})(?:\\s*წელი)?", RegexOption.IGNORE_CASE)
-private val registryAddressAnchorRegex = Regex("(Georgia\\s*,|საქართველო\\s*,|Tbilisi\\s*,|თბილისი\\s*,)", RegexOption.IGNORE_CASE)
-private val continuationStopHeadings = setOf(
-    "subject",
-    "person",
-    "seizure/injunction",
-    "tax lien/mortgage",
-    "pledge/leasing on intangible or movable property",
-    "debtor registry",
-    "არ არის რეგისტრირებული",
-)
-private val textualMonths = mapOf(
-    "january" to 1,
-    "february" to 2,
-    "march" to 3,
-    "april" to 4,
-    "may" to 5,
-    "june" to 6,
-    "july" to 7,
-    "august" to 8,
-    "september" to 9,
-    "october" to 10,
-    "november" to 11,
-    "december" to 12,
-    "იანვარი" to 1,
-    "თებერვალი" to 2,
-    "მარტი" to 3,
-    "აპრილი" to 4,
-    "მაისი" to 5,
-    "ივნისი" to 6,
-    "ივლისი" to 7,
-    "აგვისტო" to 8,
-    "სექტემბერი" to 9,
-    "ოქტომბერი" to 10,
-    "ნოემბერი" to 11,
-    "დეკემბერი" to 12,
-)
+private val textualDateRegex =
+    Regex("(\\d{1,2})\\s+([\\p{L}]+)\\s+(\\d{4})(?:\\s*წელი)?", RegexOption.IGNORE_CASE)
+private val registryAddressAnchorRegex =
+    Regex("(Georgia\\s*,|საქართველო\\s*,|Tbilisi\\s*,|თბილისი\\s*,)", RegexOption.IGNORE_CASE)
+private val continuationStopHeadings =
+    setOf(
+        "subject",
+        "person",
+        "seizure/injunction",
+        "tax lien/mortgage",
+        "pledge/leasing on intangible or movable property",
+        "debtor registry",
+        "არ არის რეგისტრირებული"
+    )
+private val textualMonths =
+    mapOf(
+        "january" to 1,
+        "february" to 2,
+        "march" to 3,
+        "april" to 4,
+        "may" to 5,
+        "june" to 6,
+        "july" to 7,
+        "august" to 8,
+        "september" to 9,
+        "october" to 10,
+        "november" to 11,
+        "december" to 12,
+        "იანვარი" to 1,
+        "თებერვალი" to 2,
+        "მარტი" to 3,
+        "აპრილი" to 4,
+        "მაისი" to 5,
+        "ივნისი" to 6,
+        "ივლისი" to 7,
+        "აგვისტო" to 8,
+        "სექტემბერი" to 9,
+        "ოქტომბერი" to 10,
+        "ნოემბერი" to 11,
+        "დეკემბერი" to 12
+    )

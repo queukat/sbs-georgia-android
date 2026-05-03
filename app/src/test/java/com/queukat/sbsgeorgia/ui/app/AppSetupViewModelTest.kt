@@ -31,16 +31,19 @@ class AppSetupViewModelTest {
 
     @Test
     fun existingConfiguredUserDoesNotSeeQuickStartGuide() = runTest {
-        val settingsRepository = SetupFakeSettingsRepository(
-            initialProfile = TaxpayerProfile(
-                registrationId = "306449082",
-                displayName = "Test Entrepreneur",
-            ),
-            initialStatusConfig = SmallBusinessStatusConfig(
-                effectiveDate = LocalDate.of(2026, 1, 1),
-                defaultTaxRatePercent = BigDecimal("1.0"),
-            ),
-        )
+        val settingsRepository =
+            SetupFakeSettingsRepository(
+                initialProfile =
+                TaxpayerProfile(
+                    registrationId = "306449082",
+                    displayName = "Test Entrepreneur"
+                ),
+                initialStatusConfig =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.of(2026, 1, 1),
+                    defaultTaxRatePercent = BigDecimal("1.0")
+                )
+            )
         val preferencesRepository = FakeAppPreferencesRepository()
         val viewModel = AppSetupViewModel(settingsRepository, preferencesRepository)
 
@@ -54,9 +57,9 @@ class AppSetupViewModelTest {
         assertEquals(
             QuickStartGuideState(
                 initialized = true,
-                dismissed = true,
+                dismissed = true
             ),
-            preferencesRepository.quickStartGuideState.value,
+            preferencesRepository.quickStartGuideState.value
         )
     }
 
@@ -76,22 +79,22 @@ class AppSetupViewModelTest {
         assertEquals(
             QuickStartGuideState(
                 initialized = true,
-                dismissed = false,
+                dismissed = false
             ),
-            preferencesRepository.quickStartGuideState.value,
+            preferencesRepository.quickStartGuideState.value
         )
 
         settingsRepository.upsertTaxpayerProfile(
             TaxpayerProfile(
                 registrationId = "306449082",
-                displayName = "Test Entrepreneur",
-            ),
+                displayName = "Test Entrepreneur"
+            )
         )
         settingsRepository.upsertStatusConfig(
             SmallBusinessStatusConfig(
                 effectiveDate = LocalDate.of(2026, 1, 1),
-                defaultTaxRatePercent = BigDecimal("1.0"),
-            ),
+                defaultTaxRatePercent = BigDecimal("1.0")
+            )
         )
         advanceUntilIdle()
 
@@ -113,31 +116,34 @@ private class FakeAppPreferencesRepository : AppPreferencesRepository {
 
     override suspend fun initializeQuickStartGuide(hasCompletedSetup: Boolean) {
         if (quickStartGuideState.value.initialized) return
-        quickStartGuideState.value = QuickStartGuideState(
-            initialized = true,
-            dismissed = hasCompletedSetup,
-        )
+        quickStartGuideState.value =
+            QuickStartGuideState(
+                initialized = true,
+                dismissed = hasCompletedSetup
+            )
     }
 
     override suspend fun markQuickStartGuideDismissed() {
-        quickStartGuideState.value = quickStartGuideState.value.copy(
-            initialized = true,
-            dismissed = true,
-        )
+        quickStartGuideState.value =
+            quickStartGuideState.value.copy(
+                initialized = true,
+                dismissed = true
+            )
     }
 }
 
 private class SetupFakeSettingsRepository(
     initialProfile: TaxpayerProfile? = null,
     initialStatusConfig: SmallBusinessStatusConfig? = null,
-    initialReminderConfig: ReminderConfig? = ReminderConfig(
-        declarationReminderDays = listOf(10, 13, 15),
-        paymentReminderDays = listOf(10, 13, 15),
-        declarationRemindersEnabled = true,
-        paymentRemindersEnabled = true,
-        defaultReminderTime = LocalTime.of(9, 0),
-        themeMode = ThemeMode.SYSTEM,
-    ),
+    initialReminderConfig: ReminderConfig? =
+        ReminderConfig(
+            declarationReminderDays = listOf(10, 13, 15),
+            paymentReminderDays = listOf(10, 13, 15),
+            declarationRemindersEnabled = true,
+            paymentRemindersEnabled = true,
+            defaultReminderTime = LocalTime.of(9, 0),
+            themeMode = ThemeMode.SYSTEM
+        )
 ) : SettingsRepository {
     private val taxpayerProfile = MutableStateFlow(initialProfile)
     private val statusConfig = MutableStateFlow(initialStatusConfig)

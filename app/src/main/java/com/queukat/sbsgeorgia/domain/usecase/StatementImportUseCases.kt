@@ -2,11 +2,11 @@ package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
-import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreview
-import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreviewRow
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmStatementImportWorkflowResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreview
+import com.queukat.sbsgeorgia.domain.model.ImportedStatementPreviewRow
 import com.queukat.sbsgeorgia.domain.model.LoadImportPreviewResult
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
@@ -19,73 +19,92 @@ import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
-class LoadStatementImportPreviewUseCase @Inject constructor(
+class LoadStatementImportPreviewUseCase
+@Inject
+constructor(
     private val statementDocumentReader: StatementDocumentReader,
     private val statementTextExtractor: StatementTextExtractor,
     private val tbcStatementParser: TbcStatementParser,
-    private val statementImportRepository: StatementImportRepository,
+    private val statementImportRepository: StatementImportRepository
 ) {
     suspend operator fun invoke(uriString: String): LoadImportPreviewResult {
         val document = statementDocumentReader.read(uriString)
-        val existingImport = statementImportRepository.getStatementImportInfo(document.sourceFingerprint)
+        val existingImport = statementImportRepository.getStatementImportInfo(
+            document.sourceFingerprint
+        )
 
         var firstParsingFailure: Throwable? = null
-        val preview = statementTextExtractor.extractTextCandidates(document.bytes)
-            .mapNotNull { extractedText ->
-                runCatching {
-                    tbcStatementParser.parse(
-                        sourceFileName = document.fileName,
-                        sourceFingerprint = document.sourceFingerprint,
-                        extractedText = extractedText,
-                    )
-                }.getOrElse { error ->
-                    if (firstParsingFailure == null) {
-                        firstParsingFailure = error
+        val preview =
+            statementTextExtractor
+                .extractTextCandidates(document.bytes)
+                .mapNotNull { extractedText ->
+                    runCatching {
+                        tbcStatementParser.parse(
+                            sourceFileName = document.fileName,
+                            sourceFingerprint = document.sourceFingerprint,
+                            extractedText = extractedText
+                        )
+                    }.getOrElse { error ->
+                        if (firstParsingFailure == null) {
+                            firstParsingFailure = error
+                        }
+                        null
                     }
-                    null
-                }
-            }
-            .maxByOrNull(::previewQualityScore)
-            ?: throw (firstParsingFailure ?: IllegalStateException("Unable to parse the selected TBC statement PDF."))
-        val previewDuplicateFingerprints = preview.rows
-            .groupingBy(ImportedStatementPreviewRow::transactionFingerprint)
-            .eachCount()
-            .filterValues { it > 1 }
-            .keys
+                }.maxByOrNull(::previewQualityScore)
+                ?: throw (
+                    firstParsingFailure
+                        ?: IllegalStateException("Unable to parse the selected TBC statement PDF.")
+                    )
+        val previewDuplicateFingerprints =
+            preview.rows
+                .groupingBy(ImportedStatementPreviewRow::transactionFingerprint)
+                .eachCount()
+                .filterValues { it > 1 }
+                .keys
         val seenFingerprints = mutableSetOf<String>()
-        val duplicateAwareRows = preview.rows.map { row ->
-            val alreadyImported = statementImportRepository.hasTransactionFingerprint(row.transactionFingerprint)
-            val duplicateInsidePreview = row.transactionFingerprint in previewDuplicateFingerprints &&
-                !seenFingerprints.add(row.transactionFingerprint)
-            row.copy(duplicate = alreadyImported || duplicateInsidePreview)
-        }
+        val duplicateAwareRows =
+            preview.rows.map { row ->
+                val alreadyImported = statementImportRepository.hasTransactionFingerprint(
+                    row.transactionFingerprint
+                )
+                val duplicateInsidePreview =
+                    row.transactionFingerprint in previewDuplicateFingerprints &&
+                        !seenFingerprints.add(row.transactionFingerprint)
+                row.copy(duplicate = alreadyImported || duplicateInsidePreview)
+            }
 
         return LoadImportPreviewResult(
             preview = preview.copy(rows = duplicateAwareRows),
             existingImport = existingImport,
-            message = if (preview.skippedLineCount > 0) {
+            message =
+            if (preview.skippedLineCount > 0) {
                 "${preview.skippedLineCount} statement lines could not be parsed and were skipped."
             } else {
                 null
-            },
+            }
         )
     }
 
     private fun previewQualityScore(preview: ImportedStatementPreview): Int {
-        val uniqueFingerprintCount = preview.rows
-            .map(ImportedStatementPreviewRow::transactionFingerprint)
-            .distinct()
-            .size
+        val uniqueFingerprintCount =
+            preview.rows
+                .map(ImportedStatementPreviewRow::transactionFingerprint)
+                .distinct()
+                .size
         val duplicateFingerprintCount = preview.rows.size - uniqueFingerprintCount
-        val embeddedDateArtifactCount = preview.rows.count { row ->
-            row.description.hasEmbeddedTransactionDate() || row.additionalInformation.hasEmbeddedTransactionDate()
-        }
-        val incomingCount = preview.rows.count { row ->
-            row.paidIn?.amount?.signum() == 1
-        }
-        val balanceCount = preview.rows.count { row ->
-            row.balance?.amount?.signum() != null
-        }
+        val embeddedDateArtifactCount =
+            preview.rows.count { row ->
+                row.description.hasEmbeddedTransactionDate() ||
+                    row.additionalInformation.hasEmbeddedTransactionDate()
+            }
+        val incomingCount =
+            preview.rows.count { row ->
+                row.paidIn?.amount?.signum() == 1
+            }
+        val balanceCount =
+            preview.rows.count { row ->
+                row.balance?.amount?.signum() != null
+            }
         return uniqueFingerprintCount * 10_000 +
             incomingCount * 150 +
             balanceCount * 10 -
@@ -103,49 +122,53 @@ private fun String?.hasEmbeddedTransactionDate(): Boolean {
 
 private val transactionDateRegex = Regex("\\b\\d{2}/\\d{2}/\\d{4}\\b")
 
-class ConfirmStatementImportUseCase @Inject constructor(
+class ConfirmStatementImportUseCase
+@Inject
+constructor(
     private val statementImportRepository: StatementImportRepository,
     private val resolveFxForMonthsUseCase: ResolveFxForMonthsUseCase,
     private val detectImportedTaxPaymentCandidatesUseCase: DetectImportedTaxPaymentCandidatesUseCase,
-    private val clock: Clock,
+    private val clock: Clock
 ) {
     suspend operator fun invoke(
         sourceFileName: String,
         sourceFingerprint: String,
-        rows: List<ApprovedImportedStatementRow>,
+        rows: List<ApprovedImportedStatementRow>
     ): ConfirmStatementImportWorkflowResult {
-        val sanitizedRows = rows.map { row ->
-            val normalizedCurrency = normalizeCurrencyCode(row.currency)
-            if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
-                require(row.incomeDate != null) {
-                    "Included imported income rows must have an income date."
+        val sanitizedRows =
+            rows.map { row ->
+                val normalizedCurrency = normalizeCurrencyCode(row.currency)
+                if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
+                    require(row.incomeDate != null) {
+                        "Included imported income rows must have an income date."
+                    }
+                    require(row.amount.signum() > 0) {
+                        "Included imported income rows must have an amount greater than zero."
+                    }
+                    require(isIsoLikeCurrencyCode(normalizedCurrency)) {
+                        "Included imported income rows must have a valid 3-letter currency code."
+                    }
                 }
-                require(row.amount.signum() > 0) {
-                    "Included imported income rows must have an amount greater than zero."
-                }
-                require(isIsoLikeCurrencyCode(normalizedCurrency)) {
-                    "Included imported income rows must have a valid 3-letter currency code."
-                }
+                row.copy(currency = normalizedCurrency)
             }
-            row.copy(currency = normalizedCurrency)
-        }
 
-        val importResult = statementImportRepository.confirmImport(
-            sourceFileName = sourceFileName,
-            sourceFingerprint = sourceFingerprint,
-            rows = sanitizedRows,
-            importedAtEpochMillis = clock.millis(),
-        )
+        val importResult =
+            statementImportRepository.confirmImport(
+                sourceFileName = sourceFileName,
+                sourceFingerprint = sourceFingerprint,
+                rows = sanitizedRows,
+                importedAtEpochMillis = clock.millis()
+            )
 
-        val monthsNeedingFxResolution = sanitizedRows
-            .asSequence()
-            .filter { row ->
-                !row.duplicate &&
-                    row.finalInclusion == DeclarationInclusion.INCLUDED &&
-                    !row.currency.equals("GEL", ignoreCase = true)
-            }
-            .mapNotNull { row -> row.incomeDate?.let(YearMonth::from) }
-            .toSet()
+        val monthsNeedingFxResolution =
+            sanitizedRows
+                .asSequence()
+                .filter { row ->
+                    !row.duplicate &&
+                        row.finalInclusion == DeclarationInclusion.INCLUDED &&
+                        !row.currency.equals("GEL", ignoreCase = true)
+                }.mapNotNull { row -> row.incomeDate?.let(YearMonth::from) }
+                .toSet()
         val fxResult = resolveFxForMonthsUseCase(monthsNeedingFxResolution)
         val taxPaymentResult = detectImportedTaxPaymentCandidatesUseCase(sanitizedRows)
 
@@ -153,63 +176,68 @@ class ConfirmStatementImportUseCase @Inject constructor(
             importResult = importResult,
             autoResolvedFxEntryCount = fxResult.resolvedEntryCount,
             remainingUnresolvedFxEntryCount = fxResult.unresolvedEntryCount,
-            reviewRequiredTaxPaymentCount = taxPaymentResult.reviewRequiredCount,
+            reviewRequiredTaxPaymentCount = taxPaymentResult.reviewRequiredCount
         )
     }
 }
 
-data class TaxPaymentCandidateDetectionResult(
-    val reviewRequiredCount: Int,
-)
+data class TaxPaymentCandidateDetectionResult(val reviewRequiredCount: Int)
 
-class DetectImportedTaxPaymentCandidatesUseCase @Inject constructor() {
+class DetectImportedTaxPaymentCandidatesUseCase
+@Inject
+constructor() {
     suspend operator fun invoke(rows: List<ApprovedImportedStatementRow>): TaxPaymentCandidateDetectionResult {
-        val reviewRequiredCount = rows
-            .asSequence()
-            .filterNot(ApprovedImportedStatementRow::duplicate)
-            .filter { it.finalInclusion != DeclarationInclusion.INCLUDED }
-            .count { row ->
-                TaxPaymentDetection.isLikelyTaxPayment(
-                    description = row.description,
-                    additionalInformation = row.additionalInformation,
-                    paidOut = row.paidOut,
-                    paidIn = row.paidIn,
-                ) &&
-                    TaxPaymentDetection.resolveOutgoingAmount(row.paidOut, row.amount)?.signum() == 1
-            }
+        val reviewRequiredCount =
+            rows
+                .asSequence()
+                .filterNot(ApprovedImportedStatementRow::duplicate)
+                .filter { it.finalInclusion != DeclarationInclusion.INCLUDED }
+                .count { row ->
+                    TaxPaymentDetection.isLikelyTaxPayment(
+                        description = row.description,
+                        additionalInformation = row.additionalInformation,
+                        paidOut = row.paidOut,
+                        paidIn = row.paidIn
+                    ) &&
+                        TaxPaymentDetection.resolveOutgoingAmount(
+                            row.paidOut,
+                            row.amount
+                        )?.signum() ==
+                        1
+                }
 
         return TaxPaymentCandidateDetectionResult(reviewRequiredCount = reviewRequiredCount)
     }
 }
 
-data class BulkMonthFxResolutionResult(
-    val resolvedEntryCount: Int,
-    val unresolvedEntryCount: Int,
-)
+data class BulkMonthFxResolutionResult(val resolvedEntryCount: Int, val unresolvedEntryCount: Int)
 
-class ResolveFxForMonthsUseCase @Inject constructor(
+class ResolveFxForMonthsUseCase
+@Inject
+constructor(
     private val incomeRepository: IncomeRepository,
-    private val resolveMonthFxUseCase: ResolveMonthFxUseCase,
+    private val resolveMonthFxUseCase: ResolveMonthFxUseCase
 ) {
     suspend operator fun invoke(yearMonths: Set<YearMonth>): BulkMonthFxResolutionResult {
         if (yearMonths.isEmpty()) {
             return BulkMonthFxResolutionResult(
                 resolvedEntryCount = 0,
-                unresolvedEntryCount = 0,
+                unresolvedEntryCount = 0
             )
         }
 
         var resolvedCount = 0
         var unresolvedCount = 0
         yearMonths.sorted().forEach { yearMonth ->
-            val result = resolveMonthFxUseCase(incomeRepository.observeByMonth(yearMonth).first())
+            val result =
+                resolveMonthFxUseCase(incomeRepository.observeByMonth(yearMonth).first())
             resolvedCount += result.resolvedEntryCount
             unresolvedCount += result.unresolvedEntryCount
         }
 
         return BulkMonthFxResolutionResult(
             resolvedEntryCount = resolvedCount,
-            unresolvedEntryCount = unresolvedCount,
+            unresolvedEntryCount = unresolvedCount
         )
     }
 }

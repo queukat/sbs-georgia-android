@@ -26,7 +26,7 @@ internal fun TaxpayerProfileEntity.toPayload(): TaxpayerProfilePayload = Taxpaye
     legalForm = legalForm,
     registrationDate = registrationDate?.toString(),
     legalAddress = legalAddress,
-    activityType = activityType,
+    activityType = activityType
 )
 
 internal fun TaxpayerProfilePayload.toEntity(): TaxpayerProfileEntity = TaxpayerProfileEntity(
@@ -36,22 +36,24 @@ internal fun TaxpayerProfilePayload.toEntity(): TaxpayerProfileEntity = Taxpayer
     legalForm = legalForm,
     registrationDate = registrationDate?.let(LocalDate::parse),
     legalAddress = legalAddress,
-    activityType = activityType,
+    activityType = activityType
 )
 
-internal fun SmallBusinessStatusConfigEntity.toPayload(): SmallBusinessStatusConfigPayload = SmallBusinessStatusConfigPayload(
-    effectiveDate = effectiveDate.toString(),
-    defaultTaxRatePercent = defaultTaxRatePercent.toPlainString(),
-    certificateNumber = certificateNumber,
-    certificateIssuedDate = certificateIssuedDate?.toString(),
-)
+internal fun SmallBusinessStatusConfigEntity.toPayload(): SmallBusinessStatusConfigPayload =
+    SmallBusinessStatusConfigPayload(
+        effectiveDate = effectiveDate.toString(),
+        defaultTaxRatePercent = defaultTaxRatePercent.toPlainString(),
+        certificateNumber = certificateNumber,
+        certificateIssuedDate = certificateIssuedDate?.toString()
+    )
 
-internal fun SmallBusinessStatusConfigPayload.toEntity(): SmallBusinessStatusConfigEntity = SmallBusinessStatusConfigEntity(
-    effectiveDate = LocalDate.parse(effectiveDate),
-    defaultTaxRatePercent = BigDecimal(defaultTaxRatePercent),
-    certificateNumber = certificateNumber,
-    certificateIssuedDate = certificateIssuedDate?.let(LocalDate::parse),
-)
+internal fun SmallBusinessStatusConfigPayload.toEntity(): SmallBusinessStatusConfigEntity =
+    SmallBusinessStatusConfigEntity(
+        effectiveDate = LocalDate.parse(effectiveDate),
+        defaultTaxRatePercent = BigDecimal(defaultTaxRatePercent),
+        certificateNumber = certificateNumber,
+        certificateIssuedDate = certificateIssuedDate?.let(LocalDate::parse)
+    )
 
 internal fun ReminderConfigEntity.toPayload(): ReminderConfigPayload = ReminderConfigPayload(
     declarationReminderDays = declarationReminderDays,
@@ -59,7 +61,7 @@ internal fun ReminderConfigEntity.toPayload(): ReminderConfigPayload = ReminderC
     declarationRemindersEnabled = declarationRemindersEnabled,
     paymentRemindersEnabled = paymentRemindersEnabled,
     defaultReminderTime = defaultReminderTime.toString(),
-    themeMode = themeMode.dbCode,
+    themeMode = themeMode.dbCode
 )
 
 internal fun ReminderConfigPayload.toEntity(): ReminderConfigEntity = ReminderConfigEntity(
@@ -68,7 +70,7 @@ internal fun ReminderConfigPayload.toEntity(): ReminderConfigEntity = ReminderCo
     declarationRemindersEnabled = declarationRemindersEnabled,
     paymentRemindersEnabled = paymentRemindersEnabled,
     defaultReminderTime = LocalTime.parse(defaultReminderTime),
-    themeMode = ThemeMode.fromPersisted(themeMode),
+    themeMode = ThemeMode.fromPersisted(themeMode)
 )
 
 internal fun IncomeEntryEntity.toPayload(): IncomeEntryPayload = IncomeEntryPayload(
@@ -86,7 +88,7 @@ internal fun IncomeEntryEntity.toPayload(): IncomeEntryPayload = IncomeEntryPayl
     sourceStatementId = sourceStatementId,
     sourceTransactionFingerprint = sourceTransactionFingerprint,
     createdAtEpochMillis = createdAtEpochMillis,
-    updatedAtEpochMillis = updatedAtEpochMillis,
+    updatedAtEpochMillis = updatedAtEpochMillis
 )
 
 internal fun IncomeEntryPayload.toEntity(): IncomeEntryEntity = IncomeEntryEntity(
@@ -104,34 +106,36 @@ internal fun IncomeEntryPayload.toEntity(): IncomeEntryEntity = IncomeEntryEntit
     sourceStatementId = sourceStatementId,
     sourceTransactionFingerprint = sourceTransactionFingerprint,
     createdAtEpochMillis = createdAtEpochMillis,
-    updatedAtEpochMillis = updatedAtEpochMillis,
+    updatedAtEpochMillis = updatedAtEpochMillis
 )
 
-internal fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecordPayload = MonthlyDeclarationRecordPayload(
-    periodKey = periodKey,
-    year = year,
-    month = month,
-    workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
-    zeroDeclarationPrepared = zeroDeclarationPrepared,
-    declarationFiledDate = declarationFiledDate?.toString(),
-    paymentSentDate = paymentSentDate?.toString(),
-    paymentCreditedDate = paymentCreditedDate?.toString(),
-    paymentAmountGel = paymentAmountGel?.toPlainString(),
-    notes = notes,
-)
+internal fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecordPayload =
+    MonthlyDeclarationRecordPayload(
+        periodKey = periodKey,
+        year = year,
+        month = month,
+        workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
+        zeroDeclarationPrepared = zeroDeclarationPrepared,
+        declarationFiledDate = declarationFiledDate?.toString(),
+        paymentSentDate = paymentSentDate?.toString(),
+        paymentCreditedDate = paymentCreditedDate?.toString(),
+        paymentAmountGel = paymentAmountGel?.toPlainString(),
+        notes = notes
+    )
 
-internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecordEntity = MonthlyDeclarationRecordEntity(
-    periodKey = periodKey,
-    year = year,
-    month = month,
-    workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
-    zeroDeclarationPrepared = zeroDeclarationPrepared,
-    declarationFiledDate = declarationFiledDate?.let(LocalDate::parse),
-    paymentSentDate = paymentSentDate?.let(LocalDate::parse),
-    paymentCreditedDate = paymentCreditedDate?.let(LocalDate::parse),
-    paymentAmountGel = paymentAmountGel?.let(::BigDecimal),
-    notes = notes,
-)
+internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecordEntity =
+    MonthlyDeclarationRecordEntity(
+        periodKey = periodKey,
+        year = year,
+        month = month,
+        workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
+        zeroDeclarationPrepared = zeroDeclarationPrepared,
+        declarationFiledDate = declarationFiledDate?.let(LocalDate::parse),
+        paymentSentDate = paymentSentDate?.let(LocalDate::parse),
+        paymentCreditedDate = paymentCreditedDate?.let(LocalDate::parse),
+        paymentAmountGel = paymentAmountGel?.let(::BigDecimal),
+        notes = notes
+    )
 
 internal fun FxRateEntity.toPayload(): FxRatePayload = FxRatePayload(
     id = id,
@@ -140,7 +144,7 @@ internal fun FxRateEntity.toPayload(): FxRatePayload = FxRatePayload(
     units = units,
     rateToGel = rateToGel.toPlainString(),
     source = source.dbCode,
-    manualOverride = manualOverride,
+    manualOverride = manualOverride
 )
 
 internal fun FxRatePayload.toEntity(): FxRateEntity = FxRateEntity(
@@ -150,21 +154,21 @@ internal fun FxRatePayload.toEntity(): FxRateEntity = FxRateEntity(
     units = units,
     rateToGel = BigDecimal(rateToGel),
     source = FxRateSource.fromPersisted(source),
-    manualOverride = manualOverride,
+    manualOverride = manualOverride
 )
 
 internal fun ImportedStatementEntity.toPayload(): ImportedStatementPayload = ImportedStatementPayload(
     id = id,
     sourceFileName = sourceFileName,
     sourceFingerprint = sourceFingerprint,
-    importedAtEpochMillis = importedAtEpochMillis,
+    importedAtEpochMillis = importedAtEpochMillis
 )
 
 internal fun ImportedStatementPayload.toEntity(): ImportedStatementEntity = ImportedStatementEntity(
     id = id,
     sourceFileName = sourceFileName,
     sourceFingerprint = sourceFingerprint,
-    importedAtEpochMillis = importedAtEpochMillis,
+    importedAtEpochMillis = importedAtEpochMillis
 )
 
 internal fun ImportedTransactionEntity.toPayload(): ImportedTransactionPayload = ImportedTransactionPayload(
@@ -178,7 +182,7 @@ internal fun ImportedTransactionEntity.toPayload(): ImportedTransactionPayload =
     paidIn = paidIn?.toPlainString(),
     balance = balance?.toPlainString(),
     suggestedInclusion = suggestedInclusion.dbCode,
-    finalInclusion = finalInclusion.dbCode,
+    finalInclusion = finalInclusion.dbCode
 )
 
 internal fun ImportedTransactionPayload.toEntity(): ImportedTransactionEntity = ImportedTransactionEntity(
@@ -192,5 +196,5 @@ internal fun ImportedTransactionPayload.toEntity(): ImportedTransactionEntity = 
     paidIn = paidIn?.let(::BigDecimal),
     balance = balance?.let(::BigDecimal),
     suggestedInclusion = DeclarationInclusion.fromPersisted(suggestedInclusion),
-    finalInclusion = DeclarationInclusion.fromPersisted(finalInclusion),
+    finalInclusion = DeclarationInclusion.fromPersisted(finalInclusion)
 )

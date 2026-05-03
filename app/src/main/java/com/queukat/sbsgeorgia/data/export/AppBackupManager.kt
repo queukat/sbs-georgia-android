@@ -24,7 +24,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 @Singleton
-class AppBackupManager @Inject constructor(
+class AppBackupManager
+@Inject
+constructor(
     private val database: SbsGeorgiaDatabase,
     private val taxpayerProfileDao: TaxpayerProfileDao,
     private val statusConfigDao: SmallBusinessStatusConfigDao,
@@ -37,20 +39,27 @@ class AppBackupManager @Inject constructor(
     private val json: Json,
     private val backupValidator: BackupValidator,
     private val clock: Clock,
-    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
     suspend fun exportJson(): String = withContext(ioDispatcher) {
-        val document = AppBackupDocument(
-            exportedAtEpochMillis = clock.millis(),
-            taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
-            statusConfig = statusConfigDao.get()?.toPayload(),
-            reminderConfig = reminderConfigDao.get()?.toPayload(),
-            incomeEntries = incomeEntryDao.getAll().map(IncomeEntryEntity::toPayload),
-            monthlyDeclarationRecords = monthlyDeclarationRecordDao.getAll().map(MonthlyDeclarationRecordEntity::toPayload),
-            fxRates = fxRateDao.getAll().map(FxRateEntity::toPayload),
-            importedStatements = importedStatementDao.getAll().map(ImportedStatementEntity::toPayload),
-            importedTransactions = importedTransactionDao.getAll().map(ImportedTransactionEntity::toPayload),
-        )
+        val document =
+            AppBackupDocument(
+                exportedAtEpochMillis = clock.millis(),
+                taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
+                statusConfig = statusConfigDao.get()?.toPayload(),
+                reminderConfig = reminderConfigDao.get()?.toPayload(),
+                incomeEntries = incomeEntryDao.getAll().map(IncomeEntryEntity::toPayload),
+                monthlyDeclarationRecords = monthlyDeclarationRecordDao.getAll().map(
+                    MonthlyDeclarationRecordEntity::toPayload
+                ),
+                fxRates = fxRateDao.getAll().map(FxRateEntity::toPayload),
+                importedStatements = importedStatementDao.getAll().map(
+                    ImportedStatementEntity::toPayload
+                ),
+                importedTransactions = importedTransactionDao.getAll().map(
+                    ImportedTransactionEntity::toPayload
+                )
+            )
         json.encodeToString(document)
     }
 

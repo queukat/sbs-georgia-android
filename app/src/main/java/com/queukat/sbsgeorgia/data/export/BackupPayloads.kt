@@ -13,7 +13,7 @@ data class AppBackupDocument(
     val monthlyDeclarationRecords: List<MonthlyDeclarationRecordPayload> = emptyList(),
     val fxRates: List<FxRatePayload> = emptyList(),
     val importedStatements: List<ImportedStatementPayload> = emptyList(),
-    val importedTransactions: List<ImportedTransactionPayload> = emptyList(),
+    val importedTransactions: List<ImportedTransactionPayload> = emptyList()
 )
 
 @Serializable
@@ -24,7 +24,7 @@ data class TaxpayerProfilePayload(
     val legalForm: String? = null,
     val registrationDate: String? = null,
     val legalAddress: String? = null,
-    val activityType: String? = null,
+    val activityType: String? = null
 )
 
 @Serializable
@@ -32,7 +32,7 @@ data class SmallBusinessStatusConfigPayload(
     val effectiveDate: String,
     val defaultTaxRatePercent: String,
     val certificateNumber: String? = null,
-    val certificateIssuedDate: String? = null,
+    val certificateIssuedDate: String? = null
 )
 
 @Serializable
@@ -42,7 +42,7 @@ data class ReminderConfigPayload(
     val declarationRemindersEnabled: Boolean,
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: String,
-    val themeMode: String,
+    val themeMode: String
 )
 
 @Serializable
@@ -61,7 +61,7 @@ data class IncomeEntryPayload(
     val sourceStatementId: Long? = null,
     val sourceTransactionFingerprint: String? = null,
     val createdAtEpochMillis: Long,
-    val updatedAtEpochMillis: Long,
+    val updatedAtEpochMillis: Long
 )
 
 @Serializable
@@ -75,7 +75,7 @@ data class MonthlyDeclarationRecordPayload(
     val paymentSentDate: String? = null,
     val paymentCreditedDate: String? = null,
     val paymentAmountGel: String? = null,
-    val notes: String,
+    val notes: String
 )
 
 @Serializable
@@ -86,7 +86,7 @@ data class FxRatePayload(
     val units: Int,
     val rateToGel: String,
     val source: String,
-    val manualOverride: Boolean,
+    val manualOverride: Boolean
 )
 
 @Serializable
@@ -94,7 +94,7 @@ data class ImportedStatementPayload(
     val id: Long,
     val sourceFileName: String,
     val sourceFingerprint: String,
-    val importedAtEpochMillis: Long,
+    val importedAtEpochMillis: Long
 )
 
 @Serializable
@@ -109,7 +109,7 @@ data class ImportedTransactionPayload(
     val paidIn: String? = null,
     val balance: String? = null,
     val suggestedInclusion: String,
-    val finalInclusion: String,
+    val finalInclusion: String
 )
 
 data class BackupRestoreResult(
@@ -117,5 +117,5 @@ data class BackupRestoreResult(
     val incomeEntryCount: Int,
     val monthlyRecordCount: Int,
     val importedStatementCount: Int,
-    val importedTransactionCount: Int,
+    val importedTransactionCount: Int
 )

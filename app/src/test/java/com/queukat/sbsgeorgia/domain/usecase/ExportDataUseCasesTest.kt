@@ -36,33 +36,38 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ExportDataUseCasesTest {
-    private val fixedClock: Clock = Clock.fixed(Instant.parse("2026-04-02T10:00:00Z"), ZoneOffset.UTC)
+    private val fixedClock: Clock = Clock.fixed(
+        Instant.parse("2026-04-02T10:00:00Z"),
+        ZoneOffset.UTC
+    )
 
     @Test
     fun exportIncomeEntriesCsvEscapesFieldsAndKeepsImportedMetadataColumns() = runTest {
-        val csv = ExportIncomeEntriesCsvUseCase(
-            incomeRepository = FakeExportIncomeRepository(
-                listOf(
-                    IncomeEntry(
-                        id = 7L,
-                        sourceType = IncomeSourceType.IMPORTED_STATEMENT,
-                        incomeDate = LocalDate.of(2026, 3, 15),
-                        originalAmount = BigDecimal("125.50"),
-                        originalCurrency = "USD",
-                        sourceCategory = "Software, services",
-                        note = "Invoice \"A-1\"",
-                        declarationInclusion = DeclarationInclusion.INCLUDED,
-                        gelEquivalent = BigDecimal("338.85"),
-                        rateSource = FxRateSource.OFFICIAL_NBG_JSON,
-                        manualFxOverride = false,
-                        sourceStatementId = 3L,
-                        sourceTransactionFingerprint = "tx-fingerprint",
-                        createdAtEpochMillis = 100L,
-                        updatedAtEpochMillis = 200L,
-                    ),
-                ),
-            ),
-        ).invoke()
+        val csv =
+            ExportIncomeEntriesCsvUseCase(
+                incomeRepository =
+                FakeExportIncomeRepository(
+                    listOf(
+                        IncomeEntry(
+                            id = 7L,
+                            sourceType = IncomeSourceType.IMPORTED_STATEMENT,
+                            incomeDate = LocalDate.of(2026, 3, 15),
+                            originalAmount = BigDecimal("125.50"),
+                            originalCurrency = "USD",
+                            sourceCategory = "Software, services",
+                            note = "Invoice \"A-1\"",
+                            declarationInclusion = DeclarationInclusion.INCLUDED,
+                            gelEquivalent = BigDecimal("338.85"),
+                            rateSource = FxRateSource.OFFICIAL_NBG_JSON,
+                            manualFxOverride = false,
+                            sourceStatementId = 3L,
+                            sourceTransactionFingerprint = "tx-fingerprint",
+                            createdAtEpochMillis = 100L,
+                            updatedAtEpochMillis = 200L
+                        )
+                    )
+                )
+            ).invoke()
 
         assertTrue(csv.contains("\"sourceStatementId\""))
         assertTrue(csv.contains("\"Software, services\""))
@@ -72,61 +77,73 @@ class ExportDataUseCasesTest {
 
     @Test
     fun exportMonthlySummariesCsvIncludesWorkflowAndUnresolvedFxColumns() = runTest {
-        val settingsRepository = FakeExportSettingsRepository(
-            profile = TaxpayerProfile(
-                registrationId = "306449082",
-                displayName = "Jane Doe",
-            ),
-            config = SmallBusinessStatusConfig(
-                effectiveDate = LocalDate.of(2026, 1, 1),
-                defaultTaxRatePercent = BigDecimal("1.0"),
-            ),
-            reminders = ReminderConfig(
-                declarationReminderDays = listOf(10, 13, 15),
-                paymentReminderDays = listOf(10, 13, 15),
-                declarationRemindersEnabled = true,
-                paymentRemindersEnabled = true,
-                defaultReminderTime = LocalTime.of(9, 0),
-                themeMode = ThemeMode.SYSTEM,
-            ),
-        )
-        val incomeRepository = FakeExportIncomeRepository(
-            listOf(
-                sampleIncomeEntry(
-                    id = 1L,
-                    date = LocalDate.of(2026, 1, 10),
-                    amount = "100.00",
-                    currency = "GEL",
-                    gelEquivalent = BigDecimal("100.00"),
-                    rateSource = FxRateSource.NONE,
+        val settingsRepository =
+            FakeExportSettingsRepository(
+                profile =
+                TaxpayerProfile(
+                    registrationId = "306449082",
+                    displayName = "Jane Doe"
                 ),
-                sampleIncomeEntry(
-                    id = 2L,
-                    date = LocalDate.of(2026, 2, 5),
-                    amount = "50.00",
-                    currency = "USD",
-                    gelEquivalent = null,
-                    rateSource = FxRateSource.NONE,
+                config =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.of(2026, 1, 1),
+                    defaultTaxRatePercent = BigDecimal("1.0")
                 ),
-            ),
-        )
-        val recordRepository = FakeExportMonthlyDeclarationRepository(
-            listOf(
-                MonthlyDeclarationRecord(
-                    yearMonth = YearMonth.of(2026, 2),
-                    workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
-                    zeroDeclarationPrepared = false,
-                ),
-            ),
-        )
+                reminders =
+                ReminderConfig(
+                    declarationReminderDays = listOf(10, 13, 15),
+                    paymentReminderDays = listOf(10, 13, 15),
+                    declarationRemindersEnabled = true,
+                    paymentRemindersEnabled = true,
+                    defaultReminderTime = LocalTime.of(9, 0),
+                    themeMode = ThemeMode.SYSTEM
+                )
+            )
+        val incomeRepository =
+            FakeExportIncomeRepository(
+                listOf(
+                    sampleIncomeEntry(
+                        id = 1L,
+                        date = LocalDate.of(2026, 1, 10),
+                        amount = "100.00",
+                        currency = "GEL",
+                        gelEquivalent = BigDecimal("100.00"),
+                        rateSource = FxRateSource.NONE
+                    ),
+                    sampleIncomeEntry(
+                        id = 2L,
+                        date = LocalDate.of(2026, 2, 5),
+                        amount = "50.00",
+                        currency = "USD",
+                        gelEquivalent = null,
+                        rateSource = FxRateSource.NONE
+                    )
+                )
+            )
+        val recordRepository =
+            FakeExportMonthlyDeclarationRepository(
+                listOf(
+                    MonthlyDeclarationRecord(
+                        yearMonth = YearMonth.of(2026, 2),
+                        workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
+                        zeroDeclarationPrepared = false
+                    )
+                )
+            )
 
-        val csv = ExportMonthlySummariesCsvUseCase(
-            settingsRepository = settingsRepository,
-            incomeRepository = incomeRepository,
-            monthlyDeclarationRepository = recordRepository,
-            planner = MonthlyDeclarationPlanner(fixedClock, com.queukat.sbsgeorgia.domain.service.GeorgiaTaxBusinessCalendar()),
-            clock = fixedClock,
-        ).invoke()
+        val csv =
+            ExportMonthlySummariesCsvUseCase(
+                settingsRepository = settingsRepository,
+                incomeRepository = incomeRepository,
+                monthlyDeclarationRepository = recordRepository,
+                planner =
+                MonthlyDeclarationPlanner(
+                    fixedClock,
+                    com.queukat.sbsgeorgia.domain.service
+                        .GeorgiaTaxBusinessCalendar()
+                ),
+                clock = fixedClock
+            ).invoke()
 
         assertTrue(csv.contains("\"workflowStatus\""))
         assertTrue(csv.contains("\"2026-02\""))
@@ -136,22 +153,35 @@ class ExportDataUseCasesTest {
 
     @Test
     fun chartMappingSortsSnapshotsChronologically() {
-        val points = chartCumulativePoints(
-            listOf(
-                sampleSnapshot(YearMonth.of(2026, 3), "150.00"),
-                sampleSnapshot(YearMonth.of(2026, 1), "100.00"),
-                sampleSnapshot(YearMonth.of(2026, 2), "120.00"),
-            ),
-        )
+        val points =
+            chartCumulativePoints(
+                listOf(
+                    sampleSnapshot(YearMonth.of(2026, 3), "150.00"),
+                    sampleSnapshot(YearMonth.of(2026, 1), "100.00"),
+                    sampleSnapshot(YearMonth.of(2026, 2), "120.00")
+                )
+            )
 
         val labelFormatter = DateTimeFormatter.ofPattern("LLL", Locale.getDefault())
         assertEquals(
             listOf(
-                YearMonth.of(2026, 1).atDay(1).format(labelFormatter).uppercase(Locale.getDefault()),
-                YearMonth.of(2026, 2).atDay(1).format(labelFormatter).uppercase(Locale.getDefault()),
-                YearMonth.of(2026, 3).atDay(1).format(labelFormatter).uppercase(Locale.getDefault()),
+                YearMonth
+                    .of(2026, 1)
+                    .atDay(1)
+                    .format(labelFormatter)
+                    .uppercase(Locale.getDefault()),
+                YearMonth
+                    .of(2026, 2)
+                    .atDay(1)
+                    .format(labelFormatter)
+                    .uppercase(Locale.getDefault()),
+                YearMonth
+                    .of(2026, 3)
+                    .atDay(1)
+                    .format(labelFormatter)
+                    .uppercase(Locale.getDefault())
             ),
-            points.map { it.label },
+            points.map { it.label }
         )
         assertEquals(listOf("100.00", "120.00", "150.00"), points.map { it.value.toPlainString() })
     }
@@ -162,7 +192,7 @@ class ExportDataUseCasesTest {
         amount: String,
         currency: String,
         gelEquivalent: BigDecimal?,
-        rateSource: FxRateSource,
+        rateSource: FxRateSource
     ): IncomeEntry = IncomeEntry(
         id = id,
         sourceType = IncomeSourceType.MANUAL,
@@ -176,20 +206,22 @@ class ExportDataUseCasesTest {
         rateSource = rateSource,
         manualFxOverride = false,
         createdAtEpochMillis = 1L,
-        updatedAtEpochMillis = 1L,
+        updatedAtEpochMillis = 1L
     )
 
     private fun sampleSnapshot(yearMonth: YearMonth, cumulative: String): MonthlyDeclarationSnapshot =
         MonthlyDeclarationSnapshot(
-            period = MonthlyDeclarationPeriod(
+            period =
+            MonthlyDeclarationPeriod(
                 incomeMonth = yearMonth,
-                filingWindow = FilingWindow(
+                filingWindow =
+                FilingWindow(
                     start = yearMonth.plusMonths(1).atDay(1),
                     endInclusive = yearMonth.plusMonths(1).atDay(15),
-                    dueDate = yearMonth.plusMonths(1).atDay(15),
+                    dueDate = yearMonth.plusMonths(1).atDay(15)
                 ),
                 inScope = true,
-                outOfScope = false,
+                outOfScope = false
             ),
             workflowStatus = MonthlyWorkflowStatus.DRAFT,
             graph20TotalGel = BigDecimal("50.00"),
@@ -201,14 +233,14 @@ class ExportDataUseCasesTest {
             zeroDeclarationPrepared = false,
             reviewNeeded = false,
             setupRequired = false,
-            record = null,
+            record = null
         )
 }
 
 private class FakeExportSettingsRepository(
     profile: TaxpayerProfile?,
     config: SmallBusinessStatusConfig?,
-    reminders: ReminderConfig?,
+    reminders: ReminderConfig?
 ) : SettingsRepository {
     private val profileState = MutableStateFlow(profile)
     private val configState = MutableStateFlow(config)
@@ -233,9 +265,7 @@ private class FakeExportSettingsRepository(
     }
 }
 
-private class FakeExportIncomeRepository(
-    entries: List<IncomeEntry>,
-) : IncomeRepository {
+private class FakeExportIncomeRepository(entries: List<IncomeEntry>) : IncomeRepository {
     private val state = MutableStateFlow(entries)
 
     override fun observeAll(): Flow<List<IncomeEntry>> = state
@@ -253,9 +283,8 @@ private class FakeExportIncomeRepository(
     }
 }
 
-private class FakeExportMonthlyDeclarationRepository(
-    records: List<MonthlyDeclarationRecord>,
-) : MonthlyDeclarationRepository {
+private class FakeExportMonthlyDeclarationRepository(records: List<MonthlyDeclarationRecord>) :
+    MonthlyDeclarationRepository {
     private val state = MutableStateFlow(records)
 
     override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = state

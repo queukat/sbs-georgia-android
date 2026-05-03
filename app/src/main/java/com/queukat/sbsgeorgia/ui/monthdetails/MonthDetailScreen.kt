@@ -40,10 +40,10 @@ import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
 import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
-import com.queukat.sbsgeorgia.ui.common.fxRateSourceLabel
 import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
+import com.queukat.sbsgeorgia.ui.common.fxRateSourceLabel
 import com.queukat.sbsgeorgia.ui.common.sourceCategoryLabel
 import java.time.YearMonth
 import kotlinx.coroutines.launch
@@ -55,9 +55,8 @@ fun MonthDetailRoute(
     onBack: () -> Unit,
     onAddIncome: () -> Unit,
     onEditEntry: (Long) -> Unit,
-    onOpenPaymentHelper: (YearMonth) -> Unit,
     onOpenFxOverride: (Long) -> Unit,
-    onOpenWorkflowStatus: (YearMonth) -> Unit,
+    onOpenWorkflowStatus: (YearMonth) -> Unit
 ) {
     val viewModel: MonthDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -81,12 +80,11 @@ fun MonthDetailRoute(
         onBack = onBack,
         onAddIncome = onAddIncome,
         onEditEntry = onEditEntry,
-        onOpenPaymentHelper = onOpenPaymentHelper,
         onOpenFxOverride = onOpenFxOverride,
         onOpenWorkflowStatus = onOpenWorkflowStatus,
         onDeleteEntry = viewModel::deleteEntry,
         onResolveOfficialRates = viewModel::resolveOfficialRates,
-        onToggleZeroPrepared = viewModel::toggleZeroPrepared,
+        onToggleZeroPrepared = viewModel::toggleZeroPrepared
     )
 }
 
@@ -98,12 +96,11 @@ fun MonthDetailScreen(
     onBack: () -> Unit,
     onAddIncome: () -> Unit,
     onEditEntry: (Long) -> Unit,
-    onOpenPaymentHelper: (YearMonth) -> Unit,
     onOpenFxOverride: (Long) -> Unit,
     onOpenWorkflowStatus: (YearMonth) -> Unit,
     onDeleteEntry: (Long) -> Unit,
     onResolveOfficialRates: () -> Unit,
-    onToggleZeroPrepared: () -> Unit,
+    onToggleZeroPrepared: () -> Unit
 ) {
     val snapshot = uiState.snapshot
     val context = LocalContext.current
@@ -128,19 +125,20 @@ fun MonthDetailScreen(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             SbsTopAppBar(
-                title = snapshot?.period?.incomeMonth?.formatMonthYear()
+                title =
+                snapshot?.period?.incomeMonth?.formatMonthYear()
                     ?: stringResource(R.string.month_detail_title_fallback),
                 onBack = onBack,
                 actions = {
                     TextButton(onClick = onAddIncome) {
                         Text(stringResource(R.string.month_detail_add_income))
                     }
-                },
+                }
             )
         },
         snackbarHost = {
             SnackbarHost(hostState = snackbarHostState)
-        },
+        }
     ) { contentPadding ->
         pendingDeleteEntryId?.let { entryId ->
             AlertDialog(
@@ -157,24 +155,26 @@ fun MonthDetailScreen(
                         onClick = {
                             pendingDeleteEntryId = null
                             onDeleteEntry(entryId)
-                        },
+                        }
                     ) {
                         Text(stringResource(R.string.month_detail_delete_confirm_action))
                     }
-                },
+                }
             )
         }
         LazyColumn(
-            modifier = Modifier
+            modifier =
+            Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(
+            contentPadding =
+            PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
                 top = contentPadding.calculateTopPadding() + 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 16.dp,
+                bottom = contentPadding.calculateBottomPadding() + 16.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 if (snapshot == null) {
@@ -190,8 +190,8 @@ fun MonthDetailScreen(
                                             R.string.month_detail_zero_prepared
                                         } else {
                                             R.string.month_detail_zero_not_prepared
-                                        },
-                                    ),
+                                        }
+                                    )
                                 )
                             }
                         }
@@ -209,8 +209,9 @@ fun MonthDetailScreen(
                                 Text(
                                     stringResource(
                                         R.string.month_detail_filing_opens_on,
-                                        snapshot.period.filingWindow.start.formatIsoDate(),
-                                    ),
+                                        snapshot.period.filingWindow.start
+                                            .formatIsoDate()
+                                    )
                                 )
                             }
                             snapshot.reviewNeeded && snapshot.unresolvedFxCount == 0 -> {
@@ -220,12 +221,12 @@ fun MonthDetailScreen(
                                 Text(
                                     stringResource(
                                         R.string.month_detail_unresolved_fx,
-                                        snapshot.unresolvedFxCount,
-                                    ),
+                                        snapshot.unresolvedFxCount
+                                    )
                                 )
                                 OutlinedButton(
                                     onClick = onResolveOfficialRates,
-                                    enabled = !uiState.isResolvingFx,
+                                    enabled = !uiState.isResolvingFx
                                 ) {
                                     Text(
                                         stringResource(
@@ -233,8 +234,8 @@ fun MonthDetailScreen(
                                                 R.string.month_detail_resolving_fx
                                             } else {
                                                 R.string.month_detail_resolve_fx
-                                            },
-                                        ),
+                                            }
+                                        )
                                     )
                                 }
                             }
@@ -242,16 +243,18 @@ fun MonthDetailScreen(
                                 Text(
                                     stringResource(
                                         R.string.month_detail_zero_guidance,
-                                        snapshot.period.filingWindow.dueDate.formatIsoDate(),
-                                    ),
+                                        snapshot.period.filingWindow.dueDate
+                                            .formatIsoDate()
+                                    )
                                 )
                             }
                             else -> {
                                 Text(
                                     stringResource(
                                         R.string.month_detail_ready,
-                                        snapshot.period.filingWindow.dueDate.formatIsoDate(),
-                                    ),
+                                        snapshot.period.filingWindow.dueDate
+                                            .formatIsoDate()
+                                    )
                                 )
                             }
                         }
@@ -265,10 +268,12 @@ fun MonthDetailScreen(
             }
             item {
                 if (snapshot != null && copyBundle != null && !snapshot.period.outOfScope) {
-                    val canCopyDeclarationValues = uiState.isFilingWindowOpen &&
-                        snapshot.unresolvedFxCount == 0 &&
-                        !snapshot.reviewNeeded
-                    val canCopyPaymentText = canCopyDeclarationValues && copyBundle.paymentComment.isNotBlank()
+                    val canCopyDeclarationValues =
+                        uiState.isFilingWindowOpen &&
+                            snapshot.unresolvedFxCount == 0 &&
+                            !snapshot.reviewNeeded
+                    val canCopyPaymentText =
+                        canCopyDeclarationValues && copyBundle.paymentComment.isNotBlank()
 
                     AppSection(title = stringResource(R.string.month_detail_section_copy_tools)) {
                         when {
@@ -276,12 +281,15 @@ fun MonthDetailScreen(
                                 Text(
                                     stringResource(
                                         R.string.month_detail_copy_waiting_for_window,
-                                        snapshot.period.filingWindow.start.formatIsoDate(),
-                                    ),
+                                        snapshot.period.filingWindow.start
+                                            .formatIsoDate()
+                                    )
                                 )
                             }
                             snapshot.unresolvedFxCount > 0 -> {
-                                Text(stringResource(R.string.month_detail_copy_blocked_unresolved_fx))
+                                Text(
+                                    stringResource(R.string.month_detail_copy_blocked_unresolved_fx)
+                                )
                             }
                             snapshot.reviewNeeded -> {
                                 Text(stringResource(R.string.month_detail_copy_blocked_review))
@@ -290,15 +298,21 @@ fun MonthDetailScreen(
 
                         KeyValueRow(graph20Label, copyBundle.graph20)
                         KeyValueRow(graph15Label, copyBundle.graph15)
-                        KeyValueRow(stringResource(R.string.snapshot_estimated_tax), copyBundle.taxAmount)
-                        KeyValueRow(stringResource(R.string.payment_helper_treasury_code), copyBundle.treasuryCode)
+                        KeyValueRow(
+                            stringResource(R.string.snapshot_estimated_tax),
+                            copyBundle.taxAmount
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.payment_helper_treasury_code),
+                            copyBundle.treasuryCode
+                        )
                         KeyValueRow(
                             stringResource(R.string.payment_helper_comment),
                             if (copyBundle.paymentComment.isBlank()) {
                                 stringResource(R.string.payment_helper_complete_settings_first)
                             } else {
                                 copyBundle.paymentComment
-                            },
+                            }
                         )
 
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -306,10 +320,10 @@ fun MonthDetailScreen(
                                 onClick = {
                                     copy(
                                         label = graph20Label,
-                                        value = copyBundle.graph20,
+                                        value = copyBundle.graph20
                                     )
                                 },
-                                enabled = canCopyDeclarationValues,
+                                enabled = canCopyDeclarationValues
                             ) {
                                 Text(stringResource(R.string.month_detail_copy_graph_20))
                             }
@@ -317,10 +331,10 @@ fun MonthDetailScreen(
                                 onClick = {
                                     copy(
                                         label = graph15Label,
-                                        value = copyBundle.graph15,
+                                        value = copyBundle.graph15
                                     )
                                 },
-                                enabled = canCopyDeclarationValues,
+                                enabled = canCopyDeclarationValues
                             ) {
                                 Text(stringResource(R.string.month_detail_copy_graph_15))
                             }
@@ -330,10 +344,10 @@ fun MonthDetailScreen(
                                 onClick = {
                                     copy(
                                         label = paymentTextLabel,
-                                        value = copyBundle.paymentText,
+                                        value = copyBundle.paymentText
                                     )
                                 },
-                                enabled = canCopyPaymentText,
+                                enabled = canCopyPaymentText
                             ) {
                                 Text(stringResource(R.string.month_detail_copy_payment_text))
                             }
@@ -341,10 +355,10 @@ fun MonthDetailScreen(
                                 onClick = {
                                     copy(
                                         label = fullTextLabel,
-                                        value = copyBundle.fullText,
+                                        value = copyBundle.fullText
                                     )
                                 },
-                                enabled = canCopyDeclarationValues,
+                                enabled = canCopyDeclarationValues
                             ) {
                                 Text(stringResource(R.string.month_detail_copy_all_text))
                             }
@@ -361,8 +375,14 @@ fun MonthDetailScreen(
             }
             items(uiState.entries) { entry ->
                 AppSection(title = formatAmount(entry.originalAmount, entry.originalCurrency)) {
-                    KeyValueRow(stringResource(R.string.month_detail_date), entry.incomeDate.formatIsoDate())
-                    KeyValueRow(stringResource(R.string.month_detail_category), sourceCategoryLabel(entry.sourceCategory))
+                    KeyValueRow(
+                        stringResource(R.string.month_detail_date),
+                        entry.incomeDate.formatIsoDate()
+                    )
+                    KeyValueRow(
+                        stringResource(R.string.month_detail_category),
+                        sourceCategoryLabel(entry.sourceCategory)
+                    )
                     KeyValueRow(
                         stringResource(R.string.month_detail_included),
                         stringResource(
@@ -370,17 +390,23 @@ fun MonthDetailScreen(
                                 R.string.common_yes
                             } else {
                                 R.string.common_no
-                            },
-                        ),
+                            }
+                        )
                     )
                     entry.gelEquivalent?.let { gelEquivalent ->
-                        KeyValueRow(stringResource(R.string.month_detail_gel_equivalent), formatAmount(gelEquivalent, "GEL"))
-                        KeyValueRow(stringResource(R.string.month_detail_fx_source), fxRateSourceLabel(entry.rateSource))
+                        KeyValueRow(
+                            stringResource(R.string.month_detail_gel_equivalent),
+                            formatAmount(gelEquivalent, "GEL")
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.month_detail_fx_source),
+                            fxRateSourceLabel(entry.rateSource)
+                        )
                     }
                     if (entry.requiresFxResolution()) {
                         Text(
                             stringResource(R.string.month_detail_unresolved_fx_hint),
-                            modifier = Modifier.testTag("month-detail-unresolved-fx-message"),
+                            modifier = Modifier.testTag("month-detail-unresolved-fx-message")
                         )
                         TextButton(onClick = { onOpenFxOverride(entry.id) }) {
                             Text(stringResource(R.string.month_detail_manual_fx_override))

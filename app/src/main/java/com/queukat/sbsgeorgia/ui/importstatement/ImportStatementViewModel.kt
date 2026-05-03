@@ -29,10 +29,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class ImportStatementViewModel @Inject constructor(
+class ImportStatementViewModel
+@Inject
+constructor(
     private val loadStatementImportPreviewUseCase: LoadStatementImportPreviewUseCase,
     private val confirmStatementImportUseCase: ConfirmStatementImportUseCase,
-    @param:ApplicationContext private val appContext: Context,
+    @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(ImportStatementUiState())
     val uiState = _uiState.asStateFlow()
@@ -42,77 +44,115 @@ class ImportStatementViewModel @Inject constructor(
 
     fun loadDocument(uri: Uri) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null,
-                infoMessage = null,
-            )
+            _uiState.value =
+                _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null,
+                    infoMessage = null
+                )
             runCatching {
                 loadStatementImportPreviewUseCase(uri.toString())
             }.onSuccess { result ->
                 val preview = result.preview
                 if (preview == null) {
-                    _uiState.value = ImportStatementUiState(
-                        errorMessage = appContext.getString(R.string.import_statement_error_no_preview),
-                    )
+                    _uiState.value =
+                        ImportStatementUiState(
+                            errorMessage = appContext.getString(
+                                R.string.import_statement_error_no_preview
+                            )
+                        )
                     return@onSuccess
                 }
 
-                val rows = preview.rows.map { row ->
-                    ImportStatementRowUiState(
-                        transactionFingerprint = row.transactionFingerprint,
-                        incomeDate = row.incomeDate,
-                        description = row.description,
-                        additionalInformation = row.additionalInformation,
-                        paidOutLabel = row.paidOut?.toDisplayLabel(),
-                        paidInLabel = row.paidIn?.toDisplayLabel(),
-                        balanceLabel = row.balance?.toDisplayLabel(),
-                        suggestedInclusion = row.suggestedInclusion,
-                        finalInclusion = if (row.duplicate) {
-                            DeclarationInclusion.EXCLUDED
-                        } else if (row.suggestedInclusion == DeclarationInclusion.INCLUDED) {
-                            DeclarationInclusion.INCLUDED
-                        } else {
-                            DeclarationInclusion.EXCLUDED
-                        },
-                        amount = row.suggestedAmount.toPlainString(),
-                        currency = normalizeCurrencyCode(row.suggestedCurrency.orEmpty()),
-                        sourceCategory = displaySourceCategory(appContext, row.suggestedSourceCategory),
-                        isTaxPaymentCandidate = row.suggestedSourceCategory == SourceCategoryPresets.TAX_PAYMENT,
-                        duplicate = row.duplicate,
-                    )
-                }
+                val rows =
+                    preview.rows.map { row ->
+                        ImportStatementRowUiState(
+                            transactionFingerprint = row.transactionFingerprint,
+                            incomeDate = row.incomeDate,
+                            description = row.description,
+                            additionalInformation = row.additionalInformation,
+                            paidOutLabel = row.paidOut?.toDisplayLabel(),
+                            paidInLabel = row.paidIn?.toDisplayLabel(),
+                            balanceLabel = row.balance?.toDisplayLabel(),
+                            suggestedInclusion = row.suggestedInclusion,
+                            finalInclusion =
+                            if (row.duplicate) {
+                                DeclarationInclusion.EXCLUDED
+                            } else if (row.suggestedInclusion ==
+                                DeclarationInclusion.INCLUDED
+                            ) {
+                                DeclarationInclusion.INCLUDED
+                            } else {
+                                DeclarationInclusion.EXCLUDED
+                            },
+                            amount = row.suggestedAmount.toPlainString(),
+                            currency = normalizeCurrencyCode(row.suggestedCurrency.orEmpty()),
+                            sourceCategory = displaySourceCategory(
+                                appContext,
+                                row.suggestedSourceCategory
+                            ),
+                            isTaxPaymentCandidate =
+                            row.suggestedSourceCategory == SourceCategoryPresets.TAX_PAYMENT,
+                            duplicate = row.duplicate
+                        )
+                    }
                 val invalidIncludedCount = rows.invalidIncludedCount()
-                _uiState.value = ImportStatementUiState(
-                    sourceFileName = preview.sourceFileName,
-                    sourceFingerprint = preview.sourceFingerprint,
-                    rows = rows,
-                    selectedIncomeCount = rows.count { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate },
-                    detectedTaxPaymentCount = rows.count { it.isTaxPaymentCandidate && !it.duplicate },
-                    recognizedOutgoingCount = preview.rows.count {
-                        it.paidOut?.amount?.signum() == 1
-                    },
-                    invalidIncludedCount = invalidIncludedCount,
-                    canImport = rows.any {
-                        it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-                    } && invalidIncludedCount == 0,
-                    infoMessage = listOfNotNull(
-                        result.existingImport?.let(::formatExistingImportMessage),
-                        if (preview.skippedLineCount > 0) {
-                            appContext.getString(R.string.import_statement_message_skipped_lines, preview.skippedLineCount)
-                        } else {
-                            null
+                _uiState.value =
+                    ImportStatementUiState(
+                        sourceFileName = preview.sourceFileName,
+                        sourceFingerprint = preview.sourceFingerprint,
+                        rows = rows,
+                        selectedIncomeCount = rows.count {
+                            it.finalInclusion ==
+                                DeclarationInclusion.INCLUDED &&
+                                !it.duplicate
                         },
-                    ).joinToString("\n").ifBlank { null },
-                )
+                        detectedTaxPaymentCount = rows.count {
+                            it.isTaxPaymentCandidate &&
+                                !it.duplicate
+                        },
+                        recognizedOutgoingCount =
+                        preview.rows.count {
+                            it.paidOut?.amount?.signum() == 1
+                        },
+                        invalidIncludedCount = invalidIncludedCount,
+                        canImport =
+                        rows.any {
+                            it.finalInclusion == DeclarationInclusion.INCLUDED &&
+                                !it.duplicate
+                        } &&
+                            invalidIncludedCount == 0,
+                        infoMessage =
+                        listOfNotNull(
+                            result.existingImport?.let(::formatExistingImportMessage),
+                            if (preview.skippedLineCount > 0) {
+                                appContext.getString(
+                                    R.string.import_statement_message_skipped_lines,
+                                    preview.skippedLineCount
+                                )
+                            } else {
+                                null
+                            }
+                        ).joinToString("\n").ifBlank { null }
+                    )
             }.onFailure { error ->
-                _uiState.value = ImportStatementUiState(
-                    errorMessage = if (error.message?.startsWith("No TBC statement transaction rows were recognized.") == true) {
-                        appContext.getString(R.string.import_statement_error_unsupported_pdf)
-                    } else {
-                        appContext.getString(R.string.import_statement_error_parse_failed)
-                    },
-                )
+                _uiState.value =
+                    ImportStatementUiState(
+                        errorMessage =
+                        if (error.message?.startsWith(
+                                "No TBC statement transaction rows were recognized."
+                            ) ==
+                            true
+                        ) {
+                            appContext.getString(
+                                R.string.import_statement_error_unsupported_pdf
+                            )
+                        } else {
+                            appContext.getString(
+                                R.string.import_statement_error_parse_failed
+                            )
+                        }
+                    )
             }
             _uiState.value = _uiState.value.copy(isLoading = false)
         }
@@ -121,7 +161,7 @@ class ImportStatementViewModel @Inject constructor(
     fun includeAsTaxable(transactionFingerprint: String, included: Boolean) {
         updateRow(transactionFingerprint) { row ->
             row.copy(
-                finalInclusion = if (included) DeclarationInclusion.INCLUDED else DeclarationInclusion.EXCLUDED,
+                finalInclusion = if (included) DeclarationInclusion.INCLUDED else DeclarationInclusion.EXCLUDED
             )
         }
     }
@@ -135,7 +175,9 @@ class ImportStatementViewModel @Inject constructor(
     }
 
     fun updateCurrency(transactionFingerprint: String, value: String) {
-        updateRow(transactionFingerprint) { row -> row.copy(currency = normalizeCurrencyCode(value)) }
+        updateRow(transactionFingerprint) { row ->
+            row.copy(currency = normalizeCurrencyCode(value))
+        }
     }
 
     fun updateSourceCategory(transactionFingerprint: String, value: String) {
@@ -147,15 +189,23 @@ class ImportStatementViewModel @Inject constructor(
         val sourceFileName = current.sourceFileName
         val sourceFingerprint = current.sourceFingerprint
         if (sourceFileName.isNullOrBlank() || sourceFingerprint.isNullOrBlank()) {
-            _uiState.value = current.copy(errorMessage = appContext.getString(R.string.import_statement_error_pick_pdf_first))
+            _uiState.value =
+                current.copy(
+                    errorMessage = appContext.getString(
+                        R.string.import_statement_error_pick_pdf_first
+                    )
+                )
             return
         }
 
         val rows = current.rows
         if (current.invalidIncludedCount > 0) {
-            _uiState.value = current.copy(
-                errorMessage = appContext.getString(R.string.import_statement_error_invalid_rows),
-            )
+            _uiState.value =
+                current.copy(
+                    errorMessage = appContext.getString(
+                        R.string.import_statement_error_invalid_rows
+                    )
+                )
             return
         }
 
@@ -165,60 +215,72 @@ class ImportStatementViewModel @Inject constructor(
                 confirmStatementImportUseCase(
                     sourceFileName = sourceFileName,
                     sourceFingerprint = sourceFingerprint,
-                    rows = rows.map { it.toApprovedRow() },
+                    rows = rows.map { it.toApprovedRow() }
                 )
             }.onSuccess { result ->
-                val summaryMessage = appContext.getString(
-                    R.string.import_statement_message_import_summary,
-                    result.importResult.importedIncomeCount,
-                    result.importResult.storedTransactionCount,
-                    result.importResult.skippedDuplicateCount,
-                    result.importResult.excludedCount,
-                )
-                val fxMessage = when {
-                    result.autoResolvedFxEntryCount > 0 && result.remainingUnresolvedFxEntryCount == 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_fx_auto_resolved_all,
-                            result.autoResolvedFxEntryCount,
-                        )
-                    result.autoResolvedFxEntryCount > 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_fx_auto_resolved_partial,
-                            result.autoResolvedFxEntryCount,
-                            result.remainingUnresolvedFxEntryCount,
-                        )
-                    result.remainingUnresolvedFxEntryCount > 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_fx_manual_review_needed,
-                            result.remainingUnresolvedFxEntryCount,
-                        )
-                    else -> null
-                }
-                val taxPaymentMessage = when {
-                    result.reviewRequiredTaxPaymentCount > 0 ->
-                        appContext.getString(
-                            R.string.import_statement_message_tax_payments_review_required,
-                            result.reviewRequiredTaxPaymentCount,
-                        )
-                    else -> null
-                }
-                _uiState.value = ImportStatementUiState(
-                    infoMessage = listOfNotNull(summaryMessage, fxMessage, taxPaymentMessage).joinToString("\n"),
-                )
+                val summaryMessage =
+                    appContext.getString(
+                        R.string.import_statement_message_import_summary,
+                        result.importResult.importedIncomeCount,
+                        result.importResult.storedTransactionCount,
+                        result.importResult.skippedDuplicateCount,
+                        result.importResult.excludedCount
+                    )
+                val fxMessage =
+                    when {
+                        result.autoResolvedFxEntryCount > 0 &&
+                            result.remainingUnresolvedFxEntryCount == 0 ->
+                            appContext.getString(
+                                R.string.import_statement_message_fx_auto_resolved_all,
+                                result.autoResolvedFxEntryCount
+                            )
+                        result.autoResolvedFxEntryCount > 0 ->
+                            appContext.getString(
+                                R.string.import_statement_message_fx_auto_resolved_partial,
+                                result.autoResolvedFxEntryCount,
+                                result.remainingUnresolvedFxEntryCount
+                            )
+                        result.remainingUnresolvedFxEntryCount > 0 ->
+                            appContext.getString(
+                                R.string.import_statement_message_fx_manual_review_needed,
+                                result.remainingUnresolvedFxEntryCount
+                            )
+                        else -> null
+                    }
+                val taxPaymentMessage =
+                    when {
+                        result.reviewRequiredTaxPaymentCount > 0 ->
+                            appContext.getString(
+                                R.string.import_statement_message_tax_payments_review_required,
+                                result.reviewRequiredTaxPaymentCount
+                            )
+                        else -> null
+                    }
+                _uiState.value =
+                    ImportStatementUiState(
+                        infoMessage = listOfNotNull(
+                            summaryMessage,
+                            fxMessage,
+                            taxPaymentMessage
+                        ).joinToString("\n")
+                    )
                 _effects.emit(
                     ImportStatementEffect.Message(
                         appContext.getString(
                             R.string.import_statement_message_import_snackbar,
                             result.importResult.importedIncomeCount,
-                            sourceFileName,
-                        ),
-                    ),
+                            sourceFileName
+                        )
+                    )
                 )
             }.onFailure {
-                _uiState.value = current.copy(
-                    isImporting = false,
-                    errorMessage = appContext.getString(R.string.import_statement_error_import_failed),
-                )
+                _uiState.value =
+                    current.copy(
+                        isImporting = false,
+                        errorMessage = appContext.getString(
+                            R.string.import_statement_error_import_failed
+                        )
+                    )
                 return@launch
             }
         }
@@ -226,26 +288,31 @@ class ImportStatementViewModel @Inject constructor(
 
     private fun updateRow(
         transactionFingerprint: String,
-        transform: (ImportStatementRowUiState) -> ImportStatementRowUiState,
+        transform: (ImportStatementRowUiState) -> ImportStatementRowUiState
     ) {
-        val updatedRows = _uiState.value.rows.map { row ->
-            if (row.transactionFingerprint == transactionFingerprint && !row.duplicate) {
-                transform(row)
-            } else {
-                row
+        val updatedRows =
+            _uiState.value.rows.map { row ->
+                if (row.transactionFingerprint == transactionFingerprint && !row.duplicate) {
+                    transform(row)
+                } else {
+                    row
+                }
             }
-        }
-        _uiState.value = _uiState.value.copy(
-            rows = updatedRows,
-            selectedIncomeCount = updatedRows.count {
-                it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-            },
-            invalidIncludedCount = updatedRows.invalidIncludedCount(),
-            canImport = updatedRows.any {
-                it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-            } && updatedRows.invalidIncludedCount() == 0,
-            errorMessage = null,
-        )
+        _uiState.value =
+            _uiState.value.copy(
+                rows = updatedRows,
+                selectedIncomeCount =
+                updatedRows.count {
+                    it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
+                },
+                invalidIncludedCount = updatedRows.invalidIncludedCount(),
+                canImport =
+                updatedRows.any {
+                    it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
+                } &&
+                    updatedRows.invalidIncludedCount() == 0,
+                errorMessage = null
+            )
     }
 
     private fun ImportStatementRowUiState.toApprovedRow(): ApprovedImportedStatementRow = ApprovedImportedStatementRow(
@@ -261,7 +328,7 @@ class ImportStatementViewModel @Inject constructor(
         amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
         currency = normalizeCurrencyCode(currency),
         sourceCategory = canonicalSourceCategory(appContext, sourceCategory),
-        duplicate = duplicate,
+        duplicate = duplicate
     )
 
     private fun parseMoneyLabel(value: String): StatementMoney {
@@ -269,12 +336,12 @@ class ImportStatementViewModel @Inject constructor(
         return if (parts.size >= 2) {
             StatementMoney(
                 amount = parts.first().replace(",", "").toBigDecimal(),
-                currency = parts.last(),
+                currency = parts.last()
             )
         } else {
             StatementMoney(
                 amount = parts.first().replace(",", "").toBigDecimal(),
-                currency = null,
+                currency = null
             )
         }
     }
@@ -284,15 +351,19 @@ class ImportStatementViewModel @Inject constructor(
             .filter { it.isNotBlank() }
             .joinToString(" ")
 
-    private fun formatExistingImportMessage(info: com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo): String {
-        val importDate = Instant.ofEpochMilli(info.importedAtEpochMillis)
-            .atZone(ZoneId.systemDefault())
-            .toLocalDate()
-            .formatIsoDate()
+    private fun formatExistingImportMessage(
+        info: com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
+    ): String {
+        val importDate =
+            Instant
+                .ofEpochMilli(info.importedAtEpochMillis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+                .formatIsoDate()
         return appContext.getString(
             R.string.import_statement_message_reimport_existing,
             info.sourceFileName,
-            importDate,
+            importDate
         )
     }
 }

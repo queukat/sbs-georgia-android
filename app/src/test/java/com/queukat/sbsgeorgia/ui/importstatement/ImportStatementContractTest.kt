@@ -10,20 +10,22 @@ import org.junit.Test
 class ImportStatementContractTest {
     @Test
     fun invalidForIncludedImportRequiresTransactionDate() {
-        val row = validRow().copy(
-            incomeDate = null,
-            finalInclusion = DeclarationInclusion.INCLUDED,
-        )
+        val row =
+            validRow().copy(
+                incomeDate = null,
+                finalInclusion = DeclarationInclusion.INCLUDED
+            )
 
         assertTrue(row.isInvalidForIncludedImport())
     }
 
     @Test
     fun invalidForIncludedImportAllowsExcludedRowWithoutDate() {
-        val row = validRow().copy(
-            incomeDate = null,
-            finalInclusion = DeclarationInclusion.EXCLUDED,
-        )
+        val row =
+            validRow().copy(
+                incomeDate = null,
+                finalInclusion = DeclarationInclusion.EXCLUDED
+            )
 
         assertFalse(row.isInvalidForIncludedImport())
     }
@@ -67,6 +69,6 @@ class ImportStatementContractTest {
         amount = "125.50",
         currency = "USD",
         sourceCategory = "Software services",
-        duplicate = false,
+        duplicate = false
     )
 }

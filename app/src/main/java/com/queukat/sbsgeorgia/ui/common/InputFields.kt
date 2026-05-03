@@ -33,27 +33,30 @@ fun DatePickerField(
     modifier: Modifier = Modifier,
     placeholderText: String? = null,
     testTag: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = true
 ) {
     var showPicker by remember { mutableStateOf(false) }
     val zoneId = remember { ZoneId.systemDefault() }
-    val initialMillis = remember(value) {
-        value?.atStartOfDay(zoneId)?.toInstant()?.toEpochMilli()
-    }
+    val initialMillis =
+        remember(value) {
+            value?.atStartOfDay(zoneId)?.toInstant()?.toEpochMilli()
+        }
 
     OutlinedTextField(
         value = value?.formatIsoDate().orEmpty(),
         onValueChange = {},
         enabled = enabled,
         label = { Text(label) },
-        placeholder = placeholderText?.let { placeholder ->
+        placeholder =
+        placeholderText?.let { placeholder ->
             { Text(placeholder) }
         },
         readOnly = true,
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxWidth()
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier)
-            .clickable(enabled = enabled) { showPicker = true },
+            .clickable(enabled = enabled) { showPicker = true }
     )
 
     if (showPicker) {
@@ -65,13 +68,14 @@ fun DatePickerField(
                     onClick = {
                         datePickerState.selectedDateMillis?.let { millis ->
                             onValueChange(
-                                Instant.ofEpochMilli(millis)
+                                Instant
+                                    .ofEpochMilli(millis)
                                     .atZone(zoneId)
-                                    .toLocalDate(),
+                                    .toLocalDate()
                             )
                         }
                         showPicker = false
-                    },
+                    }
                 ) {
                     Text(stringResource(R.string.common_ok))
                 }
@@ -80,7 +84,7 @@ fun DatePickerField(
                 TextButton(onClick = { showPicker = false }) {
                     Text(stringResource(R.string.common_cancel))
                 }
-            },
+            }
         ) {
             DatePicker(state = datePickerState)
         }
@@ -94,17 +98,18 @@ fun DecimalField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     testTag: String? = null,
-    enabled: Boolean = true,
+    enabled: Boolean = true
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         enabled = enabled,
         label = { Text(label) },
-        modifier = modifier
+        modifier =
+        modifier
             .fillMaxWidth()
             .then(if (testTag != null) Modifier.testTag(testTag) else Modifier),
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-        singleLine = true,
+        singleLine = true
     )
 }

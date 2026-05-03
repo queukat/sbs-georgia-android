@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class DashboardOverviewWidgetProvider : BaseHomeWidgetProvider(WidgetKind.OVERVIEW)
 
@@ -42,14 +41,8 @@ fun requestHomeWidgetsUpdate(context: Context) {
     HomeWidgetUpdater.requestUpdateAll(context)
 }
 
-abstract class BaseHomeWidgetProvider(
-    private val widgetKind: WidgetKind,
-) : AppWidgetProvider() {
-    override fun onUpdate(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        appWidgetIds: IntArray,
-    ) {
+abstract class BaseHomeWidgetProvider(private val widgetKind: WidgetKind) : AppWidgetProvider() {
+    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         val pendingResult = goAsync()
         HomeWidgetUpdater.launchUpdate {
             try {
@@ -57,7 +50,7 @@ abstract class BaseHomeWidgetProvider(
                     context = context,
                     appWidgetManager = appWidgetManager,
                     appWidgetIds = appWidgetIds,
-                    widgetKind = widgetKind,
+                    widgetKind = widgetKind
                 )
             } finally {
                 pendingResult.finish()
@@ -67,24 +60,27 @@ abstract class BaseHomeWidgetProvider(
 }
 
 @Singleton
-class HomeWidgetRefreshObserver @Inject constructor(
+class HomeWidgetRefreshObserver
+@Inject
+constructor(
     @param:ApplicationContext private val context: Context,
-    private val database: SbsGeorgiaDatabase,
+    private val database: SbsGeorgiaDatabase
 ) {
     @Volatile
     private var started = false
 
-    private val observer = object : InvalidationTracker.Observer(
-        "taxpayer_profile",
-        "small_business_status_config",
-        "reminder_config",
-        "income_entry",
-        "monthly_declaration_record",
-    ) {
-        override fun onInvalidated(tables: Set<String>) {
-            HomeWidgetUpdater.requestUpdateAll(context)
+    private val observer =
+        object : InvalidationTracker.Observer(
+            "taxpayer_profile",
+            "small_business_status_config",
+            "reminder_config",
+            "income_entry",
+            "monthly_declaration_record"
+        ) {
+            override fun onInvalidated(tables: Set<String>) {
+                HomeWidgetUpdater.requestUpdateAll(context)
+            }
         }
-    }
 
     fun ensureStarted() {
         if (started) return
@@ -99,7 +95,7 @@ class HomeWidgetRefreshObserver @Inject constructor(
 enum class WidgetKind {
     OVERVIEW,
     DUE_PERIOD,
-    FOCUS,
+    FOCUS
 }
 
 private object HomeWidgetUpdater {
@@ -121,24 +117,29 @@ private object HomeWidgetUpdater {
         context: Context,
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray,
-        widgetKind: WidgetKind,
+        widgetKind: WidgetKind
     ) {
         if (appWidgetIds.isEmpty()) return
 
         val summary = loadDashboardSummary(context)
         appWidgetIds.forEach { appWidgetId ->
-            val remoteViews = when (widgetKind) {
-                WidgetKind.OVERVIEW -> buildOverviewRemoteViews(context, summary)
-                WidgetKind.DUE_PERIOD -> buildDuePeriodRemoteViews(context, summary)
-                WidgetKind.FOCUS -> buildFocusRemoteViews(context, summary)
-            }
+            val remoteViews =
+                when (widgetKind) {
+                    WidgetKind.OVERVIEW -> buildOverviewRemoteViews(context, summary)
+                    WidgetKind.DUE_PERIOD -> buildDuePeriodRemoteViews(context, summary)
+                    WidgetKind.FOCUS -> buildFocusRemoteViews(context, summary)
+                }
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
         }
     }
 
     private suspend fun updateAll(context: Context) {
         val appWidgetManager = AppWidgetManager.getInstance(context)
-        updateForProvider<DashboardOverviewWidgetProvider>(context, appWidgetManager, WidgetKind.OVERVIEW)
+        updateForProvider<DashboardOverviewWidgetProvider>(
+            context,
+            appWidgetManager,
+            WidgetKind.OVERVIEW
+        )
         updateForProvider<DuePeriodWidgetProvider>(context, appWidgetManager, WidgetKind.DUE_PERIOD)
         updateForProvider<FocusWidgetProvider>(context, appWidgetManager, WidgetKind.FOCUS)
     }
@@ -146,77 +147,86 @@ private object HomeWidgetUpdater {
     private suspend inline fun <reified T : AppWidgetProvider> updateForProvider(
         context: Context,
         appWidgetManager: AppWidgetManager,
-        widgetKind: WidgetKind,
+        widgetKind: WidgetKind
     ) {
         val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, T::class.java))
         update(context, appWidgetManager, appWidgetIds, widgetKind)
     }
 
     private suspend fun loadDashboardSummary(context: Context): DashboardSummary {
-        val entryPoint = EntryPointAccessors.fromApplication(
-            context.applicationContext,
-            HomeWidgetEntryPoint::class.java,
-        )
+        val entryPoint =
+            EntryPointAccessors.fromApplication(
+                context.applicationContext,
+                HomeWidgetEntryPoint::class.java
+            )
         return entryPoint.observeDashboardSummaryUseCase().invoke().first()
     }
 
-    private fun buildOverviewRemoteViews(
-        context: Context,
-        summary: DashboardSummary,
-    ): RemoteViews = RemoteViews(context.packageName, R.layout.widget_overview).apply {
-        setTextViewText(R.id.widget_title, context.getString(R.string.widget_overview_title))
-        setTextViewText(R.id.widget_primary_value, formatAmount(summary.ytdIncomeGel, "GEL"))
-        setTextViewText(R.id.widget_primary_label, context.getString(R.string.home_ytd_income))
-        setTextViewText(R.id.widget_secondary_value, summary.unsettledMonthsCount.toString())
-        setTextViewText(R.id.widget_secondary_label, context.getString(R.string.home_unsettled_months))
-        setTextViewText(R.id.widget_tertiary_value, summary.unresolvedFxCount.toString())
-        setTextViewText(R.id.widget_tertiary_label, context.getString(R.string.home_unresolved_fx_entries))
-        val footer = if (summary.setupComplete) {
-            context.getString(R.string.widget_paid_tax_value, formatAmount(summary.paidTaxAmountGel, "GEL"))
-        } else {
-            context.getString(R.string.widget_setup_required)
+    private fun buildOverviewRemoteViews(context: Context, summary: DashboardSummary): RemoteViews =
+        RemoteViews(context.packageName, R.layout.widget_overview).apply {
+            setTextViewText(R.id.widget_title, context.getString(R.string.widget_overview_title))
+            setTextViewText(R.id.widget_primary_value, formatAmount(summary.ytdIncomeGel, "GEL"))
+            setTextViewText(R.id.widget_primary_label, context.getString(R.string.home_ytd_income))
+            setTextViewText(R.id.widget_secondary_value, summary.unsettledMonthsCount.toString())
+            setTextViewText(
+                R.id.widget_secondary_label,
+                context.getString(R.string.home_unsettled_months)
+            )
+            setTextViewText(R.id.widget_tertiary_value, summary.unresolvedFxCount.toString())
+            setTextViewText(
+                R.id.widget_tertiary_label,
+                context.getString(R.string.home_unresolved_fx_entries)
+            )
+            val footer =
+                if (summary.setupComplete) {
+                    context.getString(
+                        R.string.widget_paid_tax_value,
+                        formatAmount(summary.paidTaxAmountGel, "GEL")
+                    )
+                } else {
+                    context.getString(R.string.widget_setup_required)
+                }
+            setTextViewText(R.id.widget_footer, footer)
+            setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
         }
-        setTextViewText(R.id.widget_footer, footer)
-        setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
-    }
 
-    private fun buildDuePeriodRemoteViews(
-        context: Context,
-        summary: DashboardSummary,
-    ): RemoteViews = RemoteViews(context.packageName, R.layout.widget_due_period).apply {
-        setTextViewText(R.id.widget_title, context.getString(R.string.widget_due_period_title))
-        val duePeriod = summary.currentDuePeriod
-        if (duePeriod == null) {
-            setTextViewText(R.id.widget_month, context.getString(R.string.widget_no_due_period))
-            setTextViewText(R.id.widget_status, "")
-            setTextViewText(R.id.widget_due_date, "")
-            setTextViewText(R.id.widget_amount, "")
-            setTextViewText(R.id.widget_note, "")
-        } else {
-            bindDuePeriod(context, duePeriod)
+    private fun buildDuePeriodRemoteViews(context: Context, summary: DashboardSummary): RemoteViews =
+        RemoteViews(context.packageName, R.layout.widget_due_period).apply {
+            setTextViewText(R.id.widget_title, context.getString(R.string.widget_due_period_title))
+            val duePeriod = summary.currentDuePeriod
+            if (duePeriod == null) {
+                setTextViewText(R.id.widget_month, context.getString(R.string.widget_no_due_period))
+                setTextViewText(R.id.widget_status, "")
+                setTextViewText(R.id.widget_due_date, "")
+                setTextViewText(R.id.widget_amount, "")
+                setTextViewText(R.id.widget_note, "")
+            } else {
+                bindDuePeriod(context, duePeriod)
+            }
+            setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
         }
-        setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
-    }
 
-    private fun RemoteViews.bindDuePeriod(
-        context: Context,
-        snapshot: MonthlyDeclarationSnapshot,
-    ) {
+    private fun RemoteViews.bindDuePeriod(context: Context, snapshot: MonthlyDeclarationSnapshot) {
         setTextViewText(R.id.widget_month, snapshot.period.incomeMonth.formatMonthYear())
         setTextViewText(
             R.id.widget_status,
             context.getString(
                 R.string.widget_due_period_status_value,
-                workflowStatusLabel(context, snapshot.workflowStatus),
-            ),
+                workflowStatusLabel(context, snapshot.workflowStatus)
+            )
         )
-        val amountLabel = snapshot.estimatedTaxAmountGel?.let { amount ->
-            context.getString(R.string.widget_due_period_tax_value, formatAmount(amount, "GEL"))
-        } ?: context.getString(R.string.widget_due_period_tax_pending)
+        val amountLabel =
+            snapshot.estimatedTaxAmountGel?.let { amount ->
+                context.getString(R.string.widget_due_period_tax_value, formatAmount(amount, "GEL"))
+            } ?: context.getString(R.string.widget_due_period_tax_pending)
         setTextViewText(R.id.widget_amount, amountLabel)
         setTextViewText(
             R.id.widget_due_date,
-            context.getString(R.string.widget_due_period_due_value, snapshot.period.filingWindow.dueDate.formatIsoDate()),
+            context.getString(
+                R.string.widget_due_period_due_value,
+                snapshot.period.filingWindow.dueDate
+                    .formatIsoDate()
+            )
         )
         setTextViewText(
             R.id.widget_note,
@@ -224,46 +234,52 @@ private object HomeWidgetUpdater {
                 snapshot.setupRequired -> context.getString(R.string.widget_setup_required)
                 snapshot.reviewNeeded -> context.getString(R.string.widget_review_needed)
                 snapshot.unresolvedFxCount > 0 ->
-                    context.getString(R.string.widget_unresolved_fx_value, snapshot.unresolvedFxCount)
+                    context.getString(
+                        R.string.widget_unresolved_fx_value,
+                        snapshot.unresolvedFxCount
+                    )
                 snapshot.zeroDeclarationSuggested ->
                     context.getString(R.string.widget_zero_declaration)
                 else -> context.getString(R.string.widget_due_period_ready)
-            },
+            }
         )
     }
 
-    private fun buildFocusRemoteViews(
-        context: Context,
-        summary: DashboardSummary,
-    ): RemoteViews = RemoteViews(context.packageName, R.layout.widget_focus).apply {
-        setTextViewText(R.id.widget_title, context.getString(R.string.widget_focus_title))
-        setTextViewText(R.id.widget_primary_value, summary.unsettledMonthsCount.toString())
-        setTextViewText(R.id.widget_primary_label, context.getString(R.string.home_unsettled_months))
-        setTextViewText(R.id.widget_secondary_value, summary.unresolvedFxCount.toString())
-        setTextViewText(R.id.widget_secondary_label, context.getString(R.string.home_unresolved_fx_entries))
-        val reminder = summary.nextReminderDay?.let {
-            context.getString(R.string.widget_next_reminder_value, it)
-        } ?: context.getString(R.string.widget_no_reminder)
-        setTextViewText(R.id.widget_footer, reminder)
-        setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
-    }
+    private fun buildFocusRemoteViews(context: Context, summary: DashboardSummary): RemoteViews =
+        RemoteViews(context.packageName, R.layout.widget_focus).apply {
+            setTextViewText(R.id.widget_title, context.getString(R.string.widget_focus_title))
+            setTextViewText(R.id.widget_primary_value, summary.unsettledMonthsCount.toString())
+            setTextViewText(
+                R.id.widget_primary_label,
+                context.getString(R.string.home_unsettled_months)
+            )
+            setTextViewText(R.id.widget_secondary_value, summary.unresolvedFxCount.toString())
+            setTextViewText(
+                R.id.widget_secondary_label,
+                context.getString(R.string.home_unresolved_fx_entries)
+            )
+            val reminder =
+                summary.nextReminderDay?.let {
+                    context.getString(R.string.widget_next_reminder_value, it)
+                } ?: context.getString(R.string.widget_no_reminder)
+            setTextViewText(R.id.widget_footer, reminder)
+            setOnClickPendingIntent(R.id.widget_root, openAppPendingIntent(context))
+        }
 
     private fun openAppPendingIntent(context: Context): PendingIntent {
-        val intent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-        }
+        val intent =
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            }
         return PendingIntent.getActivity(
             context,
             7001,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
 
-    private fun workflowStatusLabel(
-        context: Context,
-        status: MonthlyWorkflowStatus,
-    ): String = context.getString(
+    private fun workflowStatusLabel(context: Context, status: MonthlyWorkflowStatus): String = context.getString(
         when (status) {
             MonthlyWorkflowStatus.DRAFT -> R.string.workflow_status_draft
             MonthlyWorkflowStatus.READY_TO_FILE -> R.string.workflow_status_ready_to_file
@@ -273,7 +289,7 @@ private object HomeWidgetUpdater {
             MonthlyWorkflowStatus.PAYMENT_CREDITED -> R.string.workflow_status_payment_credited
             MonthlyWorkflowStatus.SETTLED -> R.string.workflow_status_settled
             MonthlyWorkflowStatus.OVERDUE -> R.string.workflow_status_overdue
-        },
+        }
     )
 }
 

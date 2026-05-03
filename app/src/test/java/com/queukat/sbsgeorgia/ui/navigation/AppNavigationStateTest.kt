@@ -47,6 +47,6 @@ class AppNavigationStateTest {
     private fun createNavigationState(): AppNavigationState = AppNavigationState(
         homeBackStack = mutableStateListOf<NavKey>(HomeDestination),
         monthsBackStack = mutableStateListOf<NavKey>(MonthsDestination),
-        settingsBackStack = mutableStateListOf<NavKey>(SettingsDestination),
+        settingsBackStack = mutableStateListOf<NavKey>(SettingsDestination)
     )
 }

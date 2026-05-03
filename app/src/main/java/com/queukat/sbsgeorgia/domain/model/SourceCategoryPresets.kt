@@ -11,10 +11,11 @@ object SourceCategoryPresets {
     const val IMPORTED_STATEMENT_INCOME = "Imported statement income"
     const val IMPORTED_STATEMENT_REVIEW = "Imported statement review"
 
-    val manualSuggestions = listOf(
-        SOFTWARE_SERVICES,
-        CONSULTING,
-        MARKETPLACE_PAYOUT,
-        OTHER,
-    )
+    val manualSuggestions =
+        listOf(
+            SOFTWARE_SERVICES,
+            CONSULTING,
+            MARKETPLACE_PAYOUT,
+            OTHER
+        )
 }

@@ -14,9 +14,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class FxRateRepositoryImpl @Inject constructor(
+class FxRateRepositoryImpl
+@Inject
+constructor(
     private val fxRateDao: FxRateDao,
-    private val remoteDataSource: OfficialFxRemoteDataSource,
+    private val remoteDataSource: OfficialFxRemoteDataSource
 ) : FxRateRepository {
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? =
         fxRateDao.getBestRate(rateDate, currencyCode.uppercase())?.toDomain()
@@ -37,11 +39,15 @@ class FxRateRepositoryImpl @Inject constructor(
                             units = remoteRate.units,
                             rateToGel = remoteRate.rateToGel,
                             source = FxRateSource.OFFICIAL_NBG_JSON,
-                            manualOverride = false,
-                        ),
+                            manualOverride = false
+                        )
                     )
                 }
-                val matchedRate = fxRateDao.getRate(rateDate, normalizedCode, manualOverride = false)
+                val matchedRate = fxRateDao.getRate(
+                    rateDate,
+                    normalizedCode,
+                    manualOverride = false
+                )
                 if (matchedRate == null) {
                     FxRateFetchResult.NotFound
                 } else {
@@ -57,18 +63,21 @@ class FxRateRepositoryImpl @Inject constructor(
         rateDate: LocalDate,
         currencyCode: String,
         units: Int,
-        rateToGel: BigDecimal,
+        rateToGel: BigDecimal
     ): FxRate {
-        val entity = FxRateEntity(
-            rateDate = rateDate,
-            currencyCode = currencyCode.uppercase(),
-            units = units.coerceAtLeast(1),
-            rateToGel = rateToGel,
-            source = FxRateSource.MANUAL_OVERRIDE,
-            manualOverride = true,
-        )
+        val entity =
+            FxRateEntity(
+                rateDate = rateDate,
+                currencyCode = currencyCode.uppercase(),
+                units = units.coerceAtLeast(1),
+                rateToGel = rateToGel,
+                source = FxRateSource.MANUAL_OVERRIDE,
+                manualOverride = true
+            )
         fxRateDao.upsert(entity)
-        return checkNotNull(fxRateDao.getRate(rateDate, entity.currencyCode, manualOverride = true)).toDomain()
+        return checkNotNull(
+            fxRateDao.getRate(rateDate, entity.currencyCode, manualOverride = true)
+        ).toDomain()
     }
 }
 
@@ -78,5 +87,5 @@ private fun FxRateEntity.toDomain(): FxRate = FxRate(
     units = units,
     rateToGel = rateToGel,
     source = source,
-    manualOverride = manualOverride,
+    manualOverride = manualOverride
 )

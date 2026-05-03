@@ -31,56 +31,59 @@ fun HelpFaqDialog(
     onDismiss: () -> Unit,
     onViewQuickStartGuide: () -> Unit,
     onRateApp: () -> Unit,
-    onSendFeedback: () -> Unit,
+    onSendFeedback: () -> Unit
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(
+        properties =
+        DialogProperties(
             usePlatformDefaultWidth = false,
             dismissOnBackPress = true,
-            dismissOnClickOutside = false,
-        ),
+            dismissOnClickOutside = false
+        )
     ) {
         Surface(
             modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background,
+            color = MaterialTheme.colorScheme.background
         ) {
             Scaffold(
                 containerColor = MaterialTheme.colorScheme.background,
                 topBar = {
                     SbsTopAppBar(
                         title = stringResource(R.string.help_title),
-                        onBack = onDismiss,
+                        onBack = onDismiss
                     )
-                },
+                }
             ) { contentPadding ->
                 Column(
-                    modifier = Modifier
+                    modifier =
+                    Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
                         .padding(
                             start = 16.dp,
                             end = 16.dp,
                             top = contentPadding.calculateTopPadding() + 8.dp,
-                            bottom = contentPadding.calculateBottomPadding() + 24.dp,
+                            bottom = contentPadding.calculateBottomPadding() + 24.dp
                         ),
-                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     AppSection(
                         title = stringResource(R.string.help_section_intro),
-                        modifier = Modifier.testTag("help-faq-root"),
+                        modifier = Modifier.testTag("help-faq-root")
                     ) {
                         Text(
                             text = stringResource(R.string.help_intro_body),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     AppSection(title = stringResource(R.string.help_section_quick_actions)) {
                         Button(
                             onClick = onViewQuickStartGuide,
-                            modifier = Modifier
+                            modifier =
+                            Modifier
                                 .fillMaxWidth()
-                                .testTag("help-view-quick-start-button"),
+                                .testTag("help-view-quick-start-button")
                         ) {
                             Text(stringResource(R.string.help_view_quick_start_again))
                         }
@@ -92,14 +95,14 @@ fun HelpFaqDialog(
                         }
                         Text(
                             text = stringResource(R.string.help_feedback_public_note),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     faqItems().forEach { item ->
                         AppSection(title = stringResource(item.questionRes)) {
                             Text(
                                 text = stringResource(item.answerRes),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -112,35 +115,32 @@ fun HelpFaqDialog(
 private fun faqItems(): List<HelpFaqItem> = listOf(
     HelpFaqItem(
         questionRes = R.string.help_faq_add_income_question,
-        answerRes = R.string.help_faq_add_income_answer,
+        answerRes = R.string.help_faq_add_income_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_gel_conversion_question,
-        answerRes = R.string.help_faq_gel_conversion_answer,
+        answerRes = R.string.help_faq_gel_conversion_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_missing_rate_question,
-        answerRes = R.string.help_faq_missing_rate_answer,
+        answerRes = R.string.help_faq_missing_rate_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_monthly_declarations_question,
-        answerRes = R.string.help_faq_monthly_declarations_answer,
+        answerRes = R.string.help_faq_monthly_declarations_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_reminders_question,
-        answerRes = R.string.help_faq_reminders_answer,
+        answerRes = R.string.help_faq_reminders_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_backup_question,
-        answerRes = R.string.help_faq_backup_answer,
+        answerRes = R.string.help_faq_backup_answer
     ),
     HelpFaqItem(
         questionRes = R.string.help_faq_feedback_question,
-        answerRes = R.string.help_faq_feedback_answer,
-    ),
+        answerRes = R.string.help_faq_feedback_answer
+    )
 )
 
-private data class HelpFaqItem(
-    @param:StringRes val questionRes: Int,
-    @param:StringRes val answerRes: Int,
-)
+private data class HelpFaqItem(@param:StringRes val questionRes: Int, @param:StringRes val answerRes: Int)

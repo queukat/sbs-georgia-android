@@ -50,8 +50,8 @@ class AppThemeViewModelTest {
                 declarationRemindersEnabled = true,
                 paymentRemindersEnabled = true,
                 defaultReminderTime = LocalTime.of(9, 0),
-                themeMode = ThemeMode.DARK,
-            ),
+                themeMode = ThemeMode.DARK
+            )
         )
         advanceUntilIdle()
         assertEquals(ThemeMode.DARK, viewModel.themeMode.value)
@@ -63,8 +63,8 @@ class AppThemeViewModelTest {
                 declarationRemindersEnabled = true,
                 paymentRemindersEnabled = true,
                 defaultReminderTime = LocalTime.of(9, 0),
-                themeMode = ThemeMode.LIGHT,
-            ),
+                themeMode = ThemeMode.LIGHT
+            )
         )
         advanceUntilIdle()
         assertEquals(ThemeMode.LIGHT, viewModel.themeMode.value)

@@ -9,7 +9,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
@@ -20,8 +19,8 @@ import com.queukat.sbsgeorgia.ui.settings.SettingsScreen
 import com.queukat.sbsgeorgia.ui.settings.SettingsUiState
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.time.LocalDate
-import org.junit.Before
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,8 +40,8 @@ class SettingsScreenTest {
         var uiState by mutableStateOf(
             SettingsUiState(
                 effectiveDate = LocalDate.of(2026, 3, 7),
-                themeMode = ThemeMode.SYSTEM,
-            ),
+                themeMode = ThemeMode.SYSTEM
+            )
         )
         var saveClicked = false
 
@@ -57,14 +56,28 @@ class SettingsScreenTest {
                     onDisplayNameChanged = { uiState = uiState.copy(displayName = it) },
                     onEffectiveDateChanged = { uiState = uiState.copy(effectiveDate = it) },
                     onTaxRateChanged = { uiState = uiState.copy(taxRatePercent = it) },
-                    onDefaultReminderTimeChanged = { uiState = uiState.copy(defaultReminderTime = it) },
-                    onDeclarationReminderDaysChanged = { uiState = uiState.copy(declarationReminderDays = it) },
-                    onPaymentReminderDaysChanged = { uiState = uiState.copy(paymentReminderDays = it) },
-                    onDeclarationEnabledChanged = { uiState = uiState.copy(declarationRemindersEnabled = it) },
-                    onPaymentEnabledChanged = { uiState = uiState.copy(paymentRemindersEnabled = it) },
+                    onDefaultReminderTimeChanged = {
+                        uiState =
+                            uiState.copy(defaultReminderTime = it)
+                    },
+                    onDeclarationReminderDaysChanged = {
+                        uiState =
+                            uiState.copy(declarationReminderDays = it)
+                    },
+                    onPaymentReminderDaysChanged = {
+                        uiState =
+                            uiState.copy(paymentReminderDays = it)
+                    },
+                    onDeclarationEnabledChanged = {
+                        uiState =
+                            uiState.copy(declarationRemindersEnabled = it)
+                    },
+                    onPaymentEnabledChanged = {
+                        uiState = uiState.copy(paymentRemindersEnabled = it)
+                    },
                     onThemeModeChanged = { uiState = uiState.copy(themeMode = it) },
                     onRequestNotificationPermission = {},
-                    onSave = { saveClicked = true },
+                    onSave = { saveClicked = true }
                 )
             }
         }
@@ -88,7 +101,7 @@ class SettingsScreenTest {
                     uiState = SettingsUiState(),
                     snackbarHostState = SnackbarHostState(),
                     notificationPermissionGranted = true,
-                    onSave = {},
+                    onSave = {}
                 )
             }
         }
@@ -106,12 +119,14 @@ class SettingsScreenTest {
                     uiState = SettingsUiState(),
                     snackbarHostState = SnackbarHostState(),
                     notificationPermissionGranted = true,
-                    onSave = {},
+                    onSave = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("settings-view-quick-start-button").performScrollTo().performClick()
+        composeRule.onNodeWithTag(
+            "settings-view-quick-start-button"
+        ).performScrollTo().performClick()
         composeRule.onNodeWithTag("quick-start-progress").assertIsDisplayed()
     }
 }
