@@ -46,18 +46,6 @@ The app is intentionally focused on Georgian small business status declarations 
 - Coroutines / Flow
 - KSP
 
-## Project docs
-
-- [Plan](docs/plan.md)
-- [Refactor plan](docs/refactor_plan.md)
-- [Progress](docs/progress.md)
-- [Refactor progress](docs/refactor_progress.md)
-- [Hardening progress](docs/hardening_progress.md)
-- [Assumptions](docs/assumptions.md)
-- [Open questions](docs/open_questions.md)
-- [Startup performance](docs/startup_performance.md)
-- [Play Console setup](docs/play_console_setup.md)
-
 ## Local checks
 
 ```powershell
