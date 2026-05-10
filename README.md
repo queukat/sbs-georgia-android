@@ -1,5 +1,9 @@
 # SBS Georgia Android
 
+<!-- public-repo-status -->
+> Status: Active Android app. Public installation is through Google Play; GitHub Releases are not used as an Android download channel.
+
+
 Offline-first Android app for Georgian individual entrepreneurs with small business status.
 
 <div align="center">
