@@ -57,3 +57,9 @@ The app is intentionally focused on Georgian small business status declarations 
 ./gradlew.bat assembleDebug --console=plain
 ./gradlew.bat lintDebug --console=plain
 ```
+## License
+
+<!-- commercial-license-policy -->
+This project is licensed for non-commercial use under the [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/).
+Commercial use, resale, paid distribution, marketplace publication, SaaS hosting, or bundling into a paid product requires separate written permission from the author.
+Project names, logos, package identifiers, store listings, screenshots, and other branding assets are not licensed for use in forks or redistributed builds.
