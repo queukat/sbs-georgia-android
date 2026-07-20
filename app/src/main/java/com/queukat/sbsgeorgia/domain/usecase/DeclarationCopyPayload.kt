@@ -20,6 +20,14 @@ data class DeclarationCopyBundle(
 
 internal const val TREASURY_CODE = "101001000"
 
+internal object DeclarationCopyPayloadLabels {
+    const val GRAPH_20 = "Graph 20"
+    const val GRAPH_15 = "Graph 15"
+    const val TREASURY_CODE = "Treasury code"
+    const val TAX_AMOUNT = "Tax amount"
+    const val PAYMENT_COMMENT = "Payment comment"
+}
+
 fun buildPaymentComment(registrationId: String?, yearMonth: YearMonth): String {
     if (registrationId.isNullOrBlank()) return ""
     val monthLabel = yearMonth.atDay(1).format(paymentMonthFormatter)
@@ -37,12 +45,15 @@ fun buildDeclarationCopyBundle(
     val graph15 = plainDecimal(snapshot.graph15CumulativeGel)
     val taxAmount = plainDecimal(snapshot.estimatedTaxAmountGel ?: BigDecimal.ZERO)
     val paymentComment = buildPaymentComment(registrationId, yearMonth)
-    val declarationText = "Graph 20: $graph20\nGraph 15: $graph15"
+    // Payload labels are operational text pasted outside the app; UI copy labels stay localized.
+    val declarationText =
+        "${DeclarationCopyPayloadLabels.GRAPH_20}: $graph20\n" +
+            "${DeclarationCopyPayloadLabels.GRAPH_15}: $graph15"
     val paymentText =
         buildString {
-            appendLine("Treasury code: $TREASURY_CODE")
-            appendLine("Tax amount: $taxAmount")
-            append("Payment comment: $paymentComment")
+            appendLine("${DeclarationCopyPayloadLabels.TREASURY_CODE}: $TREASURY_CODE")
+            appendLine("${DeclarationCopyPayloadLabels.TAX_AMOUNT}: $taxAmount")
+            append("${DeclarationCopyPayloadLabels.PAYMENT_COMMENT}: $paymentComment")
         }
     return DeclarationCopyBundle(
         graph20 = graph20,

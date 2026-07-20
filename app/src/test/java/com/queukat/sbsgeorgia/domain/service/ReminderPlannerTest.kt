@@ -15,7 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ReminderPlannerTest {
-    private val planner = ReminderPlanner()
+    private val planner = ReminderPlanner(EnglishReminderNotificationStrings)
     private val reminderConfig =
         ReminderConfig(
             declarationReminderDays = listOf(10, 13, 15),
@@ -178,5 +178,54 @@ class ReminderPlannerTest {
             setupRequired = false,
             record = null
         )
+    }
+}
+
+private object EnglishReminderNotificationStrings : ReminderNotificationStrings {
+    override fun title(type: ReminderType): String = when (type) {
+        ReminderType.DECLARATION -> "Small business declaration action needed"
+        ReminderType.PAYMENT -> "Small business tax payment action needed"
+    }
+
+    override fun body(
+        message: ReminderNotificationMessage,
+        incomeMonth: YearMonth,
+        unresolvedFxCount: Int,
+        dueDate: LocalDate
+    ): String {
+        val monthReference = incomeMonth.month.name.lowercase().replaceFirstChar(Char::uppercase) +
+            " ${incomeMonth.year}"
+        val fxEntries =
+            if (unresolvedFxCount == 1) {
+                "$unresolvedFxCount FX entry"
+            } else {
+                "$unresolvedFxCount FX entries"
+            }
+        return when (message) {
+            ReminderNotificationMessage.DECLARATION_REVIEW_AND_FX ->
+                "Review $monthReference and resolve $fxEntries before filing. Effective due date: $dueDate."
+            ReminderNotificationMessage.DECLARATION_FX ->
+                "Resolve $fxEntries for $monthReference before filing. Effective due date: $dueDate."
+            ReminderNotificationMessage.DECLARATION_REVIEW ->
+                "Review $monthReference before treating it as ready to file. Effective due date: $dueDate."
+            ReminderNotificationMessage.DECLARATION_ZERO_PREPARED ->
+                "Zero declaration for $monthReference is marked prepared but still has to be filed by $dueDate."
+            ReminderNotificationMessage.DECLARATION_ZERO_SUGGESTED ->
+                "This looks like a zero declaration month for $monthReference. Filing is still required by $dueDate."
+            ReminderNotificationMessage.DECLARATION_DEFAULT ->
+                "Declaration for $monthReference should be prepared and submitted by $dueDate."
+            ReminderNotificationMessage.PAYMENT_REVIEW_AND_FX ->
+                "Review $monthReference and resolve $fxEntries before relying on the tax amount. Effective due date: $dueDate."
+            ReminderNotificationMessage.PAYMENT_FX ->
+                "Resolve $fxEntries for $monthReference before sending the tax payment. Effective due date: $dueDate."
+            ReminderNotificationMessage.PAYMENT_REVIEW ->
+                "Review $monthReference before sending the tax payment. Effective due date: $dueDate."
+            ReminderNotificationMessage.PAYMENT_FILED ->
+                "Declaration for $monthReference is filed. Tax payment should be sent by $dueDate."
+            ReminderNotificationMessage.PAYMENT_PENDING ->
+                "Tax payment for $monthReference still needs to be sent by $dueDate."
+            ReminderNotificationMessage.PAYMENT_DEFAULT ->
+                "Estimated tax for $monthReference is ready. After filing, send the payment by $dueDate."
+        }
     }
 }

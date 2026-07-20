@@ -27,6 +27,7 @@ local.properties
 /qa_*.log
 /qa_*.txt
 /artifacts/
+/*-code-analysis-*.zip
 /docs/
 /scripts/
 *.class

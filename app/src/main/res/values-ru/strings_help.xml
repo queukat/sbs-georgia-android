@@ -7,7 +7,7 @@
     <string name="quick_start_progress">%1$d из %2$d</string>
 
     <string name="quick_start_step_income_title">Фиксируйте доход по мере поступления</string>
-    <string name="quick_start_step_income_body">Доход можно добавить вручную или начать быстрее через импорт поддерживаемой банковской выписки.</string>
+    <string name="quick_start_step_income_body">Доход можно добавить вручную или начать быстрее через импорт поддерживаемой выписки TBC.</string>
     <string name="quick_start_step_income_bullet_one">Используйте дату, категорию источника и заметки, чтобы каждый месяц декларации оставался чистым.</string>
     <string name="quick_start_step_income_bullet_two">Доход не в GEL остаётся явным и не пересчитывается молча.</string>
 
@@ -31,7 +31,7 @@
     <string name="help_feedback_public_note">Откроется публичная страница в браузере. Всё, что вы напишете, может быть видно другим, поэтому не включайте налоговые ID, PDF и backup/export-файлы.</string>
 
     <string name="help_faq_add_income_question">Как добавить доход?</string>
-    <string name="help_faq_add_income_answer">Используйте Add income для ручного ввода или Import statement для поддерживаемого PDF банковской выписки. Для записи нужны дата, сумма, валюта и категория источника, а позже её можно отредактировать с экрана месяца.</string>
+    <string name="help_faq_add_income_answer">Используйте Add income для ручного ввода или Import TBC statement для поддерживаемого PDF выписки TBC. Для записи нужны дата, сумма, валюта и категория источника, а позже её можно отредактировать с экрана месяца.</string>
     <string name="help_faq_gel_conversion_question">Как считается конвертация в GEL?</string>
     <string name="help_faq_gel_conversion_answer">Доход в GEL берётся как есть. Для других валют приложение использует официальный курс NBG, если он доступен, или оставляет запись неразрешённой, чтобы итоги не строились на догадках.</string>
     <string name="help_faq_missing_rate_question">Что делать, если на дату нет FX-курса?</string>

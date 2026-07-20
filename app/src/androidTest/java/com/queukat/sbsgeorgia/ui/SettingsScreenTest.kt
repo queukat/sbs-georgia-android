@@ -10,11 +10,12 @@ import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.ui.help.HelpFaqDialog
+import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
 import com.queukat.sbsgeorgia.ui.settings.SettingsScreen
 import com.queukat.sbsgeorgia.ui.settings.SettingsUiState
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
@@ -82,7 +83,7 @@ class SettingsScreenTest {
             }
         }
 
-        composeRule.onNodeWithTag("settings-registration-id-field").performTextInput("306449082")
+        composeRule.onNodeWithTag("settings-registration-id-field").performTextInput("123456789")
         composeRule.onNodeWithTag("settings-display-name-field").performTextInput("Jane Doe")
         composeRule.onNodeWithTag("settings-tax-rate-field").performTextClearance()
         composeRule.onNodeWithTag("settings-tax-rate-field").performTextInput("1.0")
@@ -93,40 +94,29 @@ class SettingsScreenTest {
     }
 
     @Test
-    fun helpAndFaqCanBeOpenedFromSettings() {
+    fun helpFaqDialogIsDisplayed() {
         composeRule.setContent {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
-                SettingsScreen(
-                    innerPadding = PaddingValues(),
-                    uiState = SettingsUiState(),
-                    snackbarHostState = SnackbarHostState(),
-                    notificationPermissionGranted = true,
-                    onSave = {}
+                HelpFaqDialog(
+                    onDismiss = {},
+                    onViewQuickStartGuide = {},
+                    onRateApp = {},
+                    onSendFeedback = {}
                 )
             }
         }
 
-        composeRule.onNodeWithTag("settings-open-help-button").performScrollTo().performClick()
         composeRule.onNodeWithTag("help-faq-root").assertIsDisplayed()
     }
 
     @Test
-    fun quickStartGuideCanBeOpenedAgainFromSettings() {
+    fun quickStartGuideDialogIsDisplayed() {
         composeRule.setContent {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
-                SettingsScreen(
-                    innerPadding = PaddingValues(),
-                    uiState = SettingsUiState(),
-                    snackbarHostState = SnackbarHostState(),
-                    notificationPermissionGranted = true,
-                    onSave = {}
-                )
+                QuickStartGuideDialog(onDismiss = {})
             }
         }
 
-        composeRule.onNodeWithTag(
-            "settings-view-quick-start-button"
-        ).performScrollTo().performClick()
         composeRule.onNodeWithTag("quick-start-progress").assertIsDisplayed()
     }
 }

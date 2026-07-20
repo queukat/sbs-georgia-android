@@ -4,7 +4,6 @@ package com.queukat.sbsgeorgia.ui.workflow
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,12 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -31,12 +28,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
+import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
 import com.queukat.sbsgeorgia.ui.common.DecimalField
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
-import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
+import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
+import com.queukat.sbsgeorgia.ui.common.StickyPrimaryAction
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
+import com.queukat.sbsgeorgia.ui.common.formatMonthYear
 import com.queukat.sbsgeorgia.ui.common.workflowStatusLabel
 import java.time.YearMonth
 
@@ -91,13 +91,24 @@ fun WorkflowStatusScreen(
     onNotesChanged: (String) -> Unit,
     onSave: () -> Unit
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            SbsTopAppBar(
-                title =
-                uiState.yearMonth?.toString() ?: stringResource(R.string.workflow_status_title),
-                onBack = onBack
+    SbsScreenScaffold(
+        innerPadding = innerPadding,
+        title = uiState.yearMonth?.formatMonthYear() ?: stringResource(R.string.workflow_status_title),
+        onBack = onBack,
+        bottomAction = {
+            StickyPrimaryAction(
+                label =
+                stringResource(
+                    if (uiState.isSaving) {
+                        R.string.workflow_saving
+                    } else {
+                        R.string.workflow_save
+                    }
+                ),
+                onClick = onSave,
+                enabled = !uiState.isSaving,
+                isLoading = uiState.isSaving,
+                statusMessage = uiState.errorMessage
             )
         }
     ) { contentPadding ->
@@ -105,14 +116,8 @@ fun WorkflowStatusScreen(
             modifier =
             Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp
-                ),
+                .padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.workflow_section_due_state)) {
@@ -135,7 +140,7 @@ fun WorkflowStatusScreen(
                 }
             }
             AppSection(title = stringResource(R.string.workflow_section_status)) {
-                FlowRow {
+                ActionFlowRow {
                     uiState.editableStatuses.forEach { status ->
                         FilterChip(
                             selected = uiState.baseStatus == status,
@@ -202,20 +207,6 @@ fun WorkflowStatusScreen(
                     modifier = Modifier.fillMaxWidth(),
                     minLines = 3
                 )
-                uiState.errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
-                }
-                Button(onClick = onSave, enabled = !uiState.isSaving) {
-                    Text(
-                        stringResource(
-                            if (uiState.isSaving) {
-                                R.string.workflow_saving
-                            } else {
-                                R.string.workflow_save
-                            }
-                        )
-                    )
-                }
             }
         }
     }

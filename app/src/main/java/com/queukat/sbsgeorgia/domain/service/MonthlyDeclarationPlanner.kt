@@ -12,6 +12,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.Clock
@@ -156,9 +157,14 @@ constructor(
     ): DashboardSummary {
         val now = LocalDate.now(clock)
         val dueIncomeMonth = YearMonth.from(now.minusMonths(1))
+        val reminderDays =
+            reminders
+                ?.takeIf { it.declarationRemindersEnabled }
+                ?.declarationReminderDays
+                ?.sorted()
         val nextReminderDay =
-            reminders?.declarationReminderDays?.sorted()?.firstOrNull { it >= now.dayOfMonth }
-                ?: reminders?.declarationReminderDays?.sorted()?.firstOrNull()
+            reminderDays?.firstOrNull { it >= now.dayOfMonth }
+                ?: reminderDays?.firstOrNull()
         val paidTaxAmountGel =
             records
                 .asSequence()
@@ -172,11 +178,10 @@ constructor(
             setupComplete = profile != null && config != null,
             ytdIncomeGel = snapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
             unresolvedFxCount = snapshots.sumOf { it.unresolvedFxCount },
-            unsettledMonthsCount =
-            snapshots.count {
+            unsettledMonthsCount = snapshots.count {
                 !it.period.outOfScope &&
                     !now.isBefore(it.period.filingWindow.start) &&
-                    it.workflowStatus !in terminalStatuses &&
+                    !WorkflowStatusPolicy.isPaymentTerminal(it.workflowStatus) &&
                     (
                         it.graph20TotalGel > BigDecimal.ZERO ||
                             it.zeroDeclarationSuggested ||
@@ -232,45 +237,17 @@ constructor(
     fun isFilingWindowOpen(period: MonthlyDeclarationPeriod, referenceDate: LocalDate = LocalDate.now(clock)): Boolean =
         !referenceDate.isBefore(period.filingWindow.start)
 
-    fun allowedTransitions(status: MonthlyWorkflowStatus): Set<MonthlyWorkflowStatus> = when (status) {
-        MonthlyWorkflowStatus.DRAFT -> setOf(MonthlyWorkflowStatus.READY_TO_FILE)
-        MonthlyWorkflowStatus.READY_TO_FILE -> setOf(
-            MonthlyWorkflowStatus.FILED,
-            MonthlyWorkflowStatus.DRAFT
-        )
-        MonthlyWorkflowStatus.FILED -> setOf(
-            MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-            MonthlyWorkflowStatus.READY_TO_FILE
-        )
-        MonthlyWorkflowStatus.TAX_PAYMENT_PENDING -> setOf(
-            MonthlyWorkflowStatus.PAYMENT_SENT,
-            MonthlyWorkflowStatus.FILED
-        )
-        MonthlyWorkflowStatus.PAYMENT_SENT ->
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
-            )
-        MonthlyWorkflowStatus.PAYMENT_CREDITED -> setOf(MonthlyWorkflowStatus.SETTLED)
-        MonthlyWorkflowStatus.SETTLED -> emptySet()
-        MonthlyWorkflowStatus.OVERDUE ->
-            setOf(
-                MonthlyWorkflowStatus.READY_TO_FILE,
-                MonthlyWorkflowStatus.FILED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
-    }
+    fun allowedTransitions(status: MonthlyWorkflowStatus): Set<MonthlyWorkflowStatus> =
+        WorkflowStatusPolicy.allowedTransitions(status)
 
     private fun resolveGelEquivalent(entry: IncomeEntry): BigDecimal? = when {
         entry.gelEquivalent != null -> entry.gelEquivalent
-        entry.originalCurrency.equals("GEL", ignoreCase = true) -> entry.originalAmount
+        normalizeCurrencyCode(entry.originalCurrency) == GEL_CURRENCY -> entry.originalAmount
         else -> null
     }
 
     private companion object {
+        const val GEL_CURRENCY = "GEL"
         val ONE_HUNDRED: BigDecimal = BigDecimal("100")
         val overdueBaseStatuses =
             setOf(
@@ -278,12 +255,6 @@ constructor(
                 MonthlyWorkflowStatus.READY_TO_FILE,
                 MonthlyWorkflowStatus.FILED,
                 MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
-            )
-        val terminalStatuses =
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
             )
     }
 }

@@ -4,8 +4,10 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -34,9 +36,13 @@ import com.queukat.sbsgeorgia.ui.months.MonthsScreen
 import com.queukat.sbsgeorgia.ui.months.MonthsUiState
 import com.queukat.sbsgeorgia.ui.months.MonthsYearSection
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
+import com.queukat.sbsgeorgia.ui.workflow.WorkflowStatusScreen
+import com.queukat.sbsgeorgia.ui.workflow.WorkflowStatusUiState
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -99,6 +105,7 @@ class MonthsFlowTest {
                         onEditEntry = {},
                         onOpenFxOverride = {},
                         onOpenWorkflowStatus = {},
+                        onOpenPaymentHelper = {},
                         onDeleteEntry = {},
                         onResolveOfficialRates = {},
                         onToggleZeroPrepared = {}
@@ -119,7 +126,7 @@ class MonthsFlowTest {
         val summary =
             DashboardSummary(
                 taxpayerName = "Demo taxpayer",
-                registrationId = "306449082",
+                registrationId = "123456789",
                 setupComplete = true,
                 ytdIncomeGel = BigDecimal("350.00"),
                 unresolvedFxCount = 0,
@@ -149,6 +156,7 @@ class MonthsFlowTest {
                                     yearMonth = snapshot.period.incomeMonth
                                 ),
                                 canCopyDeclarationValues = true,
+                                canCopyPaymentText = true,
                                 canQuickSettleMonth = true,
                                 monthAlreadySettled = false,
                                 filingOpensOn = null
@@ -177,6 +185,7 @@ class MonthsFlowTest {
                         onEditEntry = {},
                         onOpenFxOverride = {},
                         onOpenWorkflowStatus = {},
+                        onOpenPaymentHelper = {},
                         onDeleteEntry = {},
                         onResolveOfficialRates = {},
                         onToggleZeroPrepared = {}
@@ -211,8 +220,133 @@ class MonthsFlowTest {
     }
 
     @Test
+    fun homeQuickSettleShowsConfirmationBeforeCallback() {
+        val snapshot = sampleSnapshot(unresolvedFxCount = 0)
+        val summary =
+            DashboardSummary(
+                taxpayerName = "Demo taxpayer",
+                registrationId = "123456789",
+                setupComplete = true,
+                ytdIncomeGel = BigDecimal("350.00"),
+                unresolvedFxCount = 0,
+                unsettledMonthsCount = 1,
+                paidTaxAmountGel = BigDecimal.ZERO,
+                paymentMismatchMonthsCount = 0,
+                currentDuePeriod = snapshot,
+                nextReminderDay = null
+            )
+        var settleCalls = 0
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                HomeScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    HomeUiState(
+                        summary = summary,
+                        duePeriodQuickAccess =
+                        HomeDuePeriodQuickAccess(
+                            snapshot = snapshot,
+                            copyBundle =
+                            buildDeclarationCopyBundle(
+                                snapshot = snapshot,
+                                registrationId = summary.registrationId,
+                                yearMonth = snapshot.period.incomeMonth
+                            ),
+                            canCopyDeclarationValues = true,
+                            canCopyPaymentText = true,
+                            canQuickSettleMonth = true,
+                            monthAlreadySettled = false,
+                            filingOpensOn = null
+                        )
+                    ),
+                    onOpenMonths = {},
+                    onOpenDueMonth = {},
+                    onOpenCharts = {},
+                    onAddIncome = {},
+                    onImportStatement = {},
+                    onOpenSettings = {},
+                    onSettleCurrentDuePeriod = { settleCalls += 1 }
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithTag("home-close-due-month-button")
+            .performScrollTo()
+            .performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(0, settleCalls)
+        }
+        composeRule
+            .onNodeWithTag("home-complete-month-confirm-dialog")
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithTag("home-confirm-complete-month-button")
+            .performClick()
+        composeRule.runOnIdle {
+            assertEquals(1, settleCalls)
+        }
+    }
+
+    @Test
+    fun monthsQuickSettleShowsConfirmationBeforeCallback() {
+        val snapshot = sampleSnapshot(unresolvedFxCount = 0)
+        var settledMonth: YearMonth? = null
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthsUiState(
+                        sections =
+                        listOf(
+                            MonthsYearSection(
+                                year = 2026,
+                                items =
+                                listOf(
+                                    MonthsMonthItemUiState(
+                                        snapshot = snapshot,
+                                        canQuickSettleMonth = true,
+                                        monthAlreadySettled = false
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    onMonthClick = {},
+                    onSettleMonth = { settledMonth = it },
+                    onAddIncome = {},
+                    onImportStatement = {}
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithTag("months-complete-month-button-2026-03")
+            .performScrollTo()
+            .performClick()
+
+        composeRule.runOnIdle {
+            assertNull(settledMonth)
+        }
+        composeRule
+            .onNodeWithTag("months-complete-month-confirm-dialog")
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithTag("months-confirm-complete-month-button")
+            .performClick()
+        composeRule.runOnIdle {
+            assertEquals(YearMonth.of(2026, 3), settledMonth)
+        }
+    }
+
+    @Test
     fun unresolvedFxStateIsVisibleInMonthDetails() {
         val snapshot = sampleSnapshot()
+        var resolveCalls = 0
 
         composeRule.setContent {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
@@ -230,6 +364,65 @@ class MonthsFlowTest {
                     onEditEntry = {},
                     onOpenFxOverride = {},
                     onOpenWorkflowStatus = {},
+                    onOpenPaymentHelper = {},
+                    onDeleteEntry = {},
+                    onResolveOfficialRates = { resolveCalls += 1 },
+                    onToggleZeroPrepared = {}
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithTag("month-detail-next-resolve-fx-button")
+            .assertIsDisplayed()
+            .performClick()
+        composeRule.runOnIdle {
+            assertEquals(1, resolveCalls)
+        }
+        composeRule
+            .onAllNodesWithText("Declaration and payment values")
+            .assertCountEquals(0)
+        composeRule
+            .onNodeWithTag("month-detail-unresolved-fx-message")
+            .performScrollTo()
+            .assertIsDisplayed()
+    }
+
+    @Test
+    fun filedMonthShowsPaymentHelperAsNextAction() {
+        val month = YearMonth.of(2026, 3)
+        val snapshot =
+            sampleSnapshot(
+                workflowStatus = MonthlyWorkflowStatus.FILED,
+                unresolvedFxCount = 0,
+                record =
+                MonthlyDeclarationRecord(
+                    yearMonth = month,
+                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                    zeroDeclarationPrepared = false,
+                    declarationFiledDate = LocalDate.of(2026, 4, 10)
+                )
+            )
+        var openedPaymentMonth: YearMonth? = null
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthDetailScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthDetailUiState(
+                        yearMonth = month,
+                        snapshot = snapshot,
+                        entries = emptyList(),
+                        isFilingWindowOpen = true
+                    ),
+                    snackbarHostState = androidx.compose.material3.SnackbarHostState(),
+                    onBack = {},
+                    onAddIncome = {},
+                    onEditEntry = {},
+                    onOpenFxOverride = {},
+                    onOpenWorkflowStatus = {},
+                    onOpenPaymentHelper = { openedPaymentMonth = it },
                     onDeleteEntry = {},
                     onResolveOfficialRates = {},
                     onToggleZeroPrepared = {}
@@ -238,9 +431,47 @@ class MonthsFlowTest {
         }
 
         composeRule
-            .onNodeWithTag("month-detail-unresolved-fx-message")
-            .performScrollTo()
+            .onNodeWithTag("month-detail-next-prepare-payment-button")
             .assertIsDisplayed()
+            .performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(month, openedPaymentMonth)
+        }
+    }
+
+    @Test
+    fun workflowStatusTitleUsesLocalizedMonthName() {
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                WorkflowStatusScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    WorkflowStatusUiState(
+                        yearMonth = YearMonth.of(2026, 3),
+                        dueDate = LocalDate.of(2026, 4, 15),
+                        derivedStatus = MonthlyWorkflowStatus.READY_TO_FILE,
+                        baseStatus = MonthlyWorkflowStatus.READY_TO_FILE,
+                        editableStatuses = listOf(MonthlyWorkflowStatus.FILED)
+                    ),
+                    onBack = {},
+                    onStatusChanged = {},
+                    onZeroDeclarationPreparedChanged = {},
+                    onDeclarationFiledDateChanged = {},
+                    onClearDeclarationFiledDate = {},
+                    onPaymentSentDateChanged = {},
+                    onClearPaymentSentDate = {},
+                    onPaymentCreditedDateChanged = {},
+                    onClearPaymentCreditedDate = {},
+                    onPaymentAmountChanged = {},
+                    onNotesChanged = {},
+                    onSave = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithText("March 2026").assertIsDisplayed()
+        composeRule.onAllNodesWithText("2026-03").assertCountEquals(0)
     }
 
     @Test

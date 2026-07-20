@@ -43,11 +43,13 @@ import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
 import com.queukat.sbsgeorgia.domain.model.OnboardingPreviewNote
 import com.queukat.sbsgeorgia.domain.model.ParsedDateField
 import com.queukat.sbsgeorgia.domain.model.ParsedTextField
+import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.usecase.ChartPoint
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
 import com.queukat.sbsgeorgia.ui.charts.ChartsScreen
 import com.queukat.sbsgeorgia.ui.charts.ChartsUiState
+import com.queukat.sbsgeorgia.ui.common.formatMonthYear
 import com.queukat.sbsgeorgia.ui.common.sbsNavigationBarItemColors
 import com.queukat.sbsgeorgia.ui.home.HomeDuePeriodQuickAccess
 import com.queukat.sbsgeorgia.ui.home.HomeScreen
@@ -151,7 +153,7 @@ private fun OnboardingRegistryScenario() {
                 documentType = OnboardingDocumentType.REGISTRY_EXTRACT,
                 displayName =
                 ParsedTextField(
-                    value = "Individual Entrepreneur Iaroslav Rychenkov",
+                    value = "Individual Entrepreneur Alex Example",
                     confidence = ExtractionConfidence.CONFIDENT
                 ),
                 legalForm =
@@ -161,7 +163,7 @@ private fun OnboardingRegistryScenario() {
                 ),
                 registrationId =
                 ParsedTextField(
-                    value = "306449082",
+                    value = "123456789",
                     confidence = ExtractionConfidence.CONFIDENT
                 ),
                 registrationDate =
@@ -171,7 +173,7 @@ private fun OnboardingRegistryScenario() {
                 ),
                 legalAddress =
                 ParsedTextField(
-                    value = "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+                    value = "Georgia, Tbilisi, Demo District, Sample Street N1",
                     confidence = ExtractionConfidence.REVIEW_REQUIRED
                 ),
                 notes =
@@ -180,11 +182,11 @@ private fun OnboardingRegistryScenario() {
                     OnboardingPreviewNote.REVIEW_BEFORE_APPLY
                 )
             ),
-            displayName = "Individual Entrepreneur Iaroslav Rychenkov",
+            displayName = "Individual Entrepreneur Alex Example",
             legalForm = "Individual Entrepreneur",
-            registrationId = "306449082",
+            registrationId = "123456789",
             registrationDate = "2023-11-24",
-            legalAddress = "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            legalAddress = "Georgia, Tbilisi, Demo District, Sample Street N1",
             effectiveDate = LocalDate.of(2026, 3, 7)
         ),
         onImportRegistryExtract = {},
@@ -311,7 +313,7 @@ private fun MonthDetailScenario() {
             copyBundle =
             buildDeclarationCopyBundle(
                 snapshot = snapshot,
-                registrationId = "306449082",
+                registrationId = "123456789",
                 yearMonth = snapshot.period.incomeMonth
             ),
             isFilingWindowOpen = true
@@ -322,6 +324,7 @@ private fun MonthDetailScenario() {
         onEditEntry = {},
         onOpenFxOverride = {},
         onOpenWorkflowStatus = {},
+        onOpenPaymentHelper = {},
         onDeleteEntry = {},
         onResolveOfficialRates = {},
         onToggleZeroPrepared = {}
@@ -334,7 +337,7 @@ private fun ImportPreviewScenario() {
         innerPadding = PaddingValues(),
         uiState =
         ImportStatementUiState(
-            sourceFileName = "statement-818670212_260402_120010.pdf",
+            sourceFileName = "statement-demo-2026-03.pdf",
             rows =
             listOf(
                 ImportStatementRowUiState(
@@ -342,9 +345,9 @@ private fun ImportPreviewScenario() {
                     incomeDate = LocalDate.of(2026, 3, 15),
                     description = "FOR SOFTWARE SERVICES",
                     additionalInformation = "Invoice 001",
-                    paidOutLabel = "0.00 USD",
-                    paidInLabel = "1250.00 USD",
-                    balanceLabel = "4280.15 USD",
+                    paidOut = StatementMoney(BigDecimal("0.00"), "USD"),
+                    paidIn = StatementMoney(BigDecimal("1250.00"), "USD"),
+                    balance = StatementMoney(BigDecimal("4280.15"), "USD"),
                     suggestedInclusion = DeclarationInclusion.INCLUDED,
                     finalInclusion = DeclarationInclusion.INCLUDED,
                     amount = "1250.00",
@@ -358,9 +361,9 @@ private fun ImportPreviewScenario() {
                     incomeDate = LocalDate.of(2026, 3, 17),
                     description = "Internal transfer",
                     additionalInformation = "Own account transfer",
-                    paidOutLabel = "0.00 USD",
-                    paidInLabel = "250.00 USD",
-                    balanceLabel = "4530.15 USD",
+                    paidOut = StatementMoney(BigDecimal("0.00"), "USD"),
+                    paidIn = StatementMoney(BigDecimal("250.00"), "USD"),
+                    balance = StatementMoney(BigDecimal("4530.15"), "USD"),
                     suggestedInclusion = DeclarationInclusion.EXCLUDED,
                     finalInclusion = DeclarationInclusion.EXCLUDED,
                     amount = "250.00",
@@ -384,7 +387,10 @@ private fun ImportPreviewScenario() {
         onAmountChanged = { _, _ -> },
         onCurrencyChanged = { _, _ -> },
         onSourceCategoryChanged = { _, _ -> },
-        onImportApproved = {}
+        onExcludePendingReviewRows = {},
+        onImportApproved = {},
+        onOpenMonth = {},
+        onOpenMonths = {}
     )
 }
 
@@ -398,20 +404,20 @@ private fun ChartsScenario() {
             availableYears = listOf(2026, 2025),
             monthlyIncomePoints =
             listOf(
-                ChartPoint("Jan", BigDecimal("4200.00")),
-                ChartPoint("Feb", BigDecimal("5800.00")),
-                ChartPoint("Mar", BigDecimal("8450.00")),
-                ChartPoint("Apr", BigDecimal("6250.00"))
+                ChartPoint(YearMonth.of(2026, 1).screenshotChartLabel(), BigDecimal("4200.00")),
+                ChartPoint(YearMonth.of(2026, 2).screenshotChartLabel(), BigDecimal("5800.00")),
+                ChartPoint(YearMonth.of(2026, 3).screenshotChartLabel(), BigDecimal("8450.00")),
+                ChartPoint(YearMonth.of(2026, 4).screenshotChartLabel(), BigDecimal("6250.00"))
             ),
             cumulativePoints =
             listOf(
-                ChartPoint("Jan", BigDecimal("4200.00")),
-                ChartPoint("Feb", BigDecimal("10000.00")),
-                ChartPoint("Mar", BigDecimal("18450.00")),
-                ChartPoint("Apr", BigDecimal("24700.00"))
+                ChartPoint(YearMonth.of(2026, 1).screenshotChartLabel(), BigDecimal("4200.00")),
+                ChartPoint(YearMonth.of(2026, 2).screenshotChartLabel(), BigDecimal("10000.00")),
+                ChartPoint(YearMonth.of(2026, 3).screenshotChartLabel(), BigDecimal("18450.00")),
+                ChartPoint(YearMonth.of(2026, 4).screenshotChartLabel(), BigDecimal("24700.00"))
             ),
             ytdIncomeGel = BigDecimal("24700.00"),
-            peakMonthLabel = "March 2026",
+            peakMonthLabel = YearMonth.of(2026, 3).formatMonthYear(),
             unresolvedMonthsCount = 0
         ),
         onYearSelected = {},
@@ -464,8 +470,8 @@ private fun sampleDashboardSummary(): DashboardSummary {
             workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE
         )
     return DashboardSummary(
-        taxpayerName = "Iaroslav Rychenkov",
-        registrationId = "306449082",
+        taxpayerName = "Alex Example",
+        registrationId = "123456789",
         setupComplete = true,
         ytdIncomeGel = BigDecimal("24700.00"),
         unresolvedFxCount = 0,
@@ -492,6 +498,7 @@ private fun sampleHomeUiState(): HomeUiState {
                 yearMonth = duePeriod.period.incomeMonth
             ),
             canCopyDeclarationValues = true,
+            canCopyPaymentText = true,
             canQuickSettleMonth = true,
             monthAlreadySettled = false,
             filingOpensOn = null
@@ -540,3 +547,7 @@ private fun Context.withLocale(localeTag: String): Context {
     configuration.setLayoutDirection(locale)
     return createConfigurationContext(configuration)
 }
+
+private fun YearMonth.screenshotChartLabel(): String = atDay(1)
+    .format(java.time.format.DateTimeFormatter.ofPattern("LLL", Locale.getDefault()))
+    .uppercase(Locale.getDefault())

@@ -5,15 +5,11 @@ package com.queukat.sbsgeorgia.ui.payment
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,9 +24,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
-import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
+import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
 import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
 import com.queukat.sbsgeorgia.ui.common.formatAmount
@@ -60,6 +57,7 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
     val snackbarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     val data = uiState.data
+    val actionState = uiState.actionState
     val treasuryCodeLabel = stringResource(R.string.payment_helper_treasury_code)
     val paymentCommentLabel = stringResource(R.string.payment_helper_comment)
     val taxAmountLabel = stringResource(R.string.payment_helper_tax_amount)
@@ -70,40 +68,27 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
     val taxAmountCopiedMessage = stringResource(R.string.common_copied_template, taxAmountLabel)
 
     fun copy(label: String, value: String, copiedMessage: String) {
+        if (value.isBlank()) return
         context.copyPlainTextToClipboard(label, value)
-        if (value.isNotBlank()) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar(copiedMessage)
-            }
+        coroutineScope.launch {
+            snackbarHostState.showSnackbar(copiedMessage)
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            SbsTopAppBar(
-                title =
-                data?.incomeMonth?.formatMonthYear()
-                    ?: stringResource(R.string.payment_helper_title),
-                onBack = onBack
-            )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
+    SbsScreenScaffold(
+        innerPadding = innerPadding,
+        title =
+        data?.incomeMonth?.formatMonthYear()
+            ?: stringResource(R.string.payment_helper_title),
+        onBack = onBack,
+        snackbarHostState = snackbarHostState
     ) { contentPadding ->
         Column(
             modifier =
             Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp
-                ),
+                .padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.payment_helper_section_readiness)) {
@@ -128,6 +113,8 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
                     }
                 }
                 AppSection(title = stringResource(R.string.payment_helper_section_bank_details)) {
+                    val canCopyPaymentDetails = actionState?.canPreparePayment == true
+                    val canCopyPaymentComment = actionState?.canCopyPaymentText == true
                     KeyValueRow(treasuryCodeLabel, data.treasuryCode)
                     KeyValueRow(
                         paymentCommentLabel,
@@ -140,7 +127,7 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
                         }
                     )
                     KeyValueRow(taxAmountLabel, formatAmount(data.estimatedTaxAmountGel, "GEL"))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ActionFlowRow {
                         OutlinedButton(
                             onClick = {
                                 copy(
@@ -148,7 +135,8 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
                                     value = data.treasuryCode,
                                     copiedMessage = treasuryCodeCopiedMessage
                                 )
-                            }
+                            },
+                            enabled = canCopyPaymentDetails
                         ) {
                             Text(stringResource(R.string.common_copy_code))
                         }
@@ -159,7 +147,8 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
                                     value = data.comment,
                                     copiedMessage = paymentCommentCopiedMessage
                                 )
-                            }
+                            },
+                            enabled = canCopyPaymentComment
                         ) {
                             Text(stringResource(R.string.common_copy_comment))
                         }
@@ -170,7 +159,8 @@ fun PaymentHelperScreen(innerPadding: PaddingValues, uiState: PaymentHelperUiSta
                                     value = data.estimatedTaxAmountGel.toPlainString(),
                                     copiedMessage = taxAmountCopiedMessage
                                 )
-                            }
+                            },
+                            enabled = canCopyPaymentDetails
                         ) {
                             Text(stringResource(R.string.common_copy_amount))
                         }

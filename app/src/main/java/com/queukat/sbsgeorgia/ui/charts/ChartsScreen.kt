@@ -178,10 +178,6 @@ private fun BarChart(points: List<ChartPoint>) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = formatAmount(point.value, CHART_CURRENCY),
-                        style = MaterialTheme.typography.labelSmall
-                    )
                     Box(
                         modifier = Modifier.height(140.dp),
                         contentAlignment = Alignment.BottomCenter

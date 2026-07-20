@@ -20,9 +20,9 @@
     <string name="settings_error_registration_id_required">Нужно указать регистрационный ID ИП.</string>
     <string name="settings_error_display_name_required">Нужно указать имя налогоплательщика.</string>
     <string name="settings_error_tax_rate_invalid">Ставка налога должна быть неотрицательным числом.</string>
-    <string name="settings_error_reminder_time_invalid">Время напоминания должно быть в формате HH:mm, например 09:00.</string>
-    <string name="settings_error_declaration_days_invalid">Дни напоминаний о декларации должны быть числами от 1 до 15 через запятую.</string>
-    <string name="settings_error_payment_days_invalid">Дни напоминаний об оплате должны быть числами от 1 до 15 через запятую.</string>
+    <string name="settings_error_reminder_time_invalid">Время напоминаний должно быть в 24-часовом формате HH:mm, например 09:00.</string>
+    <string name="settings_error_declaration_days_invalid">Выберите дни напоминаний о декларации с 1 по 15.</string>
+    <string name="settings_error_payment_days_invalid">Выберите дни напоминаний об оплате с 1 по 15.</string>
     <string name="settings_message_income_csv_exported">CSV с доходами экспортирован.</string>
     <string name="settings_message_monthly_csv_exported">CSV с месячными сводками экспортирован.</string>
     <string name="settings_message_backup_exported">JSON-резервная копия экспортирована.</string>
@@ -41,7 +41,7 @@
     <string name="import_statement_error_no_preview">Для выбранного PDF не удалось получить предпросмотр.</string>
     <string name="import_statement_error_parse_failed">Не удалось разобрать выбранный PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Неподдерживаемый PDF. Этот импорт поддерживает только текущий layout выписки TBC без OCR.</string>
-    <string name="import_statement_error_pick_pdf_first">Сначала выберите и разберите PDF.</string>
+    <string name="import_statement_error_pick_pdf_first">Сначала выберите и разберите PDF выписки TBC.</string>
     <string name="import_statement_error_invalid_rows">Все включённые строки должны иметь дату операции, положительную сумму, корректный трёхбуквенный код валюты и категорию источника.</string>
     <string name="import_statement_error_import_failed">Импорт завершился ошибкой.</string>
     <string name="import_statement_invalid_rows_blocking_import">Ещё %1$d включённых строк нужно исправить перед импортом.</string>

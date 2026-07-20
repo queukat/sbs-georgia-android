@@ -4,15 +4,31 @@
     <string name="manual_entry_section_entry">Данные записи</string>
     <string name="manual_entry_income_date">Дата дохода</string>
     <string name="manual_entry_amount">Сумма</string>
+    <string name="manual_entry_currency">Валюта</string>
     <string name="manual_entry_source_category">Категория источника</string>
     <string name="manual_entry_note">Заметка</string>
     <string name="manual_entry_include_graph_20">Включать в graph 20 декларации</string>
-    <string name="manual_entry_unresolved_fx_hint">Записи не в GEL останутся неразрешёнными, пока FX-flow не обработает их явно.</string>
+    <string name="manual_entry_unresolved_fx_hint">Записи не в GEL остаются неразрешёнными, пока не применён официальный курс NBG или ручной курс.</string>
     <string name="manual_entry_save">Сохранить доход</string>
     <string name="manual_entry_save_changes">Сохранить изменения</string>
     <string name="month_detail_title_fallback">Месяц</string>
     <string name="month_detail_add_income">Добавить доход</string>
     <string name="month_detail_unavailable">Детали месяца недоступны.</string>
+    <string name="month_detail_section_next_action">Следующее действие</string>
+    <string name="month_detail_next_resolve_fx">Разрешить курсы NBG</string>
+    <string name="month_detail_next_resolve_fx_hint">%1$d FX-записей требуют официального или ручного курса перед подачей.</string>
+    <string name="month_detail_next_review_entries">Проверить операции</string>
+    <string name="month_detail_next_review_entries_hint">В некоторых операциях ещё нужно окончательно выбрать включение или исключение.</string>
+    <string name="month_detail_next_copy_values">Скопировать значения декларации</string>
+    <string name="month_detail_next_copy_values_hint">Месяц готов. Скопируйте значения декларации и подайте их в налоговом портале.</string>
+    <string name="month_detail_next_prepare_payment">Подготовить платёж</string>
+    <string name="month_detail_next_prepare_payment_hint">Декларация подана. Подготовьте код казначейства, комментарий и сумму налога для банка.</string>
+    <string name="month_detail_next_mark_payment_credited">Отметить зачисление</string>
+    <string name="month_detail_next_mark_payment_credited_hint">Платёж отправлен. Когда он появится как зачтённый, обновите статус процесса.</string>
+    <string name="month_detail_next_wait_for_window_hint">Следующее действие откроется, когда начнётся окно подачи: %1$s.</string>
+    <string name="month_detail_next_out_of_scope_hint">Этот месяц вне SBS, поэтому автоматические действия по декларации и оплате недоступны.</string>
+    <string name="month_detail_next_done_hint">Процесс оплаты за этот месяц завершён.</string>
+    <string name="month_detail_next_prepare_details_hint">Сначала закройте пункты готовности ниже, после этого появится следующее действие.</string>
     <string name="month_detail_section_summary">Сводка декларации</string>
     <string name="month_detail_section_readiness">Готовность процесса</string>
     <string name="month_detail_section_entries">Записи</string>
@@ -41,7 +57,11 @@
     <string name="month_detail_included">Включено</string>
     <string name="month_detail_gel_equivalent">Эквивалент в GEL</string>
     <string name="month_detail_fx_source">Источник FX</string>
-    <string name="month_detail_unresolved_fx_hint">Курс FX ещё не разрешён. Никакой тихой конвертации не применяется.</string>
+    <string name="month_detail_fx_rate_date">Дата курса FX</string>
+    <string name="month_detail_fx_rate">Курс FX</string>
+    <string name="month_detail_fx_rate_value">%1$d %2$s = %3$s GEL</string>
+    <string name="month_detail_fx_formula">%1$s %2$s x %3$s / %4$d = %5$s</string>
+    <string name="month_detail_unresolved_fx_hint">Курс FX ещё не применён. Нужен официальный курс NBG или ручной курс; тихая конвертация не используется.</string>
     <string name="month_detail_manual_fx_override">Ручное переопределение FX</string>
     <string name="month_detail_edit">Изменить</string>
     <string name="month_detail_delete">Удалить</string>

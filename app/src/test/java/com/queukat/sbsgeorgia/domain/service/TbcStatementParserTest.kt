@@ -178,7 +178,7 @@ class TbcStatementParserTest {
     fun parsesRealCollapsedBilingualStatementExport() {
         val preview =
             parser.parse(
-                sourceFileName = "statement-818670212_260402_120010.pdf",
+                sourceFileName = "statement-demo-2026-03.pdf",
                 sourceFingerprint = "fixture-fingerprint",
                 extractedText = fixtureText("tbc_statement_v1_collapsed_bilingual_extracted.txt")
             )
@@ -189,7 +189,7 @@ class TbcStatementParserTest {
 
         val firstTransfer = preview.rows.first()
         assertEquals("Transfer between your accounts", firstTransfer.description)
-        assertTrue(firstTransfer.additionalInformation.orEmpty().contains("Iaroslav Rychenkov"))
+        assertTrue(firstTransfer.additionalInformation.orEmpty().contains("Alex Example"))
         assertEquals("400.00", firstTransfer.suggestedAmount.toPlainString())
         assertEquals(DeclarationInclusion.EXCLUDED, firstTransfer.suggestedInclusion)
 
@@ -198,7 +198,7 @@ class TbcStatementParserTest {
                 it.incomeDate.toString() == "2026-01-12" &&
                     it.description.equals("for software services", ignoreCase = true)
             }
-        assertTrue(softwareIncome.additionalInformation.orEmpty().contains("WAVEACCESS USA"))
+        assertTrue(softwareIncome.additionalInformation.orEmpty().contains("DEMO CLIENT LLC"))
         assertEquals("3031.00", softwareIncome.suggestedAmount.toPlainString())
         assertEquals(DeclarationInclusion.INCLUDED, softwareIncome.suggestedInclusion)
 
@@ -222,10 +222,10 @@ class TbcStatementParserTest {
                 extractedText =
                 """
                     ამონაწერი ანგარიშიდან:
-                    GE94TB7209445168200001 01/04/2026- 11/04/2026 11/04/2026 17:18:52
+                    GE00TB0000000000000001 01/04/2026- 11/04/2026 11/04/2026 17:18:52
                     Account Statement:
-                    ანგარიშის მფლობელი: იაროსლავ რიჩენკოვ
-                    Account Holder: Iaroslav Rychenkov
+                    ანგარიშის მფლობელი: ალექს მაგალითი
+                    Account Holder: Alex Example
                     საწყისი ნაშთი / Opening Balance 756.59GEL
                     თარიღი
                     Date
@@ -265,8 +265,8 @@ class TbcStatementParserTest {
                     ამონაწერი ანგარიშიდან:
                     Account Statement:
                     საწყისი ნაშთი / Opening Balance 1199.12GEL
-                    01/01/2026POS wallet - Euro Brand LTD, 30.00 GEL, Dec 31 2025 5:01PM, საყიდლები, MCC: 5611, MC, 515881******3677 30.00 1169.12 1 - 77 Account Statement: GE94TB7209445168200001 01/01/2026- 31/01/2026 01/02/2026 00:00:00 Account Holder: Iaroslav Rychenkov
-                    01/01/2026POS wallet - TSERTI 4, 11.00 GEL, Dec 31 2025 5:06PM, სასურსათო მაღაზიები, MCC: 5499, MC, 515881******3677 11.00 1158.12
+                    01/01/2026POS wallet - Euro Brand LTD, 30.00 GEL, Dec 31 2025 5:01PM, საყიდლები, MCC: 5611, MC, 000000******0000 30.00 1169.12 1 - 77 Account Statement: GE00TB0000000000000001 01/01/2026- 31/01/2026 01/02/2026 00:00:00 Account Holder: Alex Example
+                    01/01/2026POS wallet - TSERTI 4, 11.00 GEL, Dec 31 2025 5:06PM, სასურსათო მაღაზიები, MCC: 5499, MC, 000000******0000 11.00 1158.12
                 """.trimIndent()
             )
 

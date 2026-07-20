@@ -4,13 +4,14 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import androidx.core.net.toUri
 import java.util.Locale
 
 fun openPlayStoreListing(context: Context): Boolean {
     val marketIntent =
         Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("market://details?id=${context.packageName}")
+            "market://details?id=${context.packageName}".toUri()
         ).setPackage("com.android.vending")
     if (context.safeStartActivity(marketIntent)) {
         return true
@@ -18,7 +19,7 @@ fun openPlayStoreListing(context: Context): Boolean {
     return context.safeStartActivity(
         Intent(
             Intent.ACTION_VIEW,
-            Uri.parse("https://play.google.com/store/apps/details?id=${context.packageName}")
+            "https://play.google.com/store/apps/details?id=${context.packageName}".toUri()
         )
     )
 }
@@ -66,8 +67,8 @@ private fun buildFeedbackIssueUri(context: Context): Uri {
         - App language: ${Locale.getDefault().toLanguageTag()}
         """.trimIndent()
 
-    return Uri
-        .parse("https://github.com/queukat/sbs-georgia-android/issues/new")
+    return "https://github.com/queukat/sbs-georgia-android/issues/new"
+        .toUri()
         .buildUpon()
         .appendQueryParameter("title", "[Feedback] ")
         .appendQueryParameter("body", body)
@@ -76,9 +77,6 @@ private fun buildFeedbackIssueUri(context: Context): Uri {
 
 private fun Context.safeStartActivity(intent: Intent): Boolean {
     val preparedIntent = intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    if (preparedIntent.resolveActivity(packageManager) == null) {
-        return false
-    }
     return runCatching {
         startActivity(preparedIntent)
         true

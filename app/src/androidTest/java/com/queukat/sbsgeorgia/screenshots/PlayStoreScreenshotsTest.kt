@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.screenshots
 
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.content.Intent
@@ -20,6 +21,7 @@ import com.queukat.sbsgeorgia.ui.assumePhoneLikeComposeTestDevice
 import java.io.File
 import java.io.IOException
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.Test
@@ -32,6 +34,13 @@ class PlayStoreScreenshotsTest {
     @Before
     fun setUp() {
         assumePhoneLikeComposeTestDevice()
+        assumeTrue(
+            "Play Store screenshot capture is disabled for regular instrumentation/coverage runs.",
+            InstrumentationRegistry
+                .getArguments()
+                .getString("captureScreenshots")
+                ?.toBooleanStrictOrNull() == true
+        )
         device = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     }
 
@@ -164,11 +173,38 @@ class PlayStoreScreenshotsTest {
         @JvmStatic
         fun clearPreviousOutput() {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val basePicturesDir =
-                context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-                    ?: return
-            File(basePicturesDir, "SbsGeorgiaScreenshots/localized/$localeTag")
-                .deleteRecursively()
+            File(context.cacheDir, "screenshot-temp/$localeTag").deleteRecursively()
+            val relativePath =
+                "${Environment.DIRECTORY_PICTURES}/SbsGeorgiaScreenshots/localized/$localeTag"
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val collection = MediaStore.Images.Media.getContentUri(
+                    MediaStore.VOLUME_EXTERNAL_PRIMARY
+                )
+                val contentResolver = context.contentResolver
+                contentResolver.query(
+                    collection,
+                    arrayOf(MediaStore.Images.Media._ID),
+                    "${MediaStore.Images.Media.RELATIVE_PATH} = ?",
+                    arrayOf("$relativePath/"),
+                    null
+                )?.use { cursor ->
+                    val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                    while (cursor.moveToNext()) {
+                        contentResolver.delete(
+                            ContentUris.withAppendedId(collection, cursor.getLong(idColumn)),
+                            null,
+                            null
+                        )
+                    }
+                }
+            } else {
+                @Suppress("DEPRECATION")
+                val publicDir = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_PICTURES
+                )
+                File(publicDir, "SbsGeorgiaScreenshots/localized/$localeTag")
+                    .deleteRecursively()
+            }
         }
     }
 }

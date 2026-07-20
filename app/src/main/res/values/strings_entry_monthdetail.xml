@@ -4,15 +4,31 @@
     <string name="manual_entry_section_entry">Entry data</string>
     <string name="manual_entry_income_date">Income date</string>
     <string name="manual_entry_amount">Amount</string>
+    <string name="manual_entry_currency">Currency</string>
     <string name="manual_entry_source_category">Source category</string>
     <string name="manual_entry_note">Note</string>
     <string name="manual_entry_include_graph_20">Include in declaration graph 20</string>
-    <string name="manual_entry_unresolved_fx_hint">Non-GEL entries stay unresolved until the FX slice resolves them explicitly.</string>
+    <string name="manual_entry_unresolved_fx_hint">Non-GEL entries stay unresolved until an official NBG rate or manual rate is applied.</string>
     <string name="manual_entry_save">Save income</string>
     <string name="manual_entry_save_changes">Save changes</string>
     <string name="month_detail_title_fallback">Month</string>
     <string name="month_detail_add_income">Add income</string>
     <string name="month_detail_unavailable">Month details are not available.</string>
+    <string name="month_detail_section_next_action">Next action</string>
+    <string name="month_detail_next_resolve_fx">Resolve NBG rates</string>
+    <string name="month_detail_next_resolve_fx_hint">%1$d FX entries need official or manual rates before this month can be filed.</string>
+    <string name="month_detail_next_review_entries">Review transactions</string>
+    <string name="month_detail_next_review_entries_hint">Some entries still need a final include/exclude decision.</string>
+    <string name="month_detail_next_copy_values">Copy declaration values</string>
+    <string name="month_detail_next_copy_values_hint">The month is ready. Copy the declaration values and submit them in the tax portal.</string>
+    <string name="month_detail_next_prepare_payment">Prepare payment</string>
+    <string name="month_detail_next_prepare_payment_hint">The declaration is filed. Prepare the treasury code, comment, and tax amount for the bank payment.</string>
+    <string name="month_detail_next_mark_payment_credited">Mark payment credited</string>
+    <string name="month_detail_next_mark_payment_credited_hint">The payment was sent. Once it appears as credited, update the workflow status.</string>
+    <string name="month_detail_next_wait_for_window_hint">The next filing action unlocks when the filing window opens on %1$s.</string>
+    <string name="month_detail_next_out_of_scope_hint">This month is outside SBS scope, so automatic declaration/payment actions stay unavailable.</string>
+    <string name="month_detail_next_done_hint">Payment workflow is complete for this month.</string>
+    <string name="month_detail_next_prepare_details_hint">Resolve the readiness items below before the next action unlocks.</string>
     <string name="month_detail_section_summary">Declaration summary</string>
     <string name="month_detail_section_readiness">Workflow readiness</string>
     <string name="month_detail_section_entries">Entries</string>
@@ -41,7 +57,11 @@
     <string name="month_detail_included">Included</string>
     <string name="month_detail_gel_equivalent">GEL equivalent</string>
     <string name="month_detail_fx_source">FX source</string>
-    <string name="month_detail_unresolved_fx_hint">FX unresolved until the FX slice is connected. No silent conversion is applied.</string>
+    <string name="month_detail_fx_rate_date">FX rate date</string>
+    <string name="month_detail_fx_rate">FX rate</string>
+    <string name="month_detail_fx_rate_value">%1$d %2$s = %3$s GEL</string>
+    <string name="month_detail_fx_formula">%1$s %2$s x %3$s / %4$d = %5$s</string>
+    <string name="month_detail_unresolved_fx_hint">FX unresolved until an official NBG rate or manual rate is applied. No silent conversion is applied.</string>
     <string name="month_detail_manual_fx_override">Manual FX override</string>
     <string name="month_detail_edit">Edit</string>
     <string name="month_detail_delete">Delete</string>

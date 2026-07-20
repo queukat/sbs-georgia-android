@@ -1,8 +1,10 @@
 package com.queukat.sbsgeorgia.ui.importstatement
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import java.time.LocalDate
+import java.time.YearMonth
 
 data class ImportStatementUiState(
     val sourceFileName: String? = null,
@@ -15,8 +17,18 @@ data class ImportStatementUiState(
     val canImport: Boolean = false,
     val isLoading: Boolean = false,
     val isImporting: Boolean = false,
+    val importSuccess: ImportStatementImportSuccessUiState? = null,
     val infoMessage: String? = null,
     val errorMessage: String? = null
+)
+
+data class ImportStatementImportSuccessUiState(
+    val importedIncomeCount: Int,
+    val storedTransactionCount: Int,
+    val skippedDuplicateCount: Int,
+    val excludedCount: Int,
+    val targetMonth: YearMonth?,
+    val detailMessage: String?
 )
 
 data class ImportStatementRowUiState(
@@ -24,16 +36,17 @@ data class ImportStatementRowUiState(
     val incomeDate: LocalDate?,
     val description: String,
     val additionalInformation: String?,
-    val paidOutLabel: String?,
-    val paidInLabel: String?,
-    val balanceLabel: String?,
+    val paidOut: StatementMoney?,
+    val paidIn: StatementMoney?,
+    val balance: StatementMoney?,
     val suggestedInclusion: DeclarationInclusion,
     val finalInclusion: DeclarationInclusion,
     val amount: String,
     val currency: String,
     val sourceCategory: String,
     val isTaxPaymentCandidate: Boolean = false,
-    val duplicate: Boolean
+    val duplicate: Boolean,
+    val reviewDecisionMade: Boolean = false
 )
 
 sealed interface ImportStatementEffect {
@@ -49,5 +62,41 @@ internal fun ImportStatementRowUiState.isInvalidForIncludedImport(): Boolean =
                 sourceCategory.isBlank()
             )
 
+internal fun ImportStatementRowUiState.needsReview(): Boolean = !duplicate &&
+    (
+        isInvalidForIncludedImport() ||
+            isPendingManualReviewDecision()
+        )
+
+internal fun ImportStatementRowUiState.requiresManualReviewDecision(): Boolean = !duplicate &&
+    (
+        suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED ||
+            isTaxPaymentCandidate
+        )
+
+internal fun ImportStatementRowUiState.isPendingManualReviewDecision(): Boolean =
+    requiresManualReviewDecision() && !reviewDecisionMade
+
 internal fun List<ImportStatementRowUiState>.invalidIncludedCount(): Int =
     count(ImportStatementRowUiState::isInvalidForIncludedImport)
+
+internal fun List<ImportStatementRowUiState>.willImportCount(): Int =
+    count { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate }
+
+internal fun List<ImportStatementRowUiState>.needsReviewCount(): Int = count(
+    ImportStatementRowUiState::needsReview
+)
+
+internal fun List<ImportStatementRowUiState>.pendingReviewDecisionCount(): Int = count(
+    ImportStatementRowUiState::isPendingManualReviewDecision
+)
+
+internal fun List<ImportStatementRowUiState>.excludedCount(): Int =
+    count { it.finalInclusion == DeclarationInclusion.EXCLUDED && !it.duplicate }
+
+internal fun List<ImportStatementRowUiState>.duplicateCount(): Int = count(
+    ImportStatementRowUiState::duplicate
+)
+
+internal fun List<ImportStatementRowUiState>.taxPaymentCandidateCount(): Int =
+    count { it.isTaxPaymentCandidate && !it.duplicate }

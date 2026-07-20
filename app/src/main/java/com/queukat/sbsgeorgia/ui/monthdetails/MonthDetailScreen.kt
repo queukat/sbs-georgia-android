@@ -4,16 +4,16 @@ package com.queukat.sbsgeorgia.ui.monthdetails
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -34,10 +34,15 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.FxRate
+import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
+import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
+import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
-import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
+import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
 import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
 import com.queukat.sbsgeorgia.ui.common.formatAmount
@@ -56,7 +61,8 @@ fun MonthDetailRoute(
     onAddIncome: () -> Unit,
     onEditEntry: (Long) -> Unit,
     onOpenFxOverride: (Long) -> Unit,
-    onOpenWorkflowStatus: (YearMonth) -> Unit
+    onOpenWorkflowStatus: (YearMonth) -> Unit,
+    onOpenPaymentHelper: (YearMonth) -> Unit
 ) {
     val viewModel: MonthDetailViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -82,6 +88,7 @@ fun MonthDetailRoute(
         onEditEntry = onEditEntry,
         onOpenFxOverride = onOpenFxOverride,
         onOpenWorkflowStatus = onOpenWorkflowStatus,
+        onOpenPaymentHelper = onOpenPaymentHelper,
         onDeleteEntry = viewModel::deleteEntry,
         onResolveOfficialRates = viewModel::resolveOfficialRates,
         onToggleZeroPrepared = viewModel::toggleZeroPrepared
@@ -98,6 +105,7 @@ fun MonthDetailScreen(
     onEditEntry: (Long) -> Unit,
     onOpenFxOverride: (Long) -> Unit,
     onOpenWorkflowStatus: (YearMonth) -> Unit,
+    onOpenPaymentHelper: (YearMonth) -> Unit,
     onDeleteEntry: (Long) -> Unit,
     onResolveOfficialRates: () -> Unit,
     onToggleZeroPrepared: () -> Unit
@@ -106,12 +114,17 @@ fun MonthDetailScreen(
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val copyBundle = uiState.copyBundle
+    val copyToolsRequester = remember { BringIntoViewRequester() }
+    val entriesRequester = remember { BringIntoViewRequester() }
     val copiedTemplate = stringResource(R.string.common_copied_template, "%1\$s")
     val graph20Label = stringResource(R.string.snapshot_graph_20)
     val graph15Label = stringResource(R.string.snapshot_graph_15_cumulative)
     val paymentTextLabel = stringResource(R.string.month_detail_copy_payment_text)
     val fullTextLabel = stringResource(R.string.month_detail_copy_all_text)
     var pendingDeleteEntryId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val canCopyDeclarationValues =
+        snapshot != null && copyBundle != null && uiState.actionState?.canCopyDeclarationValues == true
+    val activeMonth = uiState.yearMonth ?: snapshot?.period?.incomeMonth
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
@@ -121,24 +134,24 @@ fun MonthDetailScreen(
         }
     }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            SbsTopAppBar(
-                title =
-                snapshot?.period?.incomeMonth?.formatMonthYear()
-                    ?: stringResource(R.string.month_detail_title_fallback),
-                onBack = onBack,
-                actions = {
-                    TextButton(onClick = onAddIncome) {
-                        Text(stringResource(R.string.month_detail_add_income))
-                    }
-                }
-            )
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
+    fun scrollToSection(requester: BringIntoViewRequester) {
+        coroutineScope.launch {
+            requester.bringIntoView()
         }
+    }
+
+    SbsScreenScaffold(
+        innerPadding = innerPadding,
+        title =
+        snapshot?.period?.incomeMonth?.formatMonthYear()
+            ?: stringResource(R.string.month_detail_title_fallback),
+        onBack = onBack,
+        topActions = {
+            TextButton(onClick = onAddIncome) {
+                Text(stringResource(R.string.month_detail_add_income))
+            }
+        },
+        snackbarHostState = snackbarHostState
     ) { contentPadding ->
         pendingDeleteEntryId?.let { entryId ->
             AlertDialog(
@@ -165,21 +178,30 @@ fun MonthDetailScreen(
         LazyColumn(
             modifier =
             Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
-            contentPadding =
-            PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = contentPadding.calculateTopPadding() + 8.dp,
-                bottom = contentPadding.calculateBottomPadding() + 16.dp
-            ),
+                .fillMaxSize(),
+            contentPadding = contentPadding,
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
                 if (snapshot == null) {
                     Text(stringResource(R.string.month_detail_unavailable))
                 } else {
+                    MonthNextActionSection(
+                        snapshot = snapshot,
+                        isFilingWindowOpen = uiState.isFilingWindowOpen,
+                        isResolvingFx = uiState.isResolvingFx,
+                        canCopyDeclarationValues = canCopyDeclarationValues,
+                        month = activeMonth,
+                        onResolveOfficialRates = onResolveOfficialRates,
+                        onReviewEntries = { scrollToSection(entriesRequester) },
+                        onCopyValues = { scrollToSection(copyToolsRequester) },
+                        onOpenPaymentHelper = onOpenPaymentHelper,
+                        onOpenWorkflowStatus = onOpenWorkflowStatus
+                    )
+                }
+            }
+            item {
+                if (snapshot != null) {
                     AppSection(title = stringResource(R.string.month_detail_section_summary)) {
                         SnapshotSummary(snapshot = snapshot)
                         if (snapshot.zeroDeclarationSuggested || snapshot.zeroDeclarationPrepared) {
@@ -224,20 +246,6 @@ fun MonthDetailScreen(
                                         snapshot.unresolvedFxCount
                                     )
                                 )
-                                OutlinedButton(
-                                    onClick = onResolveOfficialRates,
-                                    enabled = !uiState.isResolvingFx
-                                ) {
-                                    Text(
-                                        stringResource(
-                                            if (uiState.isResolvingFx) {
-                                                R.string.month_detail_resolving_fx
-                                            } else {
-                                                R.string.month_detail_resolve_fx
-                                            }
-                                        )
-                                    )
-                                }
                             }
                             snapshot.zeroDeclarationSuggested -> {
                                 Text(
@@ -267,35 +275,13 @@ fun MonthDetailScreen(
                 }
             }
             item {
-                if (snapshot != null && copyBundle != null && !snapshot.period.outOfScope) {
-                    val canCopyDeclarationValues =
-                        uiState.isFilingWindowOpen &&
-                            snapshot.unresolvedFxCount == 0 &&
-                            !snapshot.reviewNeeded
-                    val canCopyPaymentText =
-                        canCopyDeclarationValues && copyBundle.paymentComment.isNotBlank()
+                if (snapshot != null && copyBundle != null && canCopyDeclarationValues) {
+                    val canCopyPaymentText = uiState.actionState?.canCopyPaymentText == true
 
-                    AppSection(title = stringResource(R.string.month_detail_section_copy_tools)) {
-                        when {
-                            !uiState.isFilingWindowOpen -> {
-                                Text(
-                                    stringResource(
-                                        R.string.month_detail_copy_waiting_for_window,
-                                        snapshot.period.filingWindow.start
-                                            .formatIsoDate()
-                                    )
-                                )
-                            }
-                            snapshot.unresolvedFxCount > 0 -> {
-                                Text(
-                                    stringResource(R.string.month_detail_copy_blocked_unresolved_fx)
-                                )
-                            }
-                            snapshot.reviewNeeded -> {
-                                Text(stringResource(R.string.month_detail_copy_blocked_review))
-                            }
-                        }
-
+                    AppSection(
+                        title = stringResource(R.string.month_detail_section_copy_tools),
+                        modifier = Modifier.bringIntoViewRequester(copyToolsRequester)
+                    ) {
                         KeyValueRow(graph20Label, copyBundle.graph20)
                         KeyValueRow(graph15Label, copyBundle.graph15)
                         KeyValueRow(
@@ -315,7 +301,7 @@ fun MonthDetailScreen(
                             }
                         )
 
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        ActionFlowRow {
                             OutlinedButton(
                                 onClick = {
                                     copy(
@@ -339,7 +325,7 @@ fun MonthDetailScreen(
                                 Text(stringResource(R.string.month_detail_copy_graph_15))
                             }
                         }
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        ActionFlowRow {
                             OutlinedButton(
                                 onClick = {
                                     copy(
@@ -367,7 +353,10 @@ fun MonthDetailScreen(
                 }
             }
             item {
-                AppSection(title = stringResource(R.string.month_detail_section_entries)) {
+                AppSection(
+                    title = stringResource(R.string.month_detail_section_entries),
+                    modifier = Modifier.bringIntoViewRequester(entriesRequester)
+                ) {
                     if (uiState.entries.isEmpty()) {
                         Text(stringResource(R.string.month_detail_no_entries))
                     }
@@ -402,6 +391,9 @@ fun MonthDetailScreen(
                             stringResource(R.string.month_detail_fx_source),
                             fxRateSourceLabel(entry.rateSource)
                         )
+                        uiState.fxRateDetails[entry.id]?.let { rate ->
+                            FxRateDetails(entry = entry, rate = rate)
+                        }
                     }
                     if (entry.requiresFxResolution()) {
                         Text(
@@ -415,7 +407,7 @@ fun MonthDetailScreen(
                     if (entry.note.isNotBlank()) {
                         Text(entry.note, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    ActionFlowRow {
                         TextButton(onClick = { onEditEntry(entry.id) }) {
                             Text(stringResource(R.string.month_detail_edit))
                         }
@@ -426,5 +418,160 @@ fun MonthDetailScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MonthNextActionSection(
+    snapshot: MonthlyDeclarationSnapshot,
+    isFilingWindowOpen: Boolean,
+    isResolvingFx: Boolean,
+    canCopyDeclarationValues: Boolean,
+    month: YearMonth?,
+    onResolveOfficialRates: () -> Unit,
+    onReviewEntries: () -> Unit,
+    onCopyValues: () -> Unit,
+    onOpenPaymentHelper: (YearMonth) -> Unit,
+    onOpenWorkflowStatus: (YearMonth) -> Unit
+) {
+    val baseStatus = snapshot.record?.workflowStatus ?: snapshot.workflowStatus
+
+    AppSection(title = stringResource(R.string.month_detail_section_next_action)) {
+        when {
+            snapshot.period.outOfScope -> {
+                Text(stringResource(R.string.month_detail_next_out_of_scope_hint))
+            }
+            snapshot.unresolvedFxCount > 0 -> {
+                Text(
+                    stringResource(
+                        R.string.month_detail_next_resolve_fx_hint,
+                        snapshot.unresolvedFxCount
+                    )
+                )
+                Button(
+                    onClick = onResolveOfficialRates,
+                    enabled = !isResolvingFx,
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("month-detail-next-resolve-fx-button")
+                ) {
+                    Text(
+                        stringResource(
+                            if (isResolvingFx) {
+                                R.string.month_detail_resolving_fx
+                            } else {
+                                R.string.month_detail_next_resolve_fx
+                            }
+                        )
+                    )
+                }
+            }
+            snapshot.reviewNeeded -> {
+                Text(stringResource(R.string.month_detail_next_review_entries_hint))
+                Button(
+                    onClick = onReviewEntries,
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("month-detail-next-review-entries-button")
+                ) {
+                    Text(stringResource(R.string.month_detail_next_review_entries))
+                }
+            }
+            baseStatus == MonthlyWorkflowStatus.PAYMENT_SENT && month != null -> {
+                Text(stringResource(R.string.month_detail_next_mark_payment_credited_hint))
+                Button(
+                    onClick = { onOpenWorkflowStatus(month) },
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("month-detail-next-mark-payment-credited-button")
+                ) {
+                    Text(stringResource(R.string.month_detail_next_mark_payment_credited))
+                }
+            }
+            baseStatus in paymentPreparationStatuses && month != null -> {
+                Text(stringResource(R.string.month_detail_next_prepare_payment_hint))
+                Button(
+                    onClick = { onOpenPaymentHelper(month) },
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("month-detail-next-prepare-payment-button")
+                ) {
+                    Text(stringResource(R.string.month_detail_next_prepare_payment))
+                }
+            }
+            canCopyDeclarationValues -> {
+                Text(stringResource(R.string.month_detail_next_copy_values_hint))
+                Button(
+                    onClick = onCopyValues,
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("month-detail-next-copy-values-button")
+                ) {
+                    Text(stringResource(R.string.month_detail_next_copy_values))
+                }
+            }
+            !isFilingWindowOpen -> {
+                Text(
+                    stringResource(
+                        R.string.month_detail_next_wait_for_window_hint,
+                        snapshot.period.filingWindow.start.formatIsoDate()
+                    )
+                )
+            }
+            baseStatus in completedPaymentStatuses -> {
+                Text(stringResource(R.string.month_detail_next_done_hint))
+            }
+            else -> {
+                Text(stringResource(R.string.month_detail_next_prepare_details_hint))
+            }
+        }
+    }
+}
+
+private val paymentPreparationStatuses =
+    setOf(
+        MonthlyWorkflowStatus.FILED,
+        MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
+    )
+
+private val completedPaymentStatuses =
+    setOf(
+        MonthlyWorkflowStatus.PAYMENT_CREDITED,
+        MonthlyWorkflowStatus.SETTLED
+    )
+
+@Composable
+private fun FxRateDetails(entry: IncomeEntry, rate: FxRate) {
+    KeyValueRow(
+        stringResource(R.string.month_detail_fx_rate_date),
+        rate.rateDate.formatIsoDate()
+    )
+    KeyValueRow(
+        stringResource(R.string.month_detail_fx_rate),
+        stringResource(
+            R.string.month_detail_fx_rate_value,
+            rate.units,
+            rate.currencyCode,
+            rate.rateToGel.stripTrailingZeros().toPlainString()
+        )
+    )
+    entry.gelEquivalent?.let { gelEquivalent ->
+        Text(
+            text =
+            stringResource(
+                R.string.month_detail_fx_formula,
+                entry.originalAmount.stripTrailingZeros().toPlainString(),
+                entry.originalCurrency,
+                rate.rateToGel.stripTrailingZeros().toPlainString(),
+                rate.units,
+                formatAmount(gelEquivalent, "GEL")
+            ),
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }

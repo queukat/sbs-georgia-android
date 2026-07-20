@@ -3,6 +3,7 @@ package com.queukat.sbsgeorgia.data.importer
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import androidx.core.net.toUri
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -15,11 +16,11 @@ import kotlinx.coroutines.withContext
 
 data class ImportedPdfDocument(val fileName: String, val sourceFingerprint: String, val bytes: ByteArray)
 
-interface StatementDocumentReader {
+fun interface StatementDocumentReader {
     suspend fun read(uriString: String): ImportedPdfDocument
 }
 
-interface StatementTextExtractor {
+fun interface StatementTextExtractor {
     suspend fun extractText(documentBytes: ByteArray): String
 
     suspend fun extractTextCandidates(documentBytes: ByteArray): List<String> = listOf(extractText(documentBytes))
@@ -33,7 +34,7 @@ constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : StatementDocumentReader {
     override suspend fun read(uriString: String): ImportedPdfDocument = withContext(ioDispatcher) {
-        val uri = Uri.parse(uriString)
+        val uri = uriString.toUri()
         val fileName = resolveDisplayName(uri) ?: "statement.pdf"
         val bytes =
             context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }

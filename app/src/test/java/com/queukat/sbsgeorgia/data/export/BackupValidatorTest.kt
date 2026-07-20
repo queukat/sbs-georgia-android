@@ -26,7 +26,7 @@ class BackupValidatorTest {
                       "formatVersion": 1,
                       "exportedAtEpochMillis": 1,
                       "taxpayerProfile": {
-                        "registrationId": "306449082",
+                        "registrationId": "123456789",
                         "displayName": "Test Entrepreneur",
                         "baseCurrencyView": "GEL"
                       },

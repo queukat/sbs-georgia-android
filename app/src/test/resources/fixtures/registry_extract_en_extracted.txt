@@ -1,6 +1,6 @@
 Extract from Registry of Entrepreneurial and Non-entrepreneurial (Non-commercial) Legal Entities
-Firm / display name: Individual Entrepreneur Iaroslav Rychenkov
+Firm / display name: Individual Entrepreneur Alex Example
 Legal form: Individual Entrepreneur
-Identification number: 306449082
+Identification number: 123456789
 Registration date: 24/11/2023
-Legal address: Georgia, Tbilisi, Vake district, Abashidze Street 12
+Legal address: Georgia, Tbilisi, Demo district, Sample Street 1

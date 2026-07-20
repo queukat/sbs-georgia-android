@@ -32,12 +32,12 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(OnboardingDocumentType.REGISTRY_EXTRACT, preview.documentType)
-        assertEquals("Individual Entrepreneur Iaroslav Rychenkov", preview.displayName.value)
+        assertEquals("Individual Entrepreneur Alex Example", preview.displayName.value)
         assertEquals("Individual Entrepreneur", preview.legalForm.value)
-        assertEquals("306449082", preview.registrationId.value)
+        assertEquals("123456789", preview.registrationId.value)
         assertEquals(LocalDate.of(2023, 11, 24), preview.registrationDate.value)
         assertEquals(
-            "Georgia, Tbilisi, Vake district, Abashidze Street 12",
+            "Georgia, Tbilisi, Demo district, Sample Street 1",
             preview.legalAddress.value
         )
         assertEquals(ExtractionConfidence.CONFIDENT, preview.displayName.confidence)
@@ -55,12 +55,12 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(OnboardingDocumentType.REGISTRY_EXTRACT, preview.documentType)
-        assertEquals("Individual Entrepreneur Iaroslav Rychenkov", preview.displayName.value)
+        assertEquals("Individual Entrepreneur Alex Example", preview.displayName.value)
         assertEquals("Individual Entrepreneur", preview.legalForm.value)
-        assertEquals("306449082", preview.registrationId.value)
+        assertEquals("123456789", preview.registrationId.value)
         assertEquals(LocalDate.of(2023, 11, 24), preview.registrationDate.value)
         assertEquals(
-            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            "Georgia, Tbilisi, Demo District, Sample Street N1",
             preview.legalAddress.value
         )
     }
@@ -75,12 +75,12 @@ class OnboardingDocumentParsersTest {
                 """
                     Extract from Registry of
                     Subject
-                    Firm Name: Individual Entrepreneur Iaroslav Rychenkov
+                    Firm Name: Individual Entrepreneur Alex Example
                     Legal Form:Individual Entrepreneur
-                    Identification Number:306449082
+                    Identification Number:123456789
                     Registration Number and
                     Date: 24/11/2023
-                    Legal Address:Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a Person: Iaroslav Rychenkov, 51№7540587
+                    Legal Address:Georgia, Tbilisi, Demo District, Sample Street N1 Person: Alex Example, 00№0000000
                     Seizure/Injunction
                     Not registered
                 """.trimIndent(),
@@ -88,7 +88,7 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(
-            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            "Georgia, Tbilisi, Demo District, Sample Street N1",
             preview.legalAddress.value
         )
         assertTrue(preview.legalAddress.value?.contains("Person:") != true)
@@ -104,15 +104,15 @@ class OnboardingDocumentParsersTest {
                 """
                     Extract from Registry of
                     Subject
-                    Firm Name: Individual Entrepreneur Iaroslav Rychenkov
+                    Firm Name: Individual Entrepreneur Alex Example
                     Legal Form:Individual Entrepreneur
-                    Identification Number:306449082
+                    Identification Number:123456789
                     Registration Number and
                     Date: 24/11/2023
-                    Registering Authority:LEPL National Agency of Public Registry Georgia, Tbilisi, Samgori District, Police Street I Dead
+                    Registering Authority:LEPL National Agency of Public Registry Georgia, Tbilisi, Demo District, Sample Street
                     Legal Address:
-                    End N5, Floor 2, N4a
-                    Person: Iaroslav Rychenkov, 51№7540587
+                    N1
+                    Person: Alex Example, 00№0000000
                     Seizure/Injunction
                     Not registered
                 """.trimIndent(),
@@ -120,7 +120,7 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(
-            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            "Georgia, Tbilisi, Demo District, Sample Street N1",
             preview.legalAddress.value
         )
     }
@@ -135,22 +135,22 @@ class OnboardingDocumentParsersTest {
                 """
                     Extract from Registry of
                     Subject
-                    Firm Name: Individual Entrepreneur Iaroslav Rychenkov
+                    Firm Name: Individual Entrepreneur Alex Example
                     Legal Form:Individual Entrepreneur
-                    Identification Number:306449082
+                    Identification Number:123456789
                     Registration Number and
                     Date: 24/11/2023
                     Legal Address:
                     LEPL National Agency of Public Registry
-                    Georgia, Tbilisi, Samgori District, Police Street I Dead
-                    End N5, Floor 2, N4a
-                    Person: Iaroslav Rychenkov, 51№7540587
+                    Georgia, Tbilisi, Demo District, Sample Street
+                    N1
+                    Person: Alex Example, 00№0000000
                 """.trimIndent(),
                 expectedDocumentType = OnboardingDocumentType.REGISTRY_EXTRACT
             )
 
         assertEquals(
-            "Georgia, Tbilisi, Samgori District, Police Street I Dead End N5, Floor 2, N4a",
+            "Georgia, Tbilisi, Demo District, Sample Street N1",
             preview.legalAddress.value
         )
     }
@@ -165,9 +165,9 @@ class OnboardingDocumentParsersTest {
                 expectedDocumentType = OnboardingDocumentType.REGISTRY_EXTRACT
             )
 
-        assertEquals("Individual Entrepreneur Iaroslav Rychenkov", preview.displayName.value)
+        assertEquals("Individual Entrepreneur Alex Example", preview.displayName.value)
         assertEquals("ინდივიდუალური მეწარმე", preview.legalForm.value)
-        assertEquals("306449082", preview.registrationId.value)
+        assertEquals("123456789", preview.registrationId.value)
         assertEquals(LocalDate.of(2023, 11, 24), preview.registrationDate.value)
         assertEquals(ExtractionConfidence.REVIEW_REQUIRED, preview.displayName.confidence)
     }
@@ -183,8 +183,8 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE, preview.documentType)
-        assertEquals("Individual Entrepreneur Iaroslav Rychenkov", preview.displayName.value)
-        assertEquals("306449082", preview.registrationId.value)
+        assertEquals("Individual Entrepreneur Alex Example", preview.displayName.value)
+        assertEquals("123456789", preview.registrationId.value)
         assertEquals("Software development services", preview.activityType.value)
         assertEquals("SBS-2026-000123", preview.certificateNumber.value)
         assertEquals(LocalDate.of(2026, 3, 7), preview.certificateIssuedDate.value)
@@ -203,13 +203,13 @@ class OnboardingDocumentParsersTest {
             )
 
         assertEquals(OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE, preview.documentType)
-        assertEquals("იაროსლავ რიჩენკოვ", preview.displayName.value)
-        assertEquals("306449082", preview.registrationId.value)
+        assertEquals("ალექს მაგალითი", preview.displayName.value)
+        assertEquals("123456789", preview.registrationId.value)
         assertEquals(
             "კომპიუტერული დაპროგრამება და მასთან დაკავშირებული საქმინობები/",
             preview.activityType.value
         )
-        assertEquals("007 - 07378", preview.certificateNumber.value)
+        assertEquals("000 - 00000", preview.certificateNumber.value)
         assertEquals(LocalDate.of(2023, 11, 24), preview.certificateIssuedDate.value)
         assertEquals(LocalDate.of(2023, 12, 1), preview.effectiveDate.value)
     }

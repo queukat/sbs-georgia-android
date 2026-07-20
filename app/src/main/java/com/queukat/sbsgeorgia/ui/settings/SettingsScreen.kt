@@ -13,19 +13,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -48,7 +42,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.service.ReminderType
-import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
+import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
+import com.queukat.sbsgeorgia.ui.common.StickyPrimaryAction
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.help.HelpFaqDialog
 import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
@@ -273,53 +268,26 @@ fun SettingsScreen(
     val showPrimaryProgress =
         uiState.isSaving || uiState.isDataOperationInProgress || uiState.isDocumentLoading
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            SbsTopAppBar(title = stringResource(R.string.settings_title))
-        },
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        },
-        bottomBar = {
-            Surface(
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp
-            ) {
-                Column(
-                    modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    if (showPrimaryProgress) {
-                        LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    SbsScreenScaffold(
+        innerPadding = innerPadding,
+        title = stringResource(R.string.settings_title),
+        snackbarHostState = snackbarHostState,
+        bottomAction = {
+            StickyPrimaryAction(
+                label =
+                stringResource(
+                    if (uiState.isSaving) {
+                        R.string.settings_saving
+                    } else {
+                        R.string.settings_save
                     }
-                    uiState.errorMessage?.let {
-                        Text(it, color = MaterialTheme.colorScheme.error)
-                    }
-                    Button(
-                        onClick = onSave,
-                        enabled = isPrimaryActionEnabled,
-                        modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .testTag("settings-save-button")
-                    ) {
-                        Text(
-                            stringResource(
-                                if (uiState.isSaving) {
-                                    R.string.settings_saving
-                                } else {
-                                    R.string.settings_save
-                                }
-                            )
-                        )
-                    }
-                }
-            }
+                ),
+                onClick = onSave,
+                enabled = isPrimaryActionEnabled,
+                isLoading = showPrimaryProgress,
+                statusMessage = uiState.errorMessage,
+                testTag = "settings-save-button"
+            )
         }
     ) { contentPadding ->
         if (showHelpFaq) {
@@ -342,84 +310,118 @@ fun SettingsScreen(
             modifier =
             Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp
-                ),
+                .padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DocumentImportSection(
-                uiState = uiState,
-                onImportRegistryExtract = onImportRegistryExtract,
-                onImportCertificate = onImportCertificate
-            )
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_profile_sbs),
+                testTag = "settings-group-profile-sbs"
+            ) {
+                DocumentImportSection(
+                    uiState = uiState,
+                    onImportRegistryExtract = onImportRegistryExtract,
+                    onImportCertificate = onImportCertificate
+                )
 
-            uiState.preview?.let { preview ->
-                DocumentPreviewSection(
-                    preview = preview,
-                    isActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
-                    onApplyPreview = onApplyPreview
+                uiState.preview?.let { preview ->
+                    DocumentPreviewSection(
+                        preview = preview,
+                        isActionEnabled = !uiState.isSaving && !uiState.isDataOperationInProgress,
+                        onApplyPreview = onApplyPreview
+                    )
+                }
+
+                TaxpayerSettingsSection(
+                    uiState = uiState,
+                    onRegistrationIdChanged = onRegistrationIdChanged,
+                    onDisplayNameChanged = onDisplayNameChanged,
+                    onLegalFormChanged = onLegalFormChanged,
+                    onRegistrationDateChanged = onRegistrationDateChanged,
+                    onLegalAddressChanged = onLegalAddressChanged,
+                    onActivityTypeChanged = onActivityTypeChanged
+                )
+
+                SmallBusinessStatusSection(
+                    uiState = uiState,
+                    onCertificateNumberChanged = onCertificateNumberChanged,
+                    onCertificateIssuedDateChanged = onCertificateIssuedDateChanged,
+                    onEffectiveDateChanged = onEffectiveDateChanged,
+                    onTaxRateChanged = onTaxRateChanged
                 )
             }
 
-            TaxpayerSettingsSection(
-                uiState = uiState,
-                onRegistrationIdChanged = onRegistrationIdChanged,
-                onDisplayNameChanged = onDisplayNameChanged,
-                onLegalFormChanged = onLegalFormChanged,
-                onRegistrationDateChanged = onRegistrationDateChanged,
-                onLegalAddressChanged = onLegalAddressChanged,
-                onActivityTypeChanged = onActivityTypeChanged
-            )
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_reminders),
+                testTag = "settings-group-reminders"
+            ) {
+                ReminderSettingsSection(
+                    uiState = uiState,
+                    notificationPermissionGranted = notificationPermissionGranted,
+                    testReminderType = testReminderType,
+                    testReminderDelaySeconds = testReminderDelaySeconds,
+                    onDefaultReminderTimeChanged = onDefaultReminderTimeChanged,
+                    onDeclarationReminderDaysChanged = onDeclarationReminderDaysChanged,
+                    onPaymentReminderDaysChanged = onPaymentReminderDaysChanged,
+                    onDeclarationEnabledChanged = onDeclarationEnabledChanged,
+                    onPaymentEnabledChanged = onPaymentEnabledChanged,
+                    onRequestNotificationPermission = onRequestNotificationPermission,
+                    onTestReminderTypeChanged = { testReminderTypeName = it.name },
+                    onTestReminderDelayChanged = { testReminderDelaySeconds = it },
+                    onScheduleTestReminder = onScheduleTestReminder
+                )
+            }
 
-            SmallBusinessStatusSection(
-                uiState = uiState,
-                onCertificateNumberChanged = onCertificateNumberChanged,
-                onCertificateIssuedDateChanged = onCertificateIssuedDateChanged,
-                onEffectiveDateChanged = onEffectiveDateChanged,
-                onTaxRateChanged = onTaxRateChanged
-            )
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_data_backup),
+                testTag = "settings-group-data-backup"
+            ) {
+                DataManagementSection(
+                    uiState = uiState,
+                    onExportIncomeEntriesCsv = onExportIncomeEntriesCsv,
+                    onExportMonthlySummariesCsv = onExportMonthlySummariesCsv,
+                    onExportBackupJson = onExportBackupJson,
+                    onImportBackupJson = onImportBackupJson
+                )
+            }
 
-            ReminderSettingsSection(
-                uiState = uiState,
-                notificationPermissionGranted = notificationPermissionGranted,
-                testReminderType = testReminderType,
-                testReminderDelaySeconds = testReminderDelaySeconds,
-                onDefaultReminderTimeChanged = onDefaultReminderTimeChanged,
-                onDeclarationReminderDaysChanged = onDeclarationReminderDaysChanged,
-                onPaymentReminderDaysChanged = onPaymentReminderDaysChanged,
-                onDeclarationEnabledChanged = onDeclarationEnabledChanged,
-                onPaymentEnabledChanged = onPaymentEnabledChanged,
-                onRequestNotificationPermission = onRequestNotificationPermission,
-                onTestReminderTypeChanged = { testReminderTypeName = it.name },
-                onTestReminderDelayChanged = { testReminderDelaySeconds = it },
-                onScheduleTestReminder = onScheduleTestReminder
-            )
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_appearance),
+                testTag = "settings-group-appearance"
+            ) {
+                AppearanceSettingsSection(
+                    selectedThemeMode = uiState.themeMode,
+                    onThemeModeChanged = onThemeModeChanged
+                )
+            }
 
-            AppearanceSettingsSection(
-                selectedThemeMode = uiState.themeMode,
-                onThemeModeChanged = onThemeModeChanged
-            )
-
-            DataManagementSection(
-                uiState = uiState,
-                onExportIncomeEntriesCsv = onExportIncomeEntriesCsv,
-                onExportMonthlySummariesCsv = onExportMonthlySummariesCsv,
-                onExportBackupJson = onExportBackupJson,
-                onImportBackupJson = onImportBackupJson
-            )
-
-            HelpFeedbackSection(
-                onOpenHelpFaq = { showHelpFaq = true },
-                onViewQuickStart = { showQuickStartGuide = true },
-                onRateApp = onRateApp,
-                onSendFeedback = onSendFeedback
-            )
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_help),
+                testTag = "settings-group-help"
+            ) {
+                HelpFeedbackSection(
+                    onOpenHelpFaq = { showHelpFaq = true },
+                    onViewQuickStart = { showQuickStartGuide = true },
+                    onRateApp = onRateApp,
+                    onSendFeedback = onSendFeedback
+                )
+            }
         }
+    }
+}
+
+@Composable
+private fun SettingsGroup(title: String, testTag: String, content: @Composable () -> Unit) {
+    Column(
+        modifier = Modifier.testTag(testTag),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+        content()
     }
 }
 

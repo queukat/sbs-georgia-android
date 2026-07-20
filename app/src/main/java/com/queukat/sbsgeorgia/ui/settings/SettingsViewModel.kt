@@ -236,32 +236,8 @@ constructor(
                             themeMode = current.themeMode
                         )
                     upsertSettingsUseCase(
-                        profile =
-                        (
-                            persistedProfile ?: TaxpayerProfile(
-                                registrationId = input.registrationId,
-                                displayName = input.displayName
-                            )
-                            ).copy(
-                            registrationId = input.registrationId,
-                            displayName = input.displayName,
-                            legalForm = input.legalForm,
-                            registrationDate = input.registrationDate,
-                            legalAddress = input.legalAddress,
-                            activityType = input.activityType
-                        ),
-                        config =
-                        (
-                            persistedStatusConfig ?: SmallBusinessStatusConfig(
-                                effectiveDate = input.effectiveDate,
-                                defaultTaxRatePercent = input.taxRatePercent
-                            )
-                            ).copy(
-                            effectiveDate = input.effectiveDate,
-                            defaultTaxRatePercent = input.taxRatePercent,
-                            certificateNumber = input.certificateNumber,
-                            certificateIssuedDate = input.certificateIssuedDate
-                        ),
+                        profile = input.setup.toTaxpayerProfile(persistedProfile),
+                        config = input.setup.toStatusConfig(persistedStatusConfig),
                         reminders = reminders
                     )
                     reminderScheduler.reschedule(reminders)

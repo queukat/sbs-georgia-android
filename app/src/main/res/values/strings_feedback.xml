@@ -20,9 +20,9 @@
     <string name="settings_error_registration_id_required">IE registration ID is required.</string>
     <string name="settings_error_display_name_required">Taxpayer display name is required.</string>
     <string name="settings_error_tax_rate_invalid">Tax rate must be a non-negative number.</string>
-    <string name="settings_error_reminder_time_invalid">Reminder time must use HH:mm format, for example 09:00.</string>
-    <string name="settings_error_declaration_days_invalid">Declaration reminder days must be comma-separated numbers between 1 and 15.</string>
-    <string name="settings_error_payment_days_invalid">Payment reminder days must be comma-separated numbers between 1 and 15.</string>
+    <string name="settings_error_reminder_time_invalid">Reminder time must use 24-hour HH:mm format, for example 09:00.</string>
+    <string name="settings_error_declaration_days_invalid">Choose declaration reminder days from 1 to 15.</string>
+    <string name="settings_error_payment_days_invalid">Choose payment reminder days from 1 to 15.</string>
     <string name="settings_message_income_csv_exported">Income entries CSV exported.</string>
     <string name="settings_message_monthly_csv_exported">Monthly summaries CSV exported.</string>
     <string name="settings_message_backup_exported">JSON backup exported.</string>
@@ -41,7 +41,7 @@
     <string name="import_statement_error_no_preview">No preview was produced for the selected PDF.</string>
     <string name="import_statement_error_parse_failed">Failed to parse the selected PDF.</string>
     <string name="import_statement_error_unsupported_pdf">Unsupported PDF. This importer only supports the current TBC statement layout without OCR.</string>
-    <string name="import_statement_error_pick_pdf_first">Pick and parse a PDF before importing.</string>
+    <string name="import_statement_error_pick_pdf_first">Pick and parse a TBC statement PDF before importing.</string>
     <string name="import_statement_error_invalid_rows">Included taxable rows must have a transaction date, positive amount, a valid 3-letter currency code, and a source category.</string>
     <string name="import_statement_error_import_failed">Import failed.</string>
     <string name="import_statement_invalid_rows_blocking_import">%1$d included rows still need required fields before import is available.</string>

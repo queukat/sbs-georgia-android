@@ -51,6 +51,7 @@ constructor(
                     profile.registrationId.isBlank() ||
                     profile.displayName.isBlank()
             AppSetupUiState(
+                initialized = true,
                 needsOnboarding = needsOnboarding,
                 shouldShowQuickStartGuide =
                 !needsOnboarding &&
@@ -70,4 +71,8 @@ constructor(
     }
 }
 
-data class AppSetupUiState(val needsOnboarding: Boolean = true, val shouldShowQuickStartGuide: Boolean = false)
+data class AppSetupUiState(
+    val initialized: Boolean = false,
+    val needsOnboarding: Boolean = true,
+    val shouldShowQuickStartGuide: Boolean = false
+)

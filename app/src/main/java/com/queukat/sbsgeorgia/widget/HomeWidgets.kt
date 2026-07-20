@@ -13,11 +13,11 @@ import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
 import com.queukat.sbsgeorgia.domain.model.DashboardSummary
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
-import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
+import com.queukat.sbsgeorgia.ui.common.workflowStatusLabelRes
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -212,7 +212,7 @@ private object HomeWidgetUpdater {
             R.id.widget_status,
             context.getString(
                 R.string.widget_due_period_status_value,
-                workflowStatusLabel(context, snapshot.workflowStatus)
+                context.getString(workflowStatusLabelRes(snapshot.workflowStatus))
             )
         )
         val amountLabel =
@@ -278,19 +278,6 @@ private object HomeWidgetUpdater {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
     }
-
-    private fun workflowStatusLabel(context: Context, status: MonthlyWorkflowStatus): String = context.getString(
-        when (status) {
-            MonthlyWorkflowStatus.DRAFT -> R.string.workflow_status_draft
-            MonthlyWorkflowStatus.READY_TO_FILE -> R.string.workflow_status_ready_to_file
-            MonthlyWorkflowStatus.FILED -> R.string.workflow_status_filed
-            MonthlyWorkflowStatus.TAX_PAYMENT_PENDING -> R.string.workflow_status_tax_payment_pending
-            MonthlyWorkflowStatus.PAYMENT_SENT -> R.string.workflow_status_payment_sent
-            MonthlyWorkflowStatus.PAYMENT_CREDITED -> R.string.workflow_status_payment_credited
-            MonthlyWorkflowStatus.SETTLED -> R.string.workflow_status_settled
-            MonthlyWorkflowStatus.OVERDUE -> R.string.workflow_status_overdue
-        }
-    )
 }
 
 @EntryPoint

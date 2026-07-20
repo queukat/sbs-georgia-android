@@ -6,16 +6,20 @@ import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
+import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.YearMonth
 import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -24,7 +28,7 @@ class MonthlyDeclarationPlannerTest {
     private val planner = MonthlyDeclarationPlanner(clock, GeorgiaTaxBusinessCalendar())
     private val profile =
         TaxpayerProfile(
-            registrationId = "306449082",
+            registrationId = "123456789",
             displayName = "Test taxpayer"
         )
 
@@ -265,6 +269,63 @@ class MonthlyDeclarationPlannerTest {
         assertEquals(0, summary.unsettledMonthsCount)
     }
 
+    @Test
+    fun `dashboard summary hides next reminder when declaration reminders are disabled`() {
+        val summary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.parse("2026-01-01"),
+                    defaultTaxRatePercent = BigDecimal("1.0")
+                ),
+                reminders = reminderConfig(declarationRemindersEnabled = false),
+                snapshots = emptyList(),
+                records = emptyList()
+            )
+
+        assertNull(summary.nextReminderDay)
+    }
+
+    @Test
+    fun `dashboard summary uses next reminder day when declaration reminders are enabled`() {
+        val upcomingSummary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.parse("2026-01-01"),
+                    defaultTaxRatePercent = BigDecimal("1.0")
+                ),
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = true,
+                    declarationReminderDays = listOf(5, 25, 10)
+                ),
+                snapshots = emptyList(),
+                records = emptyList()
+            )
+        val wrappedSummary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.parse("2026-01-01"),
+                    defaultTaxRatePercent = BigDecimal("1.0")
+                ),
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = true,
+                    declarationReminderDays = listOf(5, 10, 15)
+                ),
+                snapshots = emptyList(),
+                records = emptyList()
+            )
+
+        assertEquals(25, upcomingSummary.nextReminderDay)
+        assertEquals(5, wrappedSummary.nextReminderDay)
+    }
+
     private fun manualEntry(date: String, amount: String, currency: String = "GEL"): IncomeEntry = IncomeEntry(
         sourceType = IncomeSourceType.MANUAL,
         incomeDate = LocalDate.parse(date),
@@ -278,5 +339,17 @@ class MonthlyDeclarationPlannerTest {
         manualFxOverride = false,
         createdAtEpochMillis = 0L,
         updatedAtEpochMillis = 0L
+    )
+
+    private fun reminderConfig(
+        declarationRemindersEnabled: Boolean,
+        declarationReminderDays: List<Int> = listOf(10, 13, 15)
+    ): ReminderConfig = ReminderConfig(
+        declarationReminderDays = declarationReminderDays,
+        paymentReminderDays = listOf(10, 13, 15),
+        declarationRemindersEnabled = declarationRemindersEnabled,
+        paymentRemindersEnabled = true,
+        defaultReminderTime = LocalTime.of(9, 0),
+        themeMode = ThemeMode.SYSTEM
     )
 }

@@ -1,6 +1,29 @@
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/brand_mark"
-    android:insetLeft="10dp"
-    android:insetTop="10dp"
-    android:insetRight="10dp"
-    android:insetBottom="10dp" />
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="320"
+    android:viewportHeight="320">
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M72,86H163Q165,86 165,88V125Q165,127 163,127H72Q70,127 70,125V88Q70,86 72,86Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M72,140H111Q113,140 113,142V157Q113,159 111,159H72Q70,159 70,157V142Q70,140 72,140Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M72,170H111Q113,170 113,172V187Q113,189 111,189H72Q70,189 70,187V172Q70,170 72,170Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M72,214H111Q113,214 113,216V238Q113,240 111,240H72Q70,240 70,238V216Q70,214 72,214Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M126,140H163Q165,140 165,142V157Q165,159 163,159H126Q124,159 124,157V142Q124,140 126,140Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:pathData="M126,170H163Q165,170 165,172V238Q165,240 163,240H126Q124,240 124,238V172Q124,170 126,170Z" />
+    <path
+        android:fillColor="@color/sbs_brand_mark"
+        android:fillType="evenOdd"
+        android:pathData="M180,86H241Q243,86 243,88V199C243,222 225,240 202,240H178V88Q178,86 180,86ZM201,107H223V130H201ZM194,194H217V217H194Z" />
+</vector>

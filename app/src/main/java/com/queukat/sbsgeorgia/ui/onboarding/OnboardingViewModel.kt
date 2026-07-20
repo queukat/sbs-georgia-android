@@ -5,24 +5,23 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
-import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
-import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.CompleteOnboardingUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
-import com.queukat.sbsgeorgia.ui.common.DateInputParser
-import com.queukat.sbsgeorgia.ui.common.DateParseResult
 import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
-import com.queukat.sbsgeorgia.ui.common.dateOrNull
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportFormState
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportLoadResult
 import com.queukat.sbsgeorgia.ui.common.document.applyDocumentImportPreview
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
 import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
+import com.queukat.sbsgeorgia.ui.common.setup.SetupFormState
+import com.queukat.sbsgeorgia.ui.common.setup.SetupFormValidator
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidationField
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidationResult
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidationStrings
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
@@ -42,6 +41,29 @@ constructor(
     @param:ApplicationContext private val appContext: Context,
     private val clock: Clock
 ) : ViewModel() {
+    private val setupValidator =
+        SetupFormValidator(
+            strings =
+            SetupValidationStrings(
+                registrationIdRequired = appContext.getString(
+                    R.string.onboarding_error_registration_id_required
+                ),
+                displayNameRequired = appContext.getString(
+                    R.string.onboarding_error_display_name_required
+                ),
+                taxRateInvalid = appContext.getString(
+                    R.string.onboarding_error_tax_rate_invalid
+                ),
+                registrationDateInvalid = appContext.getString(
+                    R.string.onboarding_error_registration_date_invalid
+                ),
+                certificateIssuedDateInvalid = appContext.getString(
+                    R.string.onboarding_error_certificate_issued_date_invalid
+                )
+            ),
+            requiredFieldOrder =
+            listOf(SetupValidationField.DISPLAY_NAME, SetupValidationField.REGISTRATION_ID)
+        )
     private val _uiState =
         MutableStateFlow(OnboardingUiState(effectiveDate = LocalDate.now(clock)))
     val uiState = _uiState.asStateFlow()
@@ -143,12 +165,22 @@ constructor(
                 certificateIssuedDate = patchedFormState.certificateIssuedDate,
                 effectiveDate = patchedFormState.effectiveDate,
                 infoMessage = appContext.documentImportStrings().previewApplied,
-                errorMessage = null
+                errorMessage = null,
+                displayNameError = null,
+                registrationIdError = null,
+                registrationDateError = null,
+                certificateIssuedDateError = null,
+                taxRatePercentError = null
             )
     }
 
     fun updateDisplayName(value: String) {
-        _uiState.value = _uiState.value.copy(displayName = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(
+                displayName = value,
+                displayNameError = null,
+                errorMessage = null
+            )
     }
 
     fun updateLegalForm(value: String) {
@@ -156,11 +188,21 @@ constructor(
     }
 
     fun updateRegistrationId(value: String) {
-        _uiState.value = _uiState.value.copy(registrationId = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(
+                registrationId = value,
+                registrationIdError = null,
+                errorMessage = null
+            )
     }
 
     fun updateRegistrationDate(value: String) {
-        _uiState.value = _uiState.value.copy(registrationDate = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(
+                registrationDate = value,
+                registrationDateError = null,
+                errorMessage = null
+            )
     }
 
     fun updateLegalAddress(value: String) {
@@ -176,7 +218,12 @@ constructor(
     }
 
     fun updateCertificateIssuedDate(value: String) {
-        _uiState.value = _uiState.value.copy(certificateIssuedDate = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(
+                certificateIssuedDate = value,
+                certificateIssuedDateError = null,
+                errorMessage = null
+            )
     }
 
     fun updateEffectiveDate(value: LocalDate) {
@@ -184,79 +231,33 @@ constructor(
     }
 
     fun updateTaxRatePercent(value: String) {
-        _uiState.value = _uiState.value.copy(taxRatePercent = value, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(
+                taxRatePercent = value,
+                taxRatePercentError = null,
+                errorMessage = null
+            )
     }
 
     fun completeOnboarding() {
         val current = _uiState.value
-        val taxRate = current.taxRatePercent.toBigDecimalOrNull()
-        val registrationDateResult = DateInputParser.parseOptionalIsoDate(
-            current.registrationDate
-        )
-        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(
-            current.certificateIssuedDate
-        )
-        val registrationDate = registrationDateResult.dateOrNull()
-        val certificateIssuedDate = certificateIssuedDateResult.dateOrNull()
-        when {
-            current.displayName.isBlank() ->
+        when (val validation = setupValidator.validate(current.toSetupFormState())) {
+            is SetupValidationResult.Invalid -> {
                 _uiState.value =
-                    current.copy(
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_error_display_name_required
-                        )
-                    )
-            current.registrationId.isBlank() ->
-                _uiState.value =
-                    current.copy(
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_error_registration_id_required
-                        )
-                    )
-            taxRate == null || taxRate < BigDecimal.ZERO ->
-                _uiState.value =
-                    current.copy(
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_error_tax_rate_invalid
-                        )
-                    )
-            registrationDateResult is DateParseResult.Invalid ->
-                _uiState.value =
-                    current.copy(
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_error_registration_date_invalid
-                        )
-                    )
-            certificateIssuedDateResult is DateParseResult.Invalid ->
-                _uiState.value =
-                    current.copy(
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_error_certificate_issued_date_invalid
-                        )
-                    )
-            else -> {
+                    current.withSetupValidationError(validation)
+            }
+            is SetupValidationResult.Valid -> {
+                val input = validation.value
                 viewModelScope.launch {
-                    _uiState.value = current.copy(isSaving = true, errorMessage = null)
+                    _uiState.value =
+                        current.withClearedFieldErrors().copy(
+                            isSaving = true,
+                            errorMessage = null
+                        )
                     runCatching {
                         completeOnboardingUseCase(
-                            profile =
-                            TaxpayerProfile(
-                                registrationId = current.registrationId.trim(),
-                                displayName = current.displayName.trim(),
-                                legalForm = current.legalForm.trim().ifBlank { null },
-                                registrationDate = registrationDate,
-                                legalAddress = current.legalAddress.trim().ifBlank { null },
-                                activityType = current.activityType.trim().ifBlank { null }
-                            ),
-                            config =
-                            SmallBusinessStatusConfig(
-                                effectiveDate = current.effectiveDate,
-                                defaultTaxRatePercent = taxRate,
-                                certificateNumber = current.certificateNumber.trim().ifBlank {
-                                    null
-                                },
-                                certificateIssuedDate = certificateIssuedDate
-                            )
+                            profile = input.toTaxpayerProfile(),
+                            config = input.toStatusConfig()
                         )
                     }.onSuccess {
                         _uiState.value =
@@ -304,10 +305,58 @@ constructor(
                 taxRatePercent = config?.defaultTaxRatePercent?.toPlainString() ?: "1.0",
                 infoMessage = infoMessage,
                 errorMessage = errorMessage,
-                isRestoringBackup = isRestoringBackup
+                isRestoringBackup = isRestoringBackup,
+                displayNameError = null,
+                registrationIdError = null,
+                registrationDateError = null,
+                certificateIssuedDateError = null,
+                taxRatePercentError = null
             )
     }
 }
+
+private fun OnboardingUiState.withClearedFieldErrors(): OnboardingUiState = copy(
+    displayNameError = null,
+    registrationIdError = null,
+    registrationDateError = null,
+    certificateIssuedDateError = null,
+    taxRatePercentError = null
+)
+
+private fun OnboardingUiState.withSetupValidationError(error: SetupValidationResult.Invalid): OnboardingUiState {
+    val message = error.errorMessage
+    return withClearedFieldErrors().copy(
+        errorMessage = message,
+        displayNameError = message.takeIf {
+            error.field == SetupValidationField.DISPLAY_NAME
+        },
+        registrationIdError = message.takeIf {
+            error.field == SetupValidationField.REGISTRATION_ID
+        },
+        registrationDateError = message.takeIf {
+            error.field == SetupValidationField.REGISTRATION_DATE
+        },
+        certificateIssuedDateError = message.takeIf {
+            error.field == SetupValidationField.CERTIFICATE_ISSUED_DATE
+        },
+        taxRatePercentError = message.takeIf {
+            error.field == SetupValidationField.TAX_RATE_PERCENT
+        }
+    )
+}
+
+private fun OnboardingUiState.toSetupFormState(): SetupFormState = SetupFormState(
+    registrationId = registrationId,
+    displayName = displayName,
+    legalForm = legalForm,
+    registrationDate = registrationDate,
+    legalAddress = legalAddress,
+    activityType = activityType,
+    certificateNumber = certificateNumber,
+    certificateIssuedDate = certificateIssuedDate,
+    effectiveDate = effectiveDate,
+    taxRatePercent = taxRatePercent
+)
 
 private fun OnboardingUiState.toDocumentImportFormState(): DocumentImportFormState = DocumentImportFormState(
     displayName = displayName,

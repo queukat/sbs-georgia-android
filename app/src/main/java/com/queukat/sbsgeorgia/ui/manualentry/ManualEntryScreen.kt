@@ -12,11 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,7 +30,8 @@ import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DatePickerField
 import com.queukat.sbsgeorgia.ui.common.DecimalField
-import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
+import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
+import com.queukat.sbsgeorgia.ui.common.StickyPrimaryAction
 import com.queukat.sbsgeorgia.ui.common.sourceCategoryLabel
 import java.time.LocalDate
 
@@ -80,19 +78,32 @@ fun ManualEntryScreen(
     onIncludedChanged: (Boolean) -> Unit,
     onSave: () -> Unit
 ) {
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.background,
-        topBar = {
-            SbsTopAppBar(
-                title =
+    SbsScreenScaffold(
+        innerPadding = innerPadding,
+        title =
+        stringResource(
+            if (uiState.entryId == null) {
+                R.string.manual_entry_title_new
+            } else {
+                R.string.manual_entry_title_edit
+            }
+        ),
+        onBack = onBack,
+        bottomAction = {
+            StickyPrimaryAction(
+                label =
                 stringResource(
                     if (uiState.entryId == null) {
-                        R.string.manual_entry_title_new
+                        R.string.manual_entry_save
                     } else {
-                        R.string.manual_entry_title_edit
+                        R.string.manual_entry_save_changes
                     }
                 ),
-                onBack = onBack
+                onClick = onSave,
+                enabled = !uiState.isSaving,
+                isLoading = uiState.isSaving,
+                statusMessage = uiState.errorMessage,
+                testTag = "manual-entry-save-button"
             )
         }
     ) { contentPadding ->
@@ -100,14 +111,8 @@ fun ManualEntryScreen(
             modifier =
             Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
-                .padding(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = contentPadding.calculateTopPadding() + 8.dp,
-                    bottom = contentPadding.calculateBottomPadding() + 16.dp
-                ),
+                .padding(contentPadding),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AppSection(title = stringResource(R.string.manual_entry_section_entry)) {
@@ -122,6 +127,16 @@ fun ManualEntryScreen(
                     value = uiState.amount,
                     onValueChange = onAmountChanged,
                     testTag = "manual-entry-amount-field"
+                )
+                OutlinedTextField(
+                    value = uiState.currency,
+                    onValueChange = onCurrencyChanged,
+                    label = { Text(stringResource(R.string.manual_entry_currency)) },
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("manual-entry-currency-field"),
+                    singleLine = true
                 )
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf("GEL", "USD", "EUR").forEach { currency ->
@@ -175,24 +190,6 @@ fun ManualEntryScreen(
                 }
                 if (!uiState.currency.equals("GEL", ignoreCase = true)) {
                     Text(stringResource(R.string.manual_entry_unresolved_fx_hint))
-                }
-                uiState.errorMessage?.let {
-                    Text(it, color = MaterialTheme.colorScheme.error)
-                }
-                Button(
-                    onClick = onSave,
-                    enabled = !uiState.isSaving,
-                    modifier = Modifier.testTag("manual-entry-save-button")
-                ) {
-                    Text(
-                        stringResource(
-                            if (uiState.entryId == null) {
-                                R.string.manual_entry_save
-                            } else {
-                                R.string.manual_entry_save_changes
-                            }
-                        )
-                    )
                 }
             }
         }

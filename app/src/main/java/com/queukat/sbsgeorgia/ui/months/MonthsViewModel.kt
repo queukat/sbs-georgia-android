@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
-import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,13 +24,12 @@ class MonthsViewModel
 constructor(
     observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
-    private val planner: MonthlyDeclarationPlanner,
+    private val actionPlanner: MonthlyDeclarationActionPlanner,
     private val clock: Clock
 ) : ViewModel() {
     val uiState =
         observeAllSnapshotsUseCase()
             .map { snapshots ->
-                val today = LocalDate.now(clock)
                 MonthsUiState(
                     sections =
                     snapshots
@@ -44,28 +43,12 @@ constructor(
                                 yearSnapshots
                                     .sortedByDescending { it.period.incomeMonth }
                                     .map { snapshot ->
-                                        val filingWindowOpen =
-                                            planner.isFilingWindowOpen(
-                                                period = snapshot.period,
-                                                referenceDate = today
-                                            )
-                                        val alreadySettled =
-                                            snapshot.workflowStatus in settledStatuses
+                                        val actionState = actionPlanner.plan(snapshot)
                                         MonthsMonthItemUiState(
                                             snapshot = snapshot,
-                                            canQuickSettleMonth =
-                                            !snapshot.period.outOfScope &&
-                                                filingWindowOpen &&
-                                                !alreadySettled,
-                                            monthAlreadySettled = alreadySettled,
-                                            filingOpensOn =
-                                            if (!snapshot.period.outOfScope &&
-                                                !filingWindowOpen
-                                            ) {
-                                                snapshot.period.filingWindow.start
-                                            } else {
-                                                null
-                                            }
+                                            canQuickSettleMonth = actionState.canQuickSettleMonth,
+                                            monthAlreadySettled = actionState.monthAlreadySettled,
+                                            filingOpensOn = actionState.filingOpensOn
                                         )
                                     }
                             )
@@ -105,14 +88,5 @@ constructor(
                 )
             )
         }
-    }
-
-    private companion object {
-        val settledStatuses =
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
     }
 }

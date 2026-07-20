@@ -1,8 +1,10 @@
 package com.queukat.sbsgeorgia.ui.settings
 
-import com.queukat.sbsgeorgia.ui.common.DateInputParser
-import com.queukat.sbsgeorgia.ui.common.DateParseResult
-import com.queukat.sbsgeorgia.ui.common.dateOrNull
+import com.queukat.sbsgeorgia.ui.common.setup.SetupFormState
+import com.queukat.sbsgeorgia.ui.common.setup.SetupFormValidator
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidatedInput
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidationResult
+import com.queukat.sbsgeorgia.ui.common.setup.SetupValidationStrings
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalTime
@@ -19,20 +21,22 @@ internal data class SettingsValidationStrings(
 )
 
 internal data class SettingsValidatedInput(
-    val registrationId: String,
-    val displayName: String,
-    val legalForm: String?,
-    val registrationDate: LocalDate?,
-    val legalAddress: String?,
-    val activityType: String?,
-    val certificateNumber: String?,
-    val certificateIssuedDate: LocalDate?,
-    val effectiveDate: LocalDate,
-    val taxRatePercent: BigDecimal,
+    val setup: SetupValidatedInput,
     val defaultReminderTime: LocalTime,
     val declarationReminderDays: List<Int>,
     val paymentReminderDays: List<Int>
-)
+) {
+    val registrationId: String get() = setup.registrationId
+    val displayName: String get() = setup.displayName
+    val legalForm: String? get() = setup.legalForm
+    val registrationDate: LocalDate? get() = setup.registrationDate
+    val legalAddress: String? get() = setup.legalAddress
+    val activityType: String? get() = setup.activityType
+    val certificateNumber: String? get() = setup.certificateNumber
+    val certificateIssuedDate: LocalDate? get() = setup.certificateIssuedDate
+    val effectiveDate: LocalDate get() = setup.effectiveDate
+    val taxRatePercent: BigDecimal get() = setup.taxRatePercent
+}
 
 internal sealed interface SettingsValidationResult {
     data class Valid(val value: SettingsValidatedInput) : SettingsValidationResult
@@ -41,34 +45,23 @@ internal sealed interface SettingsValidationResult {
 }
 
 internal class SettingsValidator(private val strings: SettingsValidationStrings) {
+    private val setupValidator = SetupFormValidator(strings.toSetupValidationStrings())
+
     fun validate(state: SettingsUiState): SettingsValidationResult {
-        val taxRate = runCatching { BigDecimal(state.taxRatePercent) }.getOrNull()
+        val setup =
+            when (val setupValidation = setupValidator.validate(state.toSetupFormState())) {
+                is SetupValidationResult.Invalid -> {
+                    return SettingsValidationResult.Invalid(setupValidation.errorMessage)
+                }
+                is SetupValidationResult.Valid -> setupValidation.value
+            }
         val defaultReminderTime = runCatching {
             LocalTime.parse(state.defaultReminderTime)
         }.getOrNull()
-        val registrationDateResult = DateInputParser.parseOptionalIsoDate(state.registrationDate)
-        val certificateIssuedDateResult = DateInputParser.parseOptionalIsoDate(
-            state.certificateIssuedDate
-        )
         val declarationReminderDays = parseReminderDays(state.declarationReminderDays)
         val paymentReminderDays = parseReminderDays(state.paymentReminderDays)
 
         return when {
-            state.registrationId.isBlank() -> SettingsValidationResult.Invalid(
-                strings.registrationIdRequired
-            )
-            state.displayName.isBlank() -> SettingsValidationResult.Invalid(
-                strings.displayNameRequired
-            )
-            taxRate == null || taxRate < BigDecimal.ZERO -> SettingsValidationResult.Invalid(
-                strings.taxRateInvalid
-            )
-            registrationDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(
-                strings.registrationDateInvalid
-            )
-            certificateIssuedDateResult is DateParseResult.Invalid -> SettingsValidationResult.Invalid(
-                strings.certificateIssuedDateInvalid
-            )
             defaultReminderTime == null -> SettingsValidationResult.Invalid(
                 strings.reminderTimeInvalid
             )
@@ -80,17 +73,7 @@ internal class SettingsValidator(private val strings: SettingsValidationStrings)
             )
             else ->
                 SettingsValidationResult.Valid(
-                    SettingsValidatedInput(
-                        registrationId = state.registrationId.trim(),
-                        displayName = state.displayName.trim(),
-                        legalForm = state.legalForm.trim().ifBlank { null },
-                        registrationDate = registrationDateResult.dateOrNull(),
-                        legalAddress = state.legalAddress.trim().ifBlank { null },
-                        activityType = state.activityType.trim().ifBlank { null },
-                        certificateNumber = state.certificateNumber.trim().ifBlank { null },
-                        certificateIssuedDate = certificateIssuedDateResult.dateOrNull(),
-                        effectiveDate = state.effectiveDate,
-                        taxRatePercent = taxRate,
+                    setup.toSettingsValidatedInput(
                         defaultReminderTime = defaultReminderTime,
                         declarationReminderDays = declarationReminderDays,
                         paymentReminderDays = paymentReminderDays
@@ -99,6 +82,38 @@ internal class SettingsValidator(private val strings: SettingsValidationStrings)
         }
     }
 }
+
+private fun SettingsValidationStrings.toSetupValidationStrings(): SetupValidationStrings = SetupValidationStrings(
+    registrationIdRequired = registrationIdRequired,
+    displayNameRequired = displayNameRequired,
+    taxRateInvalid = taxRateInvalid,
+    registrationDateInvalid = registrationDateInvalid,
+    certificateIssuedDateInvalid = certificateIssuedDateInvalid
+)
+
+private fun SettingsUiState.toSetupFormState(): SetupFormState = SetupFormState(
+    registrationId = registrationId,
+    displayName = displayName,
+    legalForm = legalForm,
+    registrationDate = registrationDate,
+    legalAddress = legalAddress,
+    activityType = activityType,
+    certificateNumber = certificateNumber,
+    certificateIssuedDate = certificateIssuedDate,
+    effectiveDate = effectiveDate,
+    taxRatePercent = taxRatePercent
+)
+
+private fun SetupValidatedInput.toSettingsValidatedInput(
+    defaultReminderTime: LocalTime,
+    declarationReminderDays: List<Int>,
+    paymentReminderDays: List<Int>
+): SettingsValidatedInput = SettingsValidatedInput(
+    setup = this,
+    defaultReminderTime = defaultReminderTime,
+    declarationReminderDays = declarationReminderDays,
+    paymentReminderDays = paymentReminderDays
+)
 
 internal fun parseReminderDays(value: String): List<Int>? {
     val parts = value.split(",").map { it.trim() }.filter { it.isNotEmpty() }

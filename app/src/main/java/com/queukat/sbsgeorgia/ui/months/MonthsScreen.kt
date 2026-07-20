@@ -2,27 +2,36 @@
 
 package com.queukat.sbsgeorgia.ui.months
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.SbsSecondaryButton
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 import com.queukat.sbsgeorgia.ui.common.SimpleChip
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
@@ -58,6 +67,8 @@ fun MonthsScreen(
     onAddIncome: () -> Unit,
     onImportStatement: () -> Unit
 ) {
+    var pendingQuickSettleMonth by rememberSaveable { mutableStateOf<String?>(null) }
+
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -74,6 +85,31 @@ fun MonthsScreen(
             )
         }
     ) { contentPadding ->
+        pendingQuickSettleMonth?.let { monthText ->
+            val yearMonth = YearMonth.parse(monthText)
+            AlertDialog(
+                onDismissRequest = { pendingQuickSettleMonth = null },
+                title = { Text(stringResource(R.string.months_complete_confirm_title)) },
+                text = { Text(stringResource(R.string.months_complete_confirm_body)) },
+                dismissButton = {
+                    TextButton(onClick = { pendingQuickSettleMonth = null }) {
+                        Text(stringResource(R.string.common_cancel))
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            pendingQuickSettleMonth = null
+                            onSettleMonth(yearMonth)
+                        },
+                        modifier = Modifier.testTag("months-confirm-complete-month-button")
+                    ) {
+                        Text(stringResource(R.string.months_complete_confirm_action))
+                    }
+                },
+                modifier = Modifier.testTag("months-complete-month-confirm-dialog")
+            )
+        }
         LazyColumn(
             modifier =
             Modifier
@@ -81,8 +117,8 @@ fun MonthsScreen(
                 .padding(innerPadding),
             contentPadding =
             PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
+                start = 12.dp,
+                end = 12.dp,
                 top = contentPadding.calculateTopPadding() + 8.dp,
                 bottom = contentPadding.calculateBottomPadding() + 16.dp
             ),
@@ -109,31 +145,59 @@ fun MonthsScreen(
                     }
                 ) { item ->
                     val snapshot = item.snapshot
-                    AppSection(title = snapshot.period.incomeMonth.formatMonthYear()) {
+                    AppSection(
+                        title = snapshot.period.incomeMonth.formatMonthYear(),
+                        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 16.dp),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                    ) {
                         SnapshotSummary(snapshot = snapshot)
-                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            TextButton(onClick = { onMonthClick(snapshot.period.incomeMonth) }) {
-                                Text(stringResource(R.string.months_open_month))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TextButton(
+                                onClick = { onMonthClick(snapshot.period.incomeMonth) },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.months_open_month),
+                                    textAlign = TextAlign.Center
+                                )
                             }
                             when {
                                 snapshot.period.outOfScope -> Unit
                                 item.monthAlreadySettled -> {
-                                    SimpleChip(stringResource(R.string.months_month_settled))
+                                    SimpleChip(
+                                        label = stringResource(R.string.months_month_settled),
+                                        modifier = Modifier.weight(1.55f)
+                                    )
                                 }
                                 item.canQuickSettleMonth -> {
-                                    OutlinedButton(onClick = {
-                                        onSettleMonth(snapshot.period.incomeMonth)
-                                    }) {
-                                        Text(stringResource(R.string.months_mark_month_settled))
-                                    }
+                                    SbsSecondaryButton(
+                                        label = stringResource(R.string.months_mark_month_settled),
+                                        onClick = {
+                                            pendingQuickSettleMonth =
+                                                snapshot.period.incomeMonth.toString()
+                                        },
+                                        modifier =
+                                        Modifier
+                                            .weight(1.55f)
+                                            .testTag(
+                                                "months-complete-month-button-" +
+                                                    snapshot.period.incomeMonth
+                                            )
+                                    )
                                 }
                                 else -> {
                                     item.filingOpensOn?.let { filingOpenDate ->
                                         SimpleChip(
+                                            label =
                                             stringResource(
                                                 R.string.months_filing_opens_on,
                                                 filingOpenDate.formatIsoDate()
-                                            )
+                                            ),
+                                            modifier = Modifier.weight(1.55f)
                                         )
                                     }
                                 }

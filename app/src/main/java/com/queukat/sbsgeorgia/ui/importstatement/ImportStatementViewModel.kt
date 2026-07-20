@@ -8,7 +8,6 @@ import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
-import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.usecase.ConfirmStatementImportUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadStatementImportPreviewUseCase
@@ -20,6 +19,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.time.Instant
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.ZoneId
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -47,6 +47,7 @@ constructor(
             _uiState.value =
                 _uiState.value.copy(
                     isLoading = true,
+                    importSuccess = null,
                     errorMessage = null,
                     infoMessage = null
                 )
@@ -71,9 +72,9 @@ constructor(
                             incomeDate = row.incomeDate,
                             description = row.description,
                             additionalInformation = row.additionalInformation,
-                            paidOutLabel = row.paidOut?.toDisplayLabel(),
-                            paidInLabel = row.paidIn?.toDisplayLabel(),
-                            balanceLabel = row.balance?.toDisplayLabel(),
+                            paidOut = row.paidOut,
+                            paidIn = row.paidIn,
+                            balance = row.balance,
                             suggestedInclusion = row.suggestedInclusion,
                             finalInclusion =
                             if (row.duplicate) {
@@ -93,7 +94,15 @@ constructor(
                             ),
                             isTaxPaymentCandidate =
                             row.suggestedSourceCategory == SourceCategoryPresets.TAX_PAYMENT,
-                            duplicate = row.duplicate
+                            duplicate = row.duplicate,
+                            reviewDecisionMade =
+                            row.duplicate ||
+                                (
+                                    row.suggestedInclusion !=
+                                        DeclarationInclusion.REVIEW_REQUIRED &&
+                                        row.suggestedSourceCategory !=
+                                        SourceCategoryPresets.TAX_PAYMENT
+                                    )
                         )
                     }
                 val invalidIncludedCount = rows.invalidIncludedCount()
@@ -102,15 +111,8 @@ constructor(
                         sourceFileName = preview.sourceFileName,
                         sourceFingerprint = preview.sourceFingerprint,
                         rows = rows,
-                        selectedIncomeCount = rows.count {
-                            it.finalInclusion ==
-                                DeclarationInclusion.INCLUDED &&
-                                !it.duplicate
-                        },
-                        detectedTaxPaymentCount = rows.count {
-                            it.isTaxPaymentCandidate &&
-                                !it.duplicate
-                        },
+                        selectedIncomeCount = rows.willImportCount(),
+                        detectedTaxPaymentCount = rows.taxPaymentCandidateCount(),
                         recognizedOutgoingCount =
                         preview.rows.count {
                             it.paidOut?.amount?.signum() == 1
@@ -161,9 +163,31 @@ constructor(
     fun includeAsTaxable(transactionFingerprint: String, included: Boolean) {
         updateRow(transactionFingerprint) { row ->
             row.copy(
-                finalInclusion = if (included) DeclarationInclusion.INCLUDED else DeclarationInclusion.EXCLUDED
+                finalInclusion =
+                if (included) {
+                    DeclarationInclusion.INCLUDED
+                } else {
+                    DeclarationInclusion.EXCLUDED
+                },
+                reviewDecisionMade = true
             )
         }
+    }
+
+    fun excludePendingReviewRows() {
+        val current = _uiState.value
+        val updatedRows =
+            current.rows.map { row ->
+                if (row.isPendingManualReviewDecision()) {
+                    row.copy(
+                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                        reviewDecisionMade = true
+                    )
+                } else {
+                    row
+                }
+            }
+        _uiState.value = current.withRows(updatedRows)
     }
 
     fun updateDate(transactionFingerprint: String, value: LocalDate) {
@@ -256,13 +280,32 @@ constructor(
                             )
                         else -> null
                     }
+                val detailMessage =
+                    listOfNotNull(
+                        summaryMessage,
+                        fxMessage,
+                        taxPaymentMessage
+                    ).joinToString("\n")
+                val targetMonth =
+                    rows
+                        .asSequence()
+                        .filter {
+                            it.finalInclusion == DeclarationInclusion.INCLUDED &&
+                                !it.duplicate
+                        }.mapNotNull { it.incomeDate?.let(YearMonth::from) }
+                        .sorted()
+                        .firstOrNull()
                 _uiState.value =
                     ImportStatementUiState(
-                        infoMessage = listOfNotNull(
-                            summaryMessage,
-                            fxMessage,
-                            taxPaymentMessage
-                        ).joinToString("\n")
+                        importSuccess =
+                        ImportStatementImportSuccessUiState(
+                            importedIncomeCount = result.importResult.importedIncomeCount,
+                            storedTransactionCount = result.importResult.storedTransactionCount,
+                            skippedDuplicateCount = result.importResult.skippedDuplicateCount,
+                            excludedCount = result.importResult.excludedCount,
+                            targetMonth = targetMonth,
+                            detailMessage = detailMessage
+                        )
                     )
                 _effects.emit(
                     ImportStatementEffect.Message(
@@ -299,30 +342,31 @@ constructor(
                 }
             }
         _uiState.value =
-            _uiState.value.copy(
-                rows = updatedRows,
-                selectedIncomeCount =
-                updatedRows.count {
-                    it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-                },
-                invalidIncludedCount = updatedRows.invalidIncludedCount(),
-                canImport =
-                updatedRows.any {
-                    it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-                } &&
-                    updatedRows.invalidIncludedCount() == 0,
-                errorMessage = null
-            )
+            _uiState.value.withRows(updatedRows)
     }
+
+    private fun ImportStatementUiState.withRows(updatedRows: List<ImportStatementRowUiState>): ImportStatementUiState =
+        copy(
+            rows = updatedRows,
+            selectedIncomeCount = updatedRows.willImportCount(),
+            detectedTaxPaymentCount = updatedRows.taxPaymentCandidateCount(),
+            invalidIncludedCount = updatedRows.invalidIncludedCount(),
+            canImport =
+            updatedRows.any {
+                it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
+            } &&
+                updatedRows.invalidIncludedCount() == 0,
+            errorMessage = null
+        )
 
     private fun ImportStatementRowUiState.toApprovedRow(): ApprovedImportedStatementRow = ApprovedImportedStatementRow(
         transactionFingerprint = transactionFingerprint,
         incomeDate = incomeDate,
         description = description,
         additionalInformation = additionalInformation,
-        paidOut = paidOutLabel?.let(::parseMoneyLabel),
-        paidIn = paidInLabel?.let(::parseMoneyLabel),
-        balance = balanceLabel?.let(::parseMoneyLabel),
+        paidOut = paidOut,
+        paidIn = paidIn,
+        balance = balance,
         suggestedInclusion = suggestedInclusion,
         finalInclusion = finalInclusion,
         amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
@@ -330,26 +374,6 @@ constructor(
         sourceCategory = canonicalSourceCategory(appContext, sourceCategory),
         duplicate = duplicate
     )
-
-    private fun parseMoneyLabel(value: String): StatementMoney {
-        val parts = value.trim().split(" ")
-        return if (parts.size >= 2) {
-            StatementMoney(
-                amount = parts.first().replace(",", "").toBigDecimal(),
-                currency = parts.last()
-            )
-        } else {
-            StatementMoney(
-                amount = parts.first().replace(",", "").toBigDecimal(),
-                currency = null
-            )
-        }
-    }
-
-    private fun StatementMoney.toDisplayLabel(): String =
-        listOf(amount.stripTrailingZeros().toPlainString(), currency.orEmpty())
-            .filter { it.isNotBlank() }
-            .joinToString(" ")
 
     private fun formatExistingImportMessage(
         info: com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo

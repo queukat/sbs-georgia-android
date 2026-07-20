@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="sbs_primary">#FF75D2C3</color>
+    <color name="sbs_on_primary">#FF0F1513</color>
+    <color name="sbs_secondary">#FFA8D2CA</color>
+    <color name="sbs_background">#FF0F1513</color>
+    <color name="sbs_surface">#FF121917</color>
+    <color name="sbs_on_surface">#FFE3ECE8</color>
+    <color name="sbs_brand_mark">#FF168678</color>
+    <color name="sbs_launcher_background">#FFF5F7F7</color>
     <color name="widget_surface">#CC1C2026</color>
     <color name="widget_outline">#334C5866</color>
     <color name="widget_text">#FFF6F7F8</color>

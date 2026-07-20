@@ -23,6 +23,9 @@ constructor(
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? =
         fxRateDao.getBestRate(rateDate, currencyCode.uppercase())?.toDomain()
 
+    override suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate? =
+        fxRateDao.getRate(rateDate, currencyCode.uppercase(), manualOverride)?.toDomain()
+
     override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult {
         val normalizedCode = currencyCode.uppercase()
         fxRateDao.getRate(rateDate, normalizedCode, manualOverride = false)?.let { cached ->

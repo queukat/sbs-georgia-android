@@ -523,16 +523,16 @@ class StatementImportUseCasesTest {
                 Account Statement
                 Statement currency: USD
                 Date  Description  Additional Information  Paid Out  Paid In  Balance
-                12/01/2026  FOR SOFTWARE SERVICES 29/01/2026 WAVEACCESS USA  0.00 USD  3031.00 USD  3031.00 USD
-                29/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  6062.00 USD
+                12/01/2026  FOR SOFTWARE SERVICES 29/01/2026 DEMO CLIENT LLC  0.00 USD  3031.00 USD  3031.00 USD
+                29/01/2026  FOR SOFTWARE SERVICES  DEMO CLIENT LLC  0.00 USD  3031.00 USD  6062.00 USD
             """.trimIndent()
         val goodCandidate =
             """
                 Account Statement
                 Statement currency: USD
                 Date  Description  Additional Information  Paid Out  Paid In  Balance
-                12/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  3031.00 USD
-                29/01/2026  FOR SOFTWARE SERVICES  WAVEACCESS USA  0.00 USD  3031.00 USD  6062.00 USD
+                12/01/2026  FOR SOFTWARE SERVICES  DEMO CLIENT LLC  0.00 USD  3031.00 USD  3031.00 USD
+                29/01/2026  FOR SOFTWARE SERVICES  DEMO CLIENT LLC  0.00 USD  3031.00 USD  6062.00 USD
             """.trimIndent()
 
         val result =
@@ -665,6 +665,11 @@ private class StatementImportFakeFxRateRepository(
 ) : FxRateRepository {
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? =
         cachedRates[rateDate to currencyCode.uppercase()]
+
+    override suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate? =
+        cachedRates[rateDate to currencyCode.uppercase()]?.takeIf {
+            it.manualOverride == manualOverride
+        }
 
     override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult =
         cachedRates[rateDate to currencyCode.uppercase()]

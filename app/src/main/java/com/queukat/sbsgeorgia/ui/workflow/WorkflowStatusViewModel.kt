@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
+import com.queukat.sbsgeorgia.domain.service.WorkflowStatusPolicy
 import com.queukat.sbsgeorgia.domain.usecase.ObserveMonthDetailUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -70,25 +71,25 @@ constructor(
             current.copy(
                 baseStatus = status,
                 declarationFiledDate =
-                if (status.ordinal >= MonthlyWorkflowStatus.FILED.ordinal) {
+                if (WorkflowStatusPolicy.requiresDeclarationFiledDate(status)) {
                     current.declarationFiledDate
                 } else {
                     null
                 },
                 paymentSentDate =
-                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
+                if (WorkflowStatusPolicy.requiresPaymentSentDate(status)) {
                     current.paymentSentDate
                 } else {
                     null
                 },
                 paymentCreditedDate =
-                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_CREDITED.ordinal) {
+                if (WorkflowStatusPolicy.requiresPaymentCreditedDate(status)) {
                     current.paymentCreditedDate
                 } else {
                     null
                 },
                 paymentAmount =
-                if (status.ordinal >= MonthlyWorkflowStatus.PAYMENT_SENT.ordinal) {
+                if (WorkflowStatusPolicy.requiresPaymentSentDate(status)) {
                     current.paymentAmount
                 } else {
                     ""
@@ -201,28 +202,12 @@ constructor(
     }
 
     private companion object {
-        val editableStatuses = MonthlyWorkflowStatus.entries.filter {
-            it !=
-                MonthlyWorkflowStatus.OVERDUE
-        }
+        val editableStatuses = WorkflowStatusPolicy.editableStatuses
         val declarationDateRequiredStatuses =
-            setOf(
-                MonthlyWorkflowStatus.FILED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
+            MonthlyWorkflowStatus.entries.filter(WorkflowStatusPolicy::requiresDeclarationFiledDate).toSet()
         val paymentSentDateRequiredStatuses =
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
+            MonthlyWorkflowStatus.entries.filter(WorkflowStatusPolicy::requiresPaymentSentDate).toSet()
         val paymentCreditedDateRequiredStatuses =
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
+            MonthlyWorkflowStatus.entries.filter(WorkflowStatusPolicy::requiresPaymentCreditedDate).toSet()
     }
 }

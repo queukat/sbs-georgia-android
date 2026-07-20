@@ -5,6 +5,7 @@ import java.math.RoundingMode
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
+import java.util.Locale
 
 enum class BaseCurrencyView(val dbCode: String) {
     GEL("gel")
@@ -167,7 +168,7 @@ data class IncomeEntry(
 )
 
 fun IncomeEntry.requiresFxResolution(): Boolean =
-    !originalCurrency.equals("GEL", ignoreCase = true) && gelEquivalent == null
+    normalizeCurrencyCode(originalCurrency) != GEL_CURRENCY && gelEquivalent == null
 
 data class FxRate(
     val rateDate: LocalDate,
@@ -245,9 +246,11 @@ data class DashboardSummary(
 )
 
 private inline fun <reified T : Enum<T>> persistedEnumValue(rawValue: String, dbCode: (T) -> String): T {
-    val normalized = rawValue.trim()
+    val normalized = rawValue.trim().uppercase(Locale.ROOT)
     return enumValues<T>().firstOrNull { value ->
-        dbCode(value).equals(normalized, ignoreCase = true) ||
-            value.name.equals(normalized, ignoreCase = true)
+        dbCode(value).uppercase(Locale.ROOT) == normalized ||
+            value.name.uppercase(Locale.ROOT) == normalized
     } ?: throw IllegalArgumentException("Unknown ${T::class.simpleName} value '$rawValue'")
 }
+
+private const val GEL_CURRENCY = "GEL"

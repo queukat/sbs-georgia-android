@@ -216,6 +216,9 @@ private class FakeFxRateRepository(
 ) : FxRateRepository {
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? = bestRate
 
+    override suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate? =
+        bestRate?.takeIf { it.manualOverride == manualOverride }
+
     override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult = fetchResult
 
     override suspend fun upsertManualOverride(

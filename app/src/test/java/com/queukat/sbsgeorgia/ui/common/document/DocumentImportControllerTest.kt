@@ -95,7 +95,7 @@ class DocumentImportControllerTest {
 
         assertEquals("Test Entrepreneur", patch.displayName)
         assertEquals("IE", patch.legalForm)
-        assertEquals("306449082", patch.registrationId)
+        assertEquals("123456789", patch.registrationId)
         assertEquals("2026-01-15", patch.registrationDate)
         assertEquals("Tbilisi, Georgia", patch.legalAddress)
         assertEquals("Software services", patch.activityType)
@@ -150,7 +150,7 @@ class DocumentImportControllerTest {
         documentType = documentType,
         displayName = ParsedTextField("Test Entrepreneur", ExtractionConfidence.CONFIDENT),
         legalForm = ParsedTextField("IE", ExtractionConfidence.REVIEW_REQUIRED),
-        registrationId = ParsedTextField("306449082", ExtractionConfidence.CONFIDENT),
+        registrationId = ParsedTextField("123456789", ExtractionConfidence.CONFIDENT),
         registrationDate = ParsedDateField(
             LocalDate.of(2026, 1, 15),
             ExtractionConfidence.CONFIDENT

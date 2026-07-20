@@ -14,6 +14,7 @@ data class HomeDuePeriodQuickAccess(
     val snapshot: MonthlyDeclarationSnapshot,
     val copyBundle: DeclarationCopyBundle?,
     val canCopyDeclarationValues: Boolean,
+    val canCopyPaymentText: Boolean,
     val canQuickSettleMonth: Boolean,
     val monthAlreadySettled: Boolean,
     val filingOpensOn: LocalDate?

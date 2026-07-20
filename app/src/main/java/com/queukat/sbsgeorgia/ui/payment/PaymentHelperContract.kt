@@ -1,9 +1,11 @@
 package com.queukat.sbsgeorgia.ui.payment
 
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionState
 import com.queukat.sbsgeorgia.domain.usecase.PaymentHelperData
 
 data class PaymentHelperUiState(
     val data: PaymentHelperData? = null,
+    val actionState: MonthlyDeclarationActionState? = null,
     val readinessState: PaymentHelperReadinessState = PaymentHelperReadinessState.LOADING,
     val isReady: Boolean = false
 )

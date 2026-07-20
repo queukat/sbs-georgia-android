@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.data.repository
 
 import android.content.SharedPreferences
+import androidx.core.content.edit
 import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
 import com.queukat.sbsgeorgia.domain.repository.QuickStartGuideState
 import javax.inject.Inject
@@ -42,11 +43,10 @@ constructor(private val sharedPreferences: SharedPreferences) :
     }
 
     private fun updateQuickStartGuideState(state: QuickStartGuideState) {
-        sharedPreferences
-            .edit()
-            .putBoolean(KEY_QUICK_START_INITIALIZED, state.initialized)
-            .putBoolean(KEY_QUICK_START_DISMISSED, state.dismissed)
-            .apply()
+        sharedPreferences.edit {
+            putBoolean(KEY_QUICK_START_INITIALIZED, state.initialized)
+            putBoolean(KEY_QUICK_START_DISMISSED, state.dismissed)
+        }
         quickStartGuideState.value = state
     }
 

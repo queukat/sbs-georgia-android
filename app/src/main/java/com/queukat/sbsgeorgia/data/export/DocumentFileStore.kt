@@ -1,7 +1,7 @@
 package com.queukat.sbsgeorgia.data.export
 
 import android.content.Context
-import android.net.Uri
+import androidx.core.net.toUri
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -23,14 +23,14 @@ constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : TextDocumentStore {
     override suspend fun writeText(uriString: String, content: String) = withContext(ioDispatcher) {
-        val uri = Uri.parse(uriString)
+        val uri = uriString.toUri()
         context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
             output.writer(Charsets.UTF_8).use { writer -> writer.write(content) }
         } ?: error("Unable to open the selected destination.")
     }
 
     override suspend fun readText(uriString: String): String = withContext(ioDispatcher) {
-        val uri = Uri.parse(uriString)
+        val uri = uriString.toUri()
         context.contentResolver.openInputStream(uri)?.use { input ->
             input.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
         } ?: error("Unable to open the selected backup file.")

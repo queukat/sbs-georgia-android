@@ -7,7 +7,7 @@
     <string name="quick_start_progress">%1$d of %2$d</string>
 
     <string name="quick_start_step_income_title">Track income as it happens</string>
-    <string name="quick_start_step_income_body">Add income manually or import a supported bank statement when you want a faster starting point.</string>
+    <string name="quick_start_step_income_body">Add income manually or import a supported TBC statement when you want a faster starting point.</string>
     <string name="quick_start_step_income_bullet_one">Use the date, source category, and notes to keep each declaration month clean.</string>
     <string name="quick_start_step_income_bullet_two">Non-GEL income stays explicit instead of being silently converted.</string>
 
@@ -31,7 +31,7 @@
     <string name="help_feedback_public_note">Feedback opens a public browser page. Anything you write can be visible to others, so do not include taxpayer IDs, PDFs, or backup/export files.</string>
 
     <string name="help_faq_add_income_question">How do I add income?</string>
-    <string name="help_faq_add_income_answer">Use Add income for manual entry, or Import statement for a supported bank PDF. Each entry needs a date, amount, currency, and source category, and you can edit entries later from the month screen.</string>
+    <string name="help_faq_add_income_answer">Use Add income for manual entry, or Import TBC statement for a supported TBC bank statement PDF. Each entry needs a date, amount, currency, and source category, and you can edit entries later from the month screen.</string>
     <string name="help_faq_gel_conversion_question">How is GEL conversion calculated?</string>
     <string name="help_faq_gel_conversion_answer">GEL income uses the original amount directly. For other currencies, the app uses official NBG rates when available or keeps the entry unresolved so totals are never silently guessed.</string>
     <string name="help_faq_missing_rate_question">What if there is no FX rate for the date?</string>

@@ -2,6 +2,8 @@ package com.queukat.sbsgeorgia.ui.payment
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.queukat.sbsgeorgia.domain.service.MonthlyActionBlocker
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ObservePaymentHelperUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.YearMonth
@@ -16,10 +18,10 @@ import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 @OptIn(ExperimentalCoroutinesApi::class)
-class PaymentHelperViewModel
-@Inject
-constructor(private val observePaymentHelperUseCase: ObservePaymentHelperUseCase) :
-    ViewModel() {
+class PaymentHelperViewModel @Inject constructor(
+    private val observePaymentHelperUseCase: ObservePaymentHelperUseCase,
+    private val actionPlanner: MonthlyDeclarationActionPlanner
+) : ViewModel() {
     private val selectedYearMonth = MutableStateFlow<YearMonth?>(null)
 
     val uiState =
@@ -29,23 +31,27 @@ constructor(private val observePaymentHelperUseCase: ObservePaymentHelperUseCase
                 observePaymentHelperUseCase(yearMonth)
                     .map { data ->
                         val snapshot = data.snapshot
+                        val actionState = actionPlanner.plan(
+                            snapshot = snapshot,
+                            registrationId = data.registrationId
+                        )
                         val readinessState =
                             when {
                                 snapshot == null -> PaymentHelperReadinessState.MONTH_UNAVAILABLE
-                                snapshot.period.outOfScope -> PaymentHelperReadinessState.OUT_OF_SCOPE
-                                snapshot.reviewNeeded -> PaymentHelperReadinessState.REVIEW_REQUIRED
-                                snapshot.unresolvedFxCount > 0 -> PaymentHelperReadinessState.UNRESOLVED_FX
+                                MonthlyActionBlocker.OUT_OF_SCOPE in actionState.blockers ->
+                                    PaymentHelperReadinessState.OUT_OF_SCOPE
+                                MonthlyActionBlocker.UNRESOLVED_FX in actionState.blockers ->
+                                    PaymentHelperReadinessState.UNRESOLVED_FX
+                                MonthlyActionBlocker.REVIEW_REQUIRED in actionState.blockers ->
+                                    PaymentHelperReadinessState.REVIEW_REQUIRED
                                 snapshot.zeroDeclarationSuggested -> PaymentHelperReadinessState.ZERO_DECLARATION
                                 else -> PaymentHelperReadinessState.READY
                             }
                         PaymentHelperUiState(
                             data = data,
+                            actionState = actionState,
                             readinessState = readinessState,
-                            isReady =
-                            snapshot != null &&
-                                !snapshot.period.outOfScope &&
-                                !snapshot.reviewNeeded &&
-                                snapshot.unresolvedFxCount == 0
+                            isReady = actionState.canPreparePayment
                         )
                     }
             }.stateIn(

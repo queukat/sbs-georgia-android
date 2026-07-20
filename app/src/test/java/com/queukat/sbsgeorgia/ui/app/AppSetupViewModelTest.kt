@@ -35,7 +35,7 @@ class AppSetupViewModelTest {
             SetupFakeSettingsRepository(
                 initialProfile =
                 TaxpayerProfile(
-                    registrationId = "306449082",
+                    registrationId = "123456789",
                     displayName = "Test Entrepreneur"
                 ),
                 initialStatusConfig =
@@ -52,6 +52,7 @@ class AppSetupViewModelTest {
         }
         advanceUntilIdle()
 
+        assertTrue(viewModel.uiState.value.initialized)
         assertFalse(viewModel.uiState.value.needsOnboarding)
         assertFalse(viewModel.uiState.value.shouldShowQuickStartGuide)
         assertEquals(
@@ -74,6 +75,7 @@ class AppSetupViewModelTest {
         }
         advanceUntilIdle()
 
+        assertTrue(viewModel.uiState.value.initialized)
         assertTrue(viewModel.uiState.value.needsOnboarding)
         assertFalse(viewModel.uiState.value.shouldShowQuickStartGuide)
         assertEquals(
@@ -86,7 +88,7 @@ class AppSetupViewModelTest {
 
         settingsRepository.upsertTaxpayerProfile(
             TaxpayerProfile(
-                registrationId = "306449082",
+                registrationId = "123456789",
                 displayName = "Test Entrepreneur"
             )
         )

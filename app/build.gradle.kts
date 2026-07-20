@@ -1,7 +1,17 @@
 import com.github.triplet.gradle.androidpublisher.ReleaseStatus
 import java.util.Properties
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.testing.Test
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
+import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+val coverageRequested = providers.gradleProperty("coverage").map(String::toBoolean).getOrElse(false)
+val unitTestCoverageRequested =
+    coverageRequested ||
+        gradle.startParameter.taskNames.any { taskName ->
+            taskName.contains("jacoco", ignoreCase = true) || taskName.endsWith("sonar", ignoreCase = true)
+        }
 
 plugins {
     alias(libs.plugins.android.application)
@@ -13,6 +23,7 @@ plugins {
     alias(libs.plugins.ktlint)
     alias(libs.plugins.ksp)
     alias(libs.plugins.play.publisher)
+    jacoco
 }
 
 val releaseSigningProperties =
@@ -39,8 +50,8 @@ android {
         applicationId = "com.queukat.sbsgeorgia"
         minSdk = 24
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 11
+        versionName = "1.0.10"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -57,6 +68,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            enableAndroidTestCoverage = coverageRequested
+            enableUnitTestCoverage = unitTestCoverageRequested
+        }
         release {
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
@@ -121,6 +136,10 @@ hilt {
     enableAggregatingTask = true
 }
 
+jacoco {
+    toolVersion = "0.8.13"
+}
+
 detekt {
     buildUponDefaultConfig = true
     config.setFrom(rootProject.file("config/detekt/detekt.yml"))
@@ -139,6 +158,71 @@ tasks.withType<dev.detekt.gradle.Detekt>().configureEach {
 
 tasks.withType<dev.detekt.gradle.DetektCreateBaselineTask>().configureEach {
     jvmTarget.set("17")
+}
+
+tasks.withType<Test>().configureEach {
+    extensions.configure(JacocoTaskExtension::class.java) {
+        isIncludeNoLocationClasses = true
+        excludes = listOf("jdk.internal.*")
+    }
+}
+
+val qaLintTasks =
+    setOf(
+        "lintVitalAnalyzeNonMinifiedRelease",
+        "lintVitalReportNonMinifiedRelease",
+        "lintVitalNonMinifiedRelease"
+    )
+
+tasks.matching { it.name in qaLintTasks }.configureEach {
+    enabled = false
+}
+
+tasks.register("installQa") {
+    group = "install"
+    description = "Installs the signed, non-minified release-like build for device UX testing."
+    dependsOn("installNonMinifiedRelease")
+}
+
+val jacocoGeneratedClassExcludes = listOf(
+    "**/R.class",
+    "**/R\$*.class",
+    "**/BuildConfig.*",
+    "**/Manifest*.*",
+    "**/*_Factory.*",
+    "**/*_MembersInjector.*",
+    "**/*_Impl.*",
+    "**/*Dao_Impl.*",
+    "**/*Database_Impl.*",
+    "**/*Hilt*.*",
+    "**/*Dagger*.*"
+)
+
+tasks.register<JacocoReport>("jacocoDebugUnitTestReport") {
+    dependsOn("testDebugUnitTest")
+
+    reports {
+        xml.required.set(true)
+        html.required.set(true)
+        csv.required.set(false)
+    }
+
+    classDirectories.setFrom(
+        files(
+            fileTree(layout.buildDirectory.dir("intermediates/classes/debug/transformDebugClassesWithAsm/dirs")) {
+                exclude(jacocoGeneratedClassExcludes)
+            }
+        )
+    )
+    sourceDirectories.setFrom(files("src/main/java", "src/main/kotlin"))
+    executionData.setFrom(
+        fileTree(layout.buildDirectory) {
+            include(
+                "jacoco/testDebugUnitTest.exec",
+                "outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec"
+            )
+        }
+    )
 }
 
 dependencies {

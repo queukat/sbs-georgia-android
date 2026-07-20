@@ -13,9 +13,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -57,7 +54,6 @@ import com.queukat.sbsgeorgia.ui.settings.SettingsRoute
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import com.queukat.sbsgeorgia.ui.workflow.WorkflowStatusRoute
 import java.time.YearMonth
-import kotlinx.coroutines.delay
 
 @Composable
 fun SbsGeorgiaApp() {
@@ -66,17 +62,13 @@ fun SbsGeorgiaApp() {
     val themeMode by appThemeViewModel.themeMode.collectAsStateWithLifecycle()
     val appSetupUiState by appSetupViewModel.uiState.collectAsStateWithLifecycle()
     val navigationState = rememberAppNavigationState()
-    var showBrandSplash by rememberSaveable { mutableStateOf(true) }
 
     SbsGeorgiaTheme(themeMode = themeMode) {
         LaunchedEffect(Unit) {
             StartupTiming.mark("SbsGeorgiaApp.themeReady")
-            if (showBrandSplash) {
-                delay(900)
-                showBrandSplash = false
-            }
         }
-        LaunchedEffect(appSetupUiState.needsOnboarding) {
+        LaunchedEffect(appSetupUiState.initialized, appSetupUiState.needsOnboarding) {
+            if (!appSetupUiState.initialized) return@LaunchedEffect
             StartupTiming.mark(
                 if (appSetupUiState.needsOnboarding) {
                     "SbsGeorgiaApp.onboardingReady"
@@ -85,7 +77,7 @@ fun SbsGeorgiaApp() {
                 }
             )
         }
-        if (showBrandSplash) {
+        if (!appSetupUiState.initialized) {
             BrandLaunchSplash()
             return@SbsGeorgiaTheme
         }
@@ -183,7 +175,8 @@ fun SbsGeorgiaApp() {
                                 navigationState.openManualEntry(entryId = entryId)
                             },
                             onOpenFxOverride = navigationState::openFxOverride,
-                            onOpenWorkflowStatus = navigationState::openWorkflowStatus
+                            onOpenWorkflowStatus = navigationState::openWorkflowStatus,
+                            onOpenPaymentHelper = navigationState::openPaymentHelper
                         )
                     }
                     entry<ManualEntryDestination> { destination ->
@@ -197,7 +190,9 @@ fun SbsGeorgiaApp() {
                     entry<ImportStatementDestination> {
                         ImportStatementRoute(
                             innerPadding = innerPadding,
-                            onBack = navigationState::pop
+                            onBack = navigationState::pop,
+                            onOpenMonth = navigationState::openMonthDetails,
+                            onOpenMonths = navigationState::openMonths
                         )
                     }
                     entry<PaymentHelperDestination> { destination ->

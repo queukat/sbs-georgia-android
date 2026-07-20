@@ -32,6 +32,8 @@ import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
+import com.queukat.sbsgeorgia.domain.service.ReminderNotificationStrings
+import com.queukat.sbsgeorgia.worker.AndroidReminderNotificationStrings
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -76,6 +78,9 @@ abstract class RepositoryBindingsModule {
 
     @Binds
     abstract fun bindOfficialFxRemoteDataSource(impl: NbgFxRemoteDataSource): OfficialFxRemoteDataSource
+
+    @Binds
+    abstract fun bindReminderNotificationStrings(impl: AndroidReminderNotificationStrings): ReminderNotificationStrings
 }
 
 @Module

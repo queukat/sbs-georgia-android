@@ -61,7 +61,7 @@ class SbsGeorgiaDatabaseMigrationTest {
                     registrationId,
                     displayName,
                     baseCurrencyView
-                ) VALUES(1, '306449082', 'Jane Doe', 'GEL')
+                ) VALUES(1, '123456789', 'Jane Doe', 'GEL')
                 """.trimIndent()
             )
             execSQL(

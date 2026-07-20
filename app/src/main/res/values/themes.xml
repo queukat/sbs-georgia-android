@@ -1,5 +1,18 @@
 <resources>
-    <style name="Theme.SbsGeorgiaAndroid" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.SbsGeorgiaAndroid.Base" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/sbs_primary</item>
+        <item name="colorOnPrimary">@color/sbs_on_primary</item>
+        <item name="colorSecondary">@color/sbs_secondary</item>
+        <item name="colorSurface">@color/sbs_surface</item>
+        <item name="colorOnSurface">@color/sbs_on_surface</item>
+        <item name="android:colorAccent">@color/sbs_primary</item>
+        <item name="android:windowBackground">@color/sbs_background</item>
+        <item name="android:statusBarColor">@color/sbs_background</item>
+        <item name="android:navigationBarColor">@color/sbs_background</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+
+    <style name="Theme.SbsGeorgiaAndroid" parent="Theme.SbsGeorgiaAndroid.Base" />
 
     <style name="Theme.SbsGeorgiaAndroid.Launcher" parent="Theme.SbsGeorgiaAndroid">
         <item name="android:windowBackground">@drawable/launch_window_background</item>

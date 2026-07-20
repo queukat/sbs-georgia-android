@@ -8,17 +8,16 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class DeclarationCopyPayloadTest {
     @Test
-    fun `buildDeclarationCopyBundle keeps dot decimal values and payment comment`() {
+    fun `buildDeclarationCopyBundle keeps canonical English payload labels and dot decimals`() {
         val yearMonth = YearMonth.of(2026, 3)
         val bundle =
             buildDeclarationCopyBundle(
                 snapshot = sampleSnapshot(yearMonth),
-                registrationId = "306449082",
+                registrationId = "123456789",
                 yearMonth = yearMonth
             )
 
@@ -28,12 +27,23 @@ class DeclarationCopyPayloadTest {
         assertEquals("1.23", bundle.taxAmount)
         assertEquals("101001000", bundle.treasuryCode)
         assertEquals(
-            "306449082 small business tax for March 2026",
+            "123456789 small business tax for March 2026",
             bundle.paymentComment
         )
-        assertTrue(bundle.fullText.contains("Graph 20: 123.45"))
-        assertTrue(bundle.fullText.contains("Graph 15: 456.78"))
-        assertTrue(bundle.fullText.contains("Tax amount: 1.23"))
+        assertEquals(
+            "Graph 20: 123.45\nGraph 15: 456.78",
+            bundle.declarationText
+        )
+        assertEquals(
+            "Treasury code: 101001000\n" +
+                "Tax amount: 1.23\n" +
+                "Payment comment: 123456789 small business tax for March 2026",
+            bundle.paymentText
+        )
+        assertEquals(
+            "${bundle.declarationText}\n${bundle.paymentText}",
+            bundle.fullText
+        )
     }
 
     private fun sampleSnapshot(yearMonth: YearMonth): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(

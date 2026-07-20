@@ -27,7 +27,7 @@ class SettingsValidatorTest {
         val result =
             validator.validate(
                 SettingsUiState(
-                    registrationId = " 306449082 ",
+                    registrationId = " 123456789 ",
                     displayName = " Test Entrepreneur ",
                     legalForm = " IE ",
                     registrationDate = "2026-03-07",
@@ -45,7 +45,7 @@ class SettingsValidatorTest {
 
         assertTrue(result is SettingsValidationResult.Valid)
         val value = (result as SettingsValidationResult.Valid).value
-        assertEquals("306449082", value.registrationId)
+        assertEquals("123456789", value.registrationId)
         assertEquals("Test Entrepreneur", value.displayName)
         assertEquals("IE", value.legalForm)
         assertEquals(LocalDate.of(2026, 3, 7), value.registrationDate)
@@ -63,7 +63,7 @@ class SettingsValidatorTest {
         val result =
             validator.validate(
                 SettingsUiState(
-                    registrationId = "306449082",
+                    registrationId = "123456789",
                     displayName = "Test Entrepreneur",
                     declarationReminderDays = "0,16"
                 )

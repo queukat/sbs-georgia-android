@@ -60,6 +60,8 @@ interface MonthlyDeclarationRepository {
 interface FxRateRepository {
     suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate?
 
+    suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate?
+
     suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult
 
     suspend fun upsertManualOverride(

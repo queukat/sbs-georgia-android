@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
-import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
@@ -24,21 +24,21 @@ class HomeViewModel
 constructor(
     observeDashboardSummaryUseCase: ObserveDashboardSummaryUseCase,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
-    private val planner: MonthlyDeclarationPlanner,
+    private val actionPlanner: MonthlyDeclarationActionPlanner,
     private val clock: Clock
 ) : ViewModel() {
     val uiState =
         observeDashboardSummaryUseCase()
             .map { summary ->
                 val duePeriod = summary.currentDuePeriod
-                val filingWindowOpen =
-                    duePeriod?.let { planner.isFilingWindowOpen(it.period) } ?: false
-                val alreadySettled =
-                    duePeriod?.workflowStatus?.let { it in settledStatuses } == true
                 HomeUiState(
                     summary = summary,
                     duePeriodQuickAccess =
                     duePeriod?.let { snapshot ->
+                        val actionState = actionPlanner.plan(
+                            snapshot = snapshot,
+                            registrationId = summary.registrationId
+                        )
                         HomeDuePeriodQuickAccess(
                             snapshot = snapshot,
                             copyBundle =
@@ -47,21 +47,11 @@ constructor(
                                 registrationId = summary.registrationId,
                                 yearMonth = snapshot.period.incomeMonth
                             ),
-                            canCopyDeclarationValues =
-                            filingWindowOpen &&
-                                snapshot.unresolvedFxCount == 0 &&
-                                !snapshot.reviewNeeded,
-                            canQuickSettleMonth =
-                            !snapshot.period.outOfScope &&
-                                filingWindowOpen &&
-                                !alreadySettled,
-                            monthAlreadySettled = alreadySettled,
-                            filingOpensOn =
-                            if (!snapshot.period.outOfScope && !filingWindowOpen) {
-                                snapshot.period.filingWindow.start
-                            } else {
-                                null
-                            }
+                            canCopyDeclarationValues = actionState.canCopyDeclarationValues,
+                            canCopyPaymentText = actionState.canCopyPaymentText,
+                            canQuickSettleMonth = actionState.canQuickSettleMonth,
+                            monthAlreadySettled = actionState.monthAlreadySettled,
+                            filingOpensOn = actionState.filingOpensOn
                         )
                     }
                 )
@@ -91,14 +81,5 @@ constructor(
                 )
             )
         }
-    }
-
-    private companion object {
-        val settledStatuses =
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
     }
 }

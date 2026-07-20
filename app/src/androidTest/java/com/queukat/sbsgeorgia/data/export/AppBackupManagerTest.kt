@@ -61,7 +61,7 @@ class AppBackupManagerTest {
                 )
             sourceDb.taxpayerProfileDao().upsert(
                 TaxpayerProfileEntity(
-                    registrationId = "306449082",
+                    registrationId = "123456789",
                     displayName = "Jane Doe",
                     baseCurrencyView = BaseCurrencyView.GEL,
                     legalForm = "Individual Entrepreneur",
@@ -167,7 +167,7 @@ class AppBackupManagerTest {
             val restoredIncomeEntries = restoreDb.incomeEntryDao().getAll()
             val restoredFxRates = restoreDb.fxRateDao().getAll()
 
-            assertEquals("306449082", restoredProfile?.registrationId)
+            assertEquals("123456789", restoredProfile?.registrationId)
             assertEquals("Individual Entrepreneur", restoredProfile?.legalForm)
             assertEquals(LocalDate.of(2023, 11, 24), restoredProfile?.registrationDate)
             assertEquals(LocalTime.of(9, 0), restoredReminder?.defaultReminderTime)

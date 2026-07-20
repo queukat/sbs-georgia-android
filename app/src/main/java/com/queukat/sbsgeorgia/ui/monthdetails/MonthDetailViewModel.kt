@@ -6,11 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
+import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
-import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ObserveMonthDetailUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ResolveMonthFxUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
@@ -28,6 +31,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -40,8 +44,9 @@ constructor(
     settingsRepository: SettingsRepository,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
     private val incomeRepository: IncomeRepository,
+    private val fxRateRepository: FxRateRepository,
     private val resolveMonthFxUseCase: ResolveMonthFxUseCase,
-    private val planner: MonthlyDeclarationPlanner,
+    private val actionPlanner: MonthlyDeclarationActionPlanner,
     @param:ApplicationContext private val appContext: Context
 ) : ViewModel() {
     private val selectedYearMonth = MutableStateFlow<YearMonth?>(null)
@@ -59,21 +64,31 @@ constructor(
                         observeMonthDetailUseCase(yearMonth),
                         settingsRepository.observeTaxpayerProfile()
                     ) { (snapshot, entries), profile ->
-                        val registrationId = profile?.registrationId
-                        val filingWindowOpen =
-                            snapshot?.let { planner.isFilingWindowOpen(it.period) } ?: false
-                        val copyBundle =
-                            buildDeclarationCopyBundle(
-                                snapshot = snapshot,
-                                registrationId = registrationId,
-                                yearMonth = yearMonth
-                            )
-                        MonthDetailUiState(
+                        MonthDetailSourceState(
                             yearMonth = yearMonth,
                             snapshot = snapshot,
                             entries = entries,
-                            copyBundle = copyBundle,
-                            isFilingWindowOpen = filingWindowOpen
+                            registrationId = profile?.registrationId
+                        )
+                    }.mapLatest { sourceState ->
+                        val actionState =
+                            actionPlanner.plan(
+                                snapshot = sourceState.snapshot,
+                                registrationId = sourceState.registrationId
+                            )
+                        MonthDetailUiState(
+                            yearMonth = sourceState.yearMonth,
+                            snapshot = sourceState.snapshot,
+                            entries = sourceState.entries,
+                            copyBundle =
+                            buildDeclarationCopyBundle(
+                                snapshot = sourceState.snapshot,
+                                registrationId = sourceState.registrationId,
+                                yearMonth = sourceState.yearMonth
+                            ),
+                            actionState = actionState,
+                            fxRateDetails = sourceState.entries.loadFxRateDetails(),
+                            isFilingWindowOpen = actionState.filingWindowOpen
                         )
                     }
                 },
@@ -139,10 +154,7 @@ constructor(
         }
     }
 
-    private suspend fun resolveOfficialRatesInternal(
-        entries: List<com.queukat.sbsgeorgia.domain.model.IncomeEntry>,
-        emitFeedback: Boolean
-    ) {
+    private suspend fun resolveOfficialRatesInternal(entries: List<IncomeEntry>, emitFeedback: Boolean) {
         if (isResolvingFx.value) return
         isResolvingFx.value = true
         try {
@@ -173,5 +185,32 @@ constructor(
         } finally {
             isResolvingFx.value = false
         }
+    }
+
+    private suspend fun List<IncomeEntry>.loadFxRateDetails() = mapNotNull { entry ->
+        if (
+            entry.gelEquivalent == null ||
+            normalizeCurrencyCode(entry.originalCurrency) == GEL_CURRENCY
+        ) {
+            return@mapNotNull null
+        }
+        val rate =
+            fxRateRepository.getRate(
+                rateDate = entry.incomeDate,
+                currencyCode = entry.originalCurrency,
+                manualOverride = entry.manualFxOverride
+            ) ?: return@mapNotNull null
+        entry.id to rate
+    }.toMap()
+
+    private data class MonthDetailSourceState(
+        val yearMonth: YearMonth,
+        val snapshot: MonthlyDeclarationSnapshot?,
+        val entries: List<IncomeEntry>,
+        val registrationId: String?
+    )
+
+    private companion object {
+        const val GEL_CURRENCY = "GEL"
     }
 }

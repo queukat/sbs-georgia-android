@@ -3,29 +3,28 @@ package com.queukat.sbsgeorgia.ui.settings.components
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.queukat.sbsgeorgia.ui.common.SbsSecondaryButton
 
 @Composable
 internal fun SettingsActionButton(label: String, body: String, onClick: () -> Unit, enabled: Boolean, testTag: String) {
     Column(
         verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
-        Button(
+        SbsSecondaryButton(
+            label = label,
             onClick = onClick,
             enabled = enabled,
             modifier =
             Modifier
                 .fillMaxWidth()
                 .testTag(testTag)
-        ) {
-            Text(label)
-        }
+        )
         Text(
             text = body,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

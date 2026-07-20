@@ -81,7 +81,7 @@ class ExportDataUseCasesTest {
             FakeExportSettingsRepository(
                 profile =
                 TaxpayerProfile(
-                    registrationId = "306449082",
+                    registrationId = "123456789",
                     displayName = "Jane Doe"
                 ),
                 config =

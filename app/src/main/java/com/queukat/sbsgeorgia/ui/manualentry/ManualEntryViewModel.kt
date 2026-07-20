@@ -98,7 +98,8 @@ constructor(
     }
 
     fun updateCurrency(currency: String) {
-        _uiState.value = _uiState.value.copy(currency = currency, errorMessage = null)
+        _uiState.value =
+            _uiState.value.copy(currency = normalizeCurrencyCode(currency), errorMessage = null)
     }
 
     fun updateCategory(category: String) {

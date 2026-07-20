@@ -1,0 +1,5 @@
+<resources>
+    <style name="Theme.SbsGeorgiaAndroid" parent="Theme.SbsGeorgiaAndroid.Base">
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+</resources>

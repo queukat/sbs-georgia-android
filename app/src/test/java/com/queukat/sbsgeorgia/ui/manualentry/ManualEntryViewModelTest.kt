@@ -60,6 +60,22 @@ class ManualEntryViewModelTest {
     }
 
     @Test
+    fun resolveManualEntryFxPersistenceAcceptsCustomIsoCurrencyCode() {
+        val result =
+            resolveManualEntryFxPersistence(
+                currency = " gbp ",
+                amount = BigDecimal("200.00"),
+                incomeDate = LocalDate.of(2026, 3, 15),
+                existing = null
+            )
+
+        assertEquals("GBP", result.normalizedCurrency)
+        assertNull(result.gelEquivalent)
+        assertEquals(FxRateSource.NONE, result.rateSource)
+        assertFalse(result.manualFxOverride)
+    }
+
+    @Test
     fun resolveManualEntryFxPersistenceKeepsExistingFxWhenFxFieldsStayTheSame() {
         val existing = existingEntry()
 
