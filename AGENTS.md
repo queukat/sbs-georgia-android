@@ -205,6 +205,10 @@ GitHub auth and CI:
   sandboxed command reports an invalid token or `SEC_E_NO_CREDENTIALS`, do not start
   a browser login first: retry `gh auth status` and the required command with
   elevated/unsandboxed execution.
+- This repository allows direct delivery to `main`; a pull request is optional.
+  For substantial changes, a temporary branch may still be used as a remote CI
+  sandbox, but after the full GitHub matrix is green, fast-forward `main` and push
+  it directly unless the user asks to retain a PR review step.
 - Run the full shared verification matrix on GitHub CI, not concurrently on the
   workstation: unit tests, debug assembly, Android-test compilation, Android lint,
   detekt and ktlint. Local Gradle runs should be narrow checks needed to investigate

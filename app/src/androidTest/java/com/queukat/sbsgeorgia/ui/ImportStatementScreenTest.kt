@@ -290,7 +290,8 @@ class ImportStatementScreenTest {
         suggestedInclusion: DeclarationInclusion = DeclarationInclusion.INCLUDED,
         finalInclusion: DeclarationInclusion = DeclarationInclusion.INCLUDED,
         isTaxPaymentCandidate: Boolean = false,
-        duplicate: Boolean = false
+        duplicate: Boolean = false,
+        reviewDecisionMade: Boolean = false
     ): ImportStatementRowUiState = ImportStatementRowUiState(
         transactionFingerprint = fingerprint,
         incomeDate = LocalDate.of(2026, 3, 15),
@@ -305,6 +306,7 @@ class ImportStatementScreenTest {
         currency = "USD",
         sourceCategory = "Software services",
         isTaxPaymentCandidate = isTaxPaymentCandidate,
-        duplicate = duplicate
+        duplicate = duplicate,
+        reviewDecisionMade = reviewDecisionMade
     )
 }
