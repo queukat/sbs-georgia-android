@@ -24,6 +24,10 @@ internal fun buildPreviewRow(
             .lowercase()
     val normalizedOutgoing = paidOut?.takeIf { it.amount > BigDecimal.ZERO }
     val normalizedIncoming = paidIn?.takeIf { it.amount > BigDecimal.ZERO }
+    val hasNonTaxableHint = nonTaxableHints.any { it in suggestionText }
+    val hasTaxableHint = taxableHints.any { it in suggestionText }
+    val hasBankFeeHint = bankFeeHints.any { it in suggestionText }
+    val isCurrencyConversion = fxConversionHints.any { it in suggestionText }
     val isTaxPayment =
         TaxPaymentDetection.isLikelyTaxPayment(
             description = description,
@@ -31,22 +35,13 @@ internal fun buildPreviewRow(
             paidOut = normalizedOutgoing,
             paidIn = normalizedIncoming
         )
-    val isCurrencyConversion = fxConversionHints.any { it in suggestionText }
-    val suggestedInclusion =
-        when {
-            normalizedIncoming != null &&
-                nonTaxableHints.any {
-                    it in suggestionText
-                } -> DeclarationInclusion.EXCLUDED
-            normalizedIncoming != null &&
-                taxableHints.any {
-                    it in suggestionText
-                } -> DeclarationInclusion.INCLUDED
-            normalizedIncoming != null -> DeclarationInclusion.REVIEW_REQUIRED
-            normalizedOutgoing != null -> DeclarationInclusion.EXCLUDED
-            fallbackAmount != null -> DeclarationInclusion.REVIEW_REQUIRED
-            else -> DeclarationInclusion.EXCLUDED
-        }
+    val suggestedInclusion = suggestInclusion(
+        hasIncoming = normalizedIncoming != null,
+        hasOutgoing = normalizedOutgoing != null,
+        hasFallbackAmount = fallbackAmount != null,
+        hasNonTaxableHint = hasNonTaxableHint,
+        hasTaxableHint = hasTaxableHint
+    )
     val suggestedAmount =
         when {
             normalizedIncoming != null -> normalizedIncoming.amount
@@ -54,22 +49,15 @@ internal fun buildPreviewRow(
             fallbackAmount != null -> fallbackAmount
             else -> BigDecimal.ZERO
         }
-    val suggestedSourceCategory =
-        when {
-            isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
-            isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
-            nonTaxableHints.any { it in suggestionText } &&
-                bankFeeHints.any { it in suggestionText } ->
-                SourceCategoryPresets.BANK_FEE
-            normalizedOutgoing != null && nonTaxableHints.any { it in suggestionText } ->
-                SourceCategoryPresets.OWN_ACCOUNT_TRANSFER
-            normalizedIncoming != null && taxableHints.any { it in suggestionText } ->
-                SourceCategoryPresets.SOFTWARE_SERVICES
-            normalizedIncoming != null ->
-                SourceCategoryPresets.IMPORTED_STATEMENT_INCOME
-            else ->
-                SourceCategoryPresets.IMPORTED_STATEMENT_REVIEW
-        }
+    val suggestedSourceCategory = suggestSourceCategory(
+        hasIncoming = normalizedIncoming != null,
+        hasOutgoing = normalizedOutgoing != null,
+        hasNonTaxableHint = hasNonTaxableHint,
+        hasTaxableHint = hasTaxableHint,
+        hasBankFeeHint = hasBankFeeHint,
+        isCurrencyConversion = isCurrencyConversion,
+        isTaxPayment = isTaxPayment
+    )
 
     return ImportedStatementPreviewRow(
         transactionFingerprint =
@@ -94,6 +82,41 @@ internal fun buildPreviewRow(
         paidIn?.currency ?: paidOut?.currency ?: balance?.currency ?: fallbackCurrency
     )
 }
+
+private fun suggestInclusion(
+    hasIncoming: Boolean,
+    hasOutgoing: Boolean,
+    hasFallbackAmount: Boolean,
+    hasNonTaxableHint: Boolean,
+    hasTaxableHint: Boolean
+): DeclarationInclusion =
+    when {
+        hasIncoming && hasNonTaxableHint -> DeclarationInclusion.EXCLUDED
+        hasIncoming && hasTaxableHint -> DeclarationInclusion.INCLUDED
+        hasIncoming -> DeclarationInclusion.REVIEW_REQUIRED
+        hasOutgoing -> DeclarationInclusion.EXCLUDED
+        hasFallbackAmount -> DeclarationInclusion.REVIEW_REQUIRED
+        else -> DeclarationInclusion.EXCLUDED
+    }
+
+private fun suggestSourceCategory(
+    hasIncoming: Boolean,
+    hasOutgoing: Boolean,
+    hasNonTaxableHint: Boolean,
+    hasTaxableHint: Boolean,
+    hasBankFeeHint: Boolean,
+    isCurrencyConversion: Boolean,
+    isTaxPayment: Boolean
+): String =
+    when {
+        isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
+        isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
+        hasNonTaxableHint && hasBankFeeHint -> SourceCategoryPresets.BANK_FEE
+        hasOutgoing && hasNonTaxableHint -> SourceCategoryPresets.OWN_ACCOUNT_TRANSFER
+        hasIncoming && hasTaxableHint -> SourceCategoryPresets.SOFTWARE_SERVICES
+        hasIncoming -> SourceCategoryPresets.IMPORTED_STATEMENT_INCOME
+        else -> SourceCategoryPresets.IMPORTED_STATEMENT_REVIEW
+    }
 
 internal val taxableHints =
     listOf(
