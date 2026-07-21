@@ -249,30 +249,30 @@ class ReminderPlannerTest {
         incomeMonth: YearMonth = YearMonth.of(2026, 3),
         dueDate: LocalDate = LocalDate.of(2026, 4, 15)
     ): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(
-            period =
-            MonthlyDeclarationPeriod(
-                incomeMonth = incomeMonth,
-                filingWindow =
-                FilingWindow(
-                    start = LocalDate.of(2026, 4, 1),
-                    endInclusive = LocalDate.of(2026, 4, 15),
-                    dueDate = dueDate
-                ),
-                inScope = !outOfScope,
-                outOfScope = outOfScope
+        period =
+        MonthlyDeclarationPeriod(
+            incomeMonth = incomeMonth,
+            filingWindow =
+            FilingWindow(
+                start = LocalDate.of(2026, 4, 1),
+                endInclusive = LocalDate.of(2026, 4, 15),
+                dueDate = dueDate
             ),
-            workflowStatus = workflowStatus,
-            graph20TotalGel = BigDecimal(graph20),
-            graph15CumulativeGel = BigDecimal(graph20),
-            originalCurrencyTotals = emptyList(),
-            estimatedTaxAmountGel = BigDecimal(estimatedTax),
-            unresolvedFxCount = unresolvedFxCount,
-            zeroDeclarationSuggested = zeroDeclarationSuggested,
-            zeroDeclarationPrepared = false,
-            reviewNeeded = reviewNeeded,
-            setupRequired = false,
-            record = null
-        )
+            inScope = !outOfScope,
+            outOfScope = outOfScope
+        ),
+        workflowStatus = workflowStatus,
+        graph20TotalGel = BigDecimal(graph20),
+        graph15CumulativeGel = BigDecimal(graph20),
+        originalCurrencyTotals = emptyList(),
+        estimatedTaxAmountGel = BigDecimal(estimatedTax),
+        unresolvedFxCount = unresolvedFxCount,
+        zeroDeclarationSuggested = zeroDeclarationSuggested,
+        zeroDeclarationPrepared = false,
+        reviewNeeded = reviewNeeded,
+        setupRequired = false,
+        record = null
+    )
 }
 
 private class RecordingReminderNotificationStrings : ReminderNotificationStrings {
