@@ -40,6 +40,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.service.ReminderType
@@ -152,9 +153,33 @@ fun SettingsRoute(innerPadding: PaddingValues) {
         onDeclarationEnabledChanged = viewModel::updateDeclarationEnabled,
         onPaymentEnabledChanged = viewModel::updatePaymentEnabled,
         onThemeModeChanged = viewModel::updateThemeMode,
-        onIncludeCumulativeIncomeChanged = viewModel::updateIncludeCumulativeIncome,
-        onIncludeMonthlyIncomeChanged = viewModel::updateIncludeMonthlyIncome,
-        onMonthlyIncomeFieldChanged = viewModel::updateMonthlyIncomeField,
+        onIncludeCumulativeIncomeChanged = { enabled ->
+            viewModel.updateDeclarationFormConfig(
+                DeclarationFormConfig(
+                    includeCumulativeIncome = enabled,
+                    includeMonthlyIncome = uiState.includeMonthlyIncomeField,
+                    monthlyIncomeField = uiState.monthlyIncomeField
+                )
+            )
+        },
+        onIncludeMonthlyIncomeChanged = { enabled ->
+            viewModel.updateDeclarationFormConfig(
+                DeclarationFormConfig(
+                    includeCumulativeIncome = uiState.includeCumulativeIncomeField,
+                    includeMonthlyIncome = enabled,
+                    monthlyIncomeField = uiState.monthlyIncomeField
+                )
+            )
+        },
+        onMonthlyIncomeFieldChanged = { field ->
+            viewModel.updateDeclarationFormConfig(
+                DeclarationFormConfig(
+                    includeCumulativeIncome = uiState.includeCumulativeIncomeField,
+                    includeMonthlyIncome = uiState.includeMonthlyIncomeField,
+                    monthlyIncomeField = field
+                )
+            )
+        },
         onScheduleTestReminder = viewModel::scheduleTestReminder,
         onImportRegistryExtract = {
             pendingDocumentImportAction = DocumentImportAction.IMPORT_REGISTRY_EXTRACT

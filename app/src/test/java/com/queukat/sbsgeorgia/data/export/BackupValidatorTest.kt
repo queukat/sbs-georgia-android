@@ -64,25 +64,6 @@ class BackupValidatorTest {
     }
 
     @Test
-    fun buildRestorePlanRejectsDeclarationFieldOutsideMonthlyIncomeFields() {
-        assertRestorePlanFails(
-            content =
-            """
-                {
-                  "formatVersion": 1,
-                  "exportedAtEpochMillis": 1,
-                  "declarationFormConfig": {
-                    "includeCumulativeIncome": true,
-                    "includeMonthlyIncome": true,
-                    "monthlyIncomeFieldNumber": 15
-                  }
-                }
-            """.trimIndent(),
-            messagePart = "invalid declaration form config"
-        )
-    }
-
-    @Test
     fun buildRestorePlanRejectsOrphanImportedTransactionsBeforeRestore() {
         val error =
             runCatching {

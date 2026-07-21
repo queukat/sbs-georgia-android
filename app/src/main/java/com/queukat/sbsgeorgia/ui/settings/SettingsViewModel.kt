@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
-import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -202,16 +201,13 @@ constructor(
         }
     }
 
-    fun updateIncludeCumulativeIncome(enabled: Boolean) {
-        _uiState.value = _uiState.value.copy(includeCumulativeIncomeField = enabled)
-    }
-
-    fun updateIncludeMonthlyIncome(enabled: Boolean) {
-        _uiState.value = _uiState.value.copy(includeMonthlyIncomeField = enabled)
-    }
-
-    fun updateMonthlyIncomeField(field: DeclarationFormField) {
-        _uiState.value = _uiState.value.copy(monthlyIncomeField = field)
+    fun updateDeclarationFormConfig(config: DeclarationFormConfig) {
+        _uiState.value =
+            _uiState.value.copy(
+                includeCumulativeIncomeField = config.includeCumulativeIncome,
+                includeMonthlyIncomeField = config.includeMonthlyIncome,
+                monthlyIncomeField = config.monthlyIncomeField
+            )
     }
 
     fun loadDocument(uri: Uri, action: DocumentImportAction) {
