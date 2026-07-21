@@ -89,8 +89,7 @@ private fun suggestInclusion(
     hasFallbackAmount: Boolean,
     hasNonTaxableHint: Boolean,
     hasTaxableHint: Boolean
-): DeclarationInclusion =
-    when {
+): DeclarationInclusion = when {
         hasIncoming && hasNonTaxableHint -> DeclarationInclusion.EXCLUDED
         hasIncoming && hasTaxableHint -> DeclarationInclusion.INCLUDED
         hasIncoming -> DeclarationInclusion.REVIEW_REQUIRED
@@ -107,8 +106,7 @@ private fun suggestSourceCategory(
     hasBankFeeHint: Boolean,
     isCurrencyConversion: Boolean,
     isTaxPayment: Boolean
-): String =
-    when {
+): String = when {
         isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
         isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
         hasNonTaxableHint && hasBankFeeHint -> SourceCategoryPresets.BANK_FEE
