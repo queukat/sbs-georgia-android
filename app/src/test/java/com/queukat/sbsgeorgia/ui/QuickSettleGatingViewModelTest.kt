@@ -220,7 +220,6 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         actionPlanner = actionPlanner,
         clock = clock
     )
-
 }
 
 private class FakeSettingsRepository : SettingsRepository {

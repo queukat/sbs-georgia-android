@@ -248,8 +248,8 @@ class ReminderPlannerTest {
         unresolvedFxCount: Int = 0,
         incomeMonth: YearMonth = YearMonth.of(2026, 3),
         dueDate: LocalDate = LocalDate.of(2026, 4, 15)
-    ): MonthlyDeclarationSnapshot {
-        return MonthlyDeclarationSnapshot(
+    ): MonthlyDeclarationSnapshot =
+        MonthlyDeclarationSnapshot(
             period =
             MonthlyDeclarationPeriod(
                 incomeMonth = incomeMonth,
@@ -274,7 +274,6 @@ class ReminderPlannerTest {
             setupRequired = false,
             record = null
         )
-    }
 }
 
 private class RecordingReminderNotificationStrings : ReminderNotificationStrings {

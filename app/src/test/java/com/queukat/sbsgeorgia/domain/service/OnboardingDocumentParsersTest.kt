@@ -239,11 +239,11 @@ class OnboardingDocumentParsersTest {
                 sourceFileName = "certificate-invalid-date.pdf",
                 sourceFingerprint = "fingerprint",
                 extractedText =
-                    """
+                """
                     მცირე ბიზნესის სტატუსის სერტიფიკატი
                     სერტიფიკატი
                     მცირე ბიზნესის სტატუსი მინიჭებულია 31/02/2026
-                    """.trimIndent(),
+                """.trimIndent(),
                 expectedDocumentType = OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE
             )
 

@@ -222,14 +222,14 @@ class MonthlyDeclarationPlannerTest {
                 profile = profile,
                 config = config,
                 entries =
-                    listOf(
-                        manualEntry("2026-01-05", "20.00").copy(
-                            declarationInclusion = DeclarationInclusion.EXCLUDED
-                        ),
-                        manualEntry("2026-02-05", "20.00").copy(
-                            declarationInclusion = DeclarationInclusion.REVIEW_REQUIRED
-                        )
+                listOf(
+                    manualEntry("2026-01-05", "20.00").copy(
+                        declarationInclusion = DeclarationInclusion.EXCLUDED
                     ),
+                    manualEntry("2026-02-05", "20.00").copy(
+                        declarationInclusion = DeclarationInclusion.REVIEW_REQUIRED
+                    )
+                ),
                 records = emptyList()
             )
 
