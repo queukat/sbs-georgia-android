@@ -305,23 +305,18 @@ private fun ImportStatementReviewSummary(
 }
 
 @Composable
-private fun SummaryRow(
-    label: String,
-    value: Int,
-    testTag: String,
-    onClick: (() -> Unit)? = null
-) {
+private fun SummaryRow(label: String, value: Int, testTag: String, onClick: (() -> Unit)? = null) {
     Row(
         modifier =
-            Modifier
-                .fillMaxWidth()
-                .then(
-                    if (onClick != null && value > 0) {
-                        Modifier.clickable(onClick = onClick)
-                    } else {
-                        Modifier
-                    }
-                ),
+        Modifier
+            .fillMaxWidth()
+            .then(
+                if (onClick != null && value > 0) {
+                    Modifier.clickable(onClick = onClick)
+                } else {
+                    Modifier
+                }
+            ),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)

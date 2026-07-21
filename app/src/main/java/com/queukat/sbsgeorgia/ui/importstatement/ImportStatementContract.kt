@@ -125,9 +125,7 @@ internal enum class ImportStatementFilter(val titleRes: Int, val testTag: String
     )
 }
 
-internal fun List<ImportStatementRowUiState>.filterFor(
-    filter: ImportStatementFilter
-): List<ImportStatementRowUiState> =
+internal fun List<ImportStatementRowUiState>.filterFor(filter: ImportStatementFilter): List<ImportStatementRowUiState> =
     when (filter) {
         ImportStatementFilter.NEEDS_REVIEW -> filter(ImportStatementRowUiState::needsReview)
         ImportStatementFilter.TAX_PAYMENTS ->
@@ -139,5 +137,4 @@ internal fun List<ImportStatementRowUiState>.filterFor(
         ImportStatementFilter.DUPLICATES -> filter(ImportStatementRowUiState::duplicate)
     }
 
-internal fun List<ImportStatementRowUiState>.countFor(filter: ImportStatementFilter): Int =
-    filterFor(filter).size
+internal fun List<ImportStatementRowUiState>.countFor(filter: ImportStatementFilter): Int = filterFor(filter).size
