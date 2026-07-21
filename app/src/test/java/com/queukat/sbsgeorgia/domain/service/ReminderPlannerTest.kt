@@ -248,8 +248,7 @@ class ReminderPlannerTest {
         unresolvedFxCount: Int = 0,
         incomeMonth: YearMonth = YearMonth.of(2026, 3),
         dueDate: LocalDate = LocalDate.of(2026, 4, 15)
-    ): MonthlyDeclarationSnapshot =
-        MonthlyDeclarationSnapshot(
+    ): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(
             period =
             MonthlyDeclarationPeriod(
                 incomeMonth = incomeMonth,
