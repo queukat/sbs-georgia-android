@@ -198,6 +198,18 @@ Play screenshots:
 Release/publishing notes live in `docs/play_console_setup.md`, but `docs/` is
 ignored in this repo, so confirm local availability before relying on it.
 
+GitHub auth and CI:
+
+- On this Windows workspace, auth-dependent `gh` and HTTPS `git push` commands must
+  run outside the filesystem sandbox so they can use the system keyring. If a
+  sandboxed command reports an invalid token or `SEC_E_NO_CREDENTIALS`, do not start
+  a browser login first: retry `gh auth status` and the required command with
+  elevated/unsandboxed execution.
+- Run the full shared verification matrix on GitHub CI, not concurrently on the
+  workstation: unit tests, debug assembly, Android-test compilation, Android lint,
+  detekt and ktlint. Local Gradle runs should be narrow checks needed to investigate
+  or reproduce a specific failure; stop leftover daemons after parallel work.
+
 ## Tests and fixtures
 
 - JVM unit tests live under `app/src/test/java`.
@@ -210,6 +222,12 @@ ignored in this repo, so confirm local availability before relying on it.
   for TBC statement variants and onboarding document parsers.
 - Room schema changes require a migration, checked schema JSON and migration test
   updates.
+- For broad audits or cross-surface regressions, use a swarm of bounded agents split
+  by independent contracts (for example navigation, import, declaration workflow,
+  FX, backup and reminders). Agents inspect and add scoped tests; the root agent
+  reviews and integrates every production change. Do not let swarm agents launch
+  overlapping full Gradle suites locally. Push the consolidated branch and let
+  GitHub CI run the full matrix once.
 
 ## Project traps
 
