@@ -32,7 +32,7 @@ private fun parseColumnSeparatedTransactionLine(
     val incomeDate =
         runCatching { LocalDate.parse(dateToken, TbcStatementFormat.dateFormatter) }.getOrNull()
             ?: return null
-    val hasCompleteMoneyColumns = parts.size > 5 || parts.takeLast(3).all(::isMoneyColumn)
+    val hasCompleteMoneyColumns = parts.takeLast(3).all(::isMoneyColumn)
     val moneyColumnCount = if (hasCompleteMoneyColumns) 3 else 2
     val trailingColumns = parts.takeLast(moneyColumnCount)
     val leadingColumns = parts.drop(1).dropLast(moneyColumnCount)
@@ -50,17 +50,13 @@ private fun parseColumnSeparatedTransactionLine(
     } else {
         val movement = parseMoney(trailingColumns[0], statementCurrency) ?: return null
         balance = parseMoney(trailingColumns[1], statementCurrency) ?: return null
-        val delta = previousBalance?.let { balance.amount.subtract(it) }
-        val inferredDirection =
-            when {
-                delta?.signum() == 1 -> null to movement
-                delta?.signum() == -1 -> movement to null
-                else -> inferCollapsedDirection(
-                    amount = movement.amount,
-                    lineText = leadingColumns.joinToString(" "),
-                    currency = movement.currency ?: statementCurrency
-                )
-            }
+        val inferredDirection = inferDirectionFromBalanceOrText(
+            amount = movement.amount,
+            balance = balance.amount,
+            previousBalance = previousBalance,
+            lineText = leadingColumns.joinToString(" "),
+            currency = movement.currency ?: statementCurrency
+        )
         paidOut = inferredDirection.first
         paidIn = inferredDirection.second
         fallbackAmount = movement.amount.takeIf { paidOut == null && paidIn == null }
@@ -102,13 +98,9 @@ private fun parseCollapsedTransactionLine(
             .trim()
     if (transactionText.isBlank()) return null
 
-    val explicitAmount =
-        TbcStatementFormat.trailingAmountRegex
-            .find(transactionText)
-            ?.groupValues
-            ?.getOrNull(1)
-            ?.replace(",", "")
-            ?.toBigDecimalOrNull()
+    val explicitAmountMatch = TbcStatementFormat.trailingAmountRegex.find(transactionText)
+    val explicitAmountText = explicitAmountMatch?.groupValues?.getOrNull(1)
+    val explicitAmount = explicitAmountText?.replace(",", "")?.toBigDecimalOrNull()
     val balance = StatementMoney(amount = balanceAmount, currency = statementCurrency)
 
     val paidOut: StatementMoney?
@@ -117,38 +109,47 @@ private fun parseCollapsedTransactionLine(
     when {
         previousBalance != null -> {
             val delta = balanceAmount.subtract(previousBalance)
-            val movementAmount = delta.abs()
-            if (movementAmount > BigDecimal.ZERO) {
+            val deltaAmount = delta.abs().takeIf { it > BigDecimal.ZERO }
+            val normalizedExplicitAmountText = explicitAmountText?.replace(",", "")
+            val deltaAmountText = deltaAmount?.toPlainString()
+            val attachedNumericPrefix =
+                if (deltaAmountText != null &&
+                    normalizedExplicitAmountText?.endsWith(deltaAmountText) == true
+                ) {
+                    normalizedExplicitAmountText.dropLast(deltaAmountText.length)
+                } else {
+                    null
+                }
+            val deltaMatchesPrintedSuffix =
+                attachedNumericPrefix != null &&
+                    attachedNumericPrefix.length >= ATTACHED_IDENTIFIER_MIN_LENGTH &&
+                    attachedNumericPrefix.all(Char::isDigit)
+            val movementAmount =
+                when {
+                    deltaAmount != null &&
+                        (
+                            explicitAmount == null ||
+                                explicitAmount.compareTo(deltaAmount) == 0 ||
+                                deltaMatchesPrintedSuffix
+                            ) -> deltaAmount
+                    else -> explicitAmount
+                }
+            if (movementAmount == null) {
+                paidOut = null
+                paidIn = null
+                fallbackAmount = null
+            } else {
                 transactionText = stripTrailingAmount(transactionText, movementAmount)
-            }
-            when {
-                delta.signum() > 0 -> {
-                    paidOut = null
-                    paidIn = StatementMoney(amount = movementAmount, currency = statementCurrency)
-                    fallbackAmount = null
-                }
-                delta.signum() < 0 -> {
-                    paidOut = StatementMoney(amount = movementAmount, currency = statementCurrency)
-                    paidIn = null
-                    fallbackAmount = null
-                }
-                explicitAmount != null -> {
-                    transactionText = stripTrailingAmount(transactionText, explicitAmount)
-                    val inferredDirection =
-                        inferCollapsedDirection(
-                            amount = explicitAmount,
-                            lineText = transactionText,
-                            currency = statementCurrency
-                        )
-                    paidOut = inferredDirection.first
-                    paidIn = inferredDirection.second
-                    fallbackAmount = if (paidOut == null && paidIn == null) explicitAmount else null
-                }
-                else -> {
-                    paidOut = null
-                    paidIn = null
-                    fallbackAmount = null
-                }
+                val inferredDirection = inferDirectionFromBalanceOrText(
+                    amount = movementAmount,
+                    balance = balanceAmount,
+                    previousBalance = previousBalance,
+                    lineText = transactionText,
+                    currency = statementCurrency
+                )
+                paidOut = inferredDirection.first
+                paidIn = inferredDirection.second
+                fallbackAmount = movementAmount.takeIf { paidOut == null && paidIn == null }
             }
         }
         explicitAmount != null -> {
@@ -180,6 +181,8 @@ private fun parseCollapsedTransactionLine(
     )
 }
 
+private const val ATTACHED_IDENTIFIER_MIN_LENGTH = 6
+
 private fun inferCollapsedDirection(
     amount: BigDecimal,
     lineText: String,
@@ -194,8 +197,44 @@ private fun inferCollapsedDirection(
     }
 }
 
-private fun stripTrailingAmount(text: String, amount: BigDecimal): String =
-    text.replace(Regex("${Regex.escape(amount.toPlainString())}\\s*$"), "").trim()
+private fun inferDirectionFromBalanceOrText(
+    amount: BigDecimal,
+    balance: BigDecimal,
+    previousBalance: BigDecimal?,
+    lineText: String,
+    currency: String?
+): Pair<StatementMoney?, StatementMoney?> {
+    val delta = previousBalance?.let(balance::subtract)
+    if (delta != null &&
+        delta.signum() != 0 &&
+        delta.abs().compareTo(amount) == 0
+    ) {
+        val money = StatementMoney(amount = amount, currency = currency)
+        return if (delta.signum() > 0) null to money else money to null
+    }
+
+    return inferCollapsedDirection(
+        amount = amount,
+        lineText = lineText,
+        currency = currency
+    )
+}
+
+private fun stripTrailingAmount(text: String, amount: BigDecimal): String {
+    val match = TbcStatementFormat.trailingAmountRegex.find(text) ?: return text.trim()
+    val trailingAmount = match.groupValues[1].replace(",", "").toBigDecimalOrNull()
+    if (trailingAmount?.compareTo(amount) == 0) {
+        return text.removeRange(match.range).trim()
+    }
+
+    val trimmed = text.trimEnd()
+    val plainAmount = amount.toPlainString()
+    return if (trimmed.endsWith(plainAmount)) {
+        trimmed.dropLast(plainAmount.length).trim()
+    } else {
+        trimmed
+    }
+}
 
 internal fun hasTrailingAmount(text: String): Boolean {
     val trimmed = text.trimEnd()

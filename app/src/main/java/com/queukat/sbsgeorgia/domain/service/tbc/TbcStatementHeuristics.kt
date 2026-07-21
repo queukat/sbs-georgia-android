@@ -31,6 +31,7 @@ internal fun buildPreviewRow(
             paidOut = normalizedOutgoing,
             paidIn = normalizedIncoming
         )
+    val isCurrencyConversion = fxConversionHints.any { it in suggestionText }
     val suggestedInclusion =
         when {
             normalizedIncoming != null &&
@@ -56,6 +57,7 @@ internal fun buildPreviewRow(
     val suggestedSourceCategory =
         when {
             isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
+            isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
             nonTaxableHints.any { it in suggestionText } &&
                 bankFeeHints.any { it in suggestionText } ->
                 SourceCategoryPresets.BANK_FEE
@@ -108,6 +110,14 @@ internal val taxableHints =
         "ინვოისი"
     )
 
+internal val fxConversionHints =
+    listOf(
+        "currency conversion",
+        "foreign exchange",
+        "fx conversion",
+        "კონვერტ"
+    )
+
 internal val nonTaxableHints =
     listOf(
         "internal transfer",
@@ -121,7 +131,7 @@ internal val nonTaxableHints =
         "შიდა გადარიცხვა",
         "საკომისიო",
         "კომისია"
-    )
+    ) + fxConversionHints
 
 internal val incomingDirectionHints =
     taxableHints +
@@ -130,7 +140,20 @@ internal val incomingDirectionHints =
             "კლიენტის გადახდა"
         )
 
-internal val outgoingDirectionHints = nonTaxableHints
+internal val outgoingDirectionHints =
+    nonTaxableHints +
+        listOf(
+            "pos wallet",
+            "card payment",
+            "payment by card",
+            "cash withdrawal",
+            "atm withdrawal",
+            "treasury account",
+            "101001000",
+            "ბარათით გადახდა",
+            "ნაღდი ფულის გატანა",
+            "ხაზინის ერთიანი ანგარიში"
+        )
 
 internal val bankFeeHints =
     listOf(

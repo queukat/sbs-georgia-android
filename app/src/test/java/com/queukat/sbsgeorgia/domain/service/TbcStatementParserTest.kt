@@ -64,6 +64,9 @@ class TbcStatementParserTest {
         val commission = preview.rows.first { it.description == "BANK COMMISSION" }
         assertEquals(DeclarationInclusion.EXCLUDED, commission.suggestedInclusion)
         assertEquals("Bank fee", commission.suggestedSourceCategory)
+        val genericInbound = preview.rows.first { it.description == "CLIENT PAYMENT" }
+        assertEquals("90.00", genericInbound.paidIn?.amount?.toPlainString())
+        assertEquals("0.00", genericInbound.paidOut?.amount?.toPlainString())
         assertEquals("Own account transfer", preview.rows.last().suggestedSourceCategory)
     }
 
@@ -279,6 +282,110 @@ class TbcStatementParserTest {
         assertEquals(null, incoming.paidOut)
         assertEquals("250.00", incoming.paidIn?.amount?.toPlainString())
         assertEquals(DeclarationInclusion.REVIEW_REQUIRED, incoming.suggestedInclusion)
+    }
+
+    @Test
+    fun extraDescriptionColumnsDoNotShiftMovementIntoPaidIn() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-extra-description-columns.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 1000.00GEL
+                    01/01/2099   POS wallet   Demo merchant   Terminal reference   25.00   975.00
+                """.trimIndent()
+            )
+
+        val row = preview.rows.single()
+        assertEquals("25.00", row.paidOut?.amount?.toPlainString())
+        assertEquals(null, row.paidIn)
+        assertEquals("25.00", row.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, row.suggestedInclusion)
+    }
+
+    @Test
+    fun mismatchedBalanceDeltaUsesPrintedMovementAndStrongDirectionHint() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-balance-gap.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 1000.00GEL
+                    01/01/2099POS wallet - Demo merchant 25.00 900.00
+                """.trimIndent()
+            )
+
+        val row = preview.rows.single()
+        assertEquals("25.00", row.paidOut?.amount?.toPlainString())
+        assertEquals(null, row.paidIn)
+        assertEquals("25.00", row.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, row.suggestedInclusion)
+    }
+
+    @Test
+    fun mismatchedBalanceDeltaKeepsUnknownDirectionForReview() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-unknown-balance-gap.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 1000.00GEL
+                    01/01/2099Unknown operation 25.00 900.00
+                """.trimIndent()
+            )
+
+        val row = preview.rows.single()
+        assertEquals(null, row.paidOut)
+        assertEquals(null, row.paidIn)
+        assertEquals("25.00", row.suggestedAmount.toPlainString())
+        assertEquals(DeclarationInclusion.REVIEW_REQUIRED, row.suggestedInclusion)
+    }
+
+    @Test
+    fun completeMoneyColumnsRemainStableWithExtraDescriptionSegments() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-complete-columns.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 1000.00GEL
+                    01/01/2099   Card purchase   Demo merchant   Terminal reference   25.00   -   975.00
+                """.trimIndent()
+            )
+
+        val row = preview.rows.single()
+        assertEquals("25.00", row.paidOut?.amount?.toPlainString())
+        assertEquals(null, row.paidIn)
+        assertEquals("975.00", row.balance?.amount?.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, row.suggestedInclusion)
+    }
+
+    @Test
+    fun excludesExplicitCurrencyConversionCredit() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-currency-conversion.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 1000.00GEL
+                    01/01/2099   ვალუტის კონვერტაცია   Demo reference   -   50.00   1050.00
+                """.trimIndent()
+            )
+
+        val row = preview.rows.single()
+        assertEquals("50.00", row.paidIn?.amount?.toPlainString())
+        assertEquals(DeclarationInclusion.EXCLUDED, row.suggestedInclusion)
+        assertEquals("Currency conversion", row.suggestedSourceCategory)
     }
 
     @Test

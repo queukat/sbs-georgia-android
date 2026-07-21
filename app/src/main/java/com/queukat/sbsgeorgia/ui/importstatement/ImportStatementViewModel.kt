@@ -97,12 +97,7 @@ constructor(
                             duplicate = row.duplicate,
                             reviewDecisionMade =
                             row.duplicate ||
-                                (
-                                    row.suggestedInclusion !=
-                                        DeclarationInclusion.REVIEW_REQUIRED &&
-                                        row.suggestedSourceCategory !=
-                                        SourceCategoryPresets.TAX_PAYMENT
-                                    )
+                                row.suggestedInclusion != DeclarationInclusion.REVIEW_REQUIRED
                         )
                     }
                 val invalidIncludedCount = rows.invalidIncludedCount()

@@ -83,26 +83,25 @@ class ImportStatementContractTest {
             )
 
         assertTrue(rows[1].needsReview())
-        assertTrue(rows[2].needsReview())
+        assertFalse(rows[2].needsReview())
         assertFalse(rows[3].needsReview())
         assertEquals(1, rows.willImportCount())
-        assertEquals(2, rows.needsReviewCount())
-        assertEquals(2, rows.pendingReviewDecisionCount())
+        assertEquals(1, rows.needsReviewCount())
+        assertEquals(1, rows.pendingReviewDecisionCount())
         assertEquals(2, rows.excludedCount())
         assertEquals(1, rows.duplicateCount())
         assertEquals(1, rows.taxPaymentCandidateCount())
     }
 
     @Test
-    fun reviewedExcludedTaxPaymentNoLongerNeedsReview() {
+    fun excludedTaxPaymentIsVisibleWithoutBlockingImportReview() {
         val row =
             validRow().copy(
                 finalInclusion = DeclarationInclusion.EXCLUDED,
-                isTaxPaymentCandidate = true,
-                reviewDecisionMade = true
+                isTaxPaymentCandidate = true
             )
 
-        assertTrue(row.requiresManualReviewDecision())
+        assertFalse(row.requiresManualReviewDecision())
         assertFalse(row.isPendingManualReviewDecision())
         assertFalse(row.needsReview())
     }

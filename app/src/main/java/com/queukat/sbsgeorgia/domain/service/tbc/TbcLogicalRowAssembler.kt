@@ -67,6 +67,10 @@ private fun shouldSkipLine(line: String): Boolean {
         normalized.startsWith("ანგარიშის ამონაწერი") ||
         normalized.startsWith("account holder") ||
         normalized.startsWith("ანგარიშის მფლობელი") ||
+        normalized.startsWith("statement currency") ||
+        normalized.startsWith("account currency") ||
+        normalized.startsWith("ამონაწერის ვალუტა") ||
+        normalized.startsWith("ანგარიშის ვალუტა") ||
         normalized.startsWith("generated on") ||
         normalized.startsWith("გენერირებულია") ||
         normalized.matches(TbcStatementFormat.statementPeriodRegex) ||

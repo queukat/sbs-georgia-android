@@ -67,6 +67,7 @@
     <string name="source_category_other">Другое</string>
     <string name="source_category_bank_fee">Банковская комиссия</string>
     <string name="source_category_own_account_transfer">Перевод между своими счетами</string>
+    <string name="source_category_currency_conversion">Конвертация валюты</string>
     <string name="source_category_tax_payment">Оплата налога</string>
     <string name="source_category_imported_statement_income">Доход из импортированной выписки</string>
     <string name="source_category_imported_statement_review">Нужна проверка импортированной выписки</string>

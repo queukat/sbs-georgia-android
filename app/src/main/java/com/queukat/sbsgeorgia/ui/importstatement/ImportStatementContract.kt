@@ -69,11 +69,8 @@ internal fun ImportStatementRowUiState.needsReview(): Boolean = !duplicate &&
             isPendingManualReviewDecision()
         )
 
-internal fun ImportStatementRowUiState.requiresManualReviewDecision(): Boolean = !duplicate &&
-    (
-        suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED ||
-            isTaxPaymentCandidate
-        )
+internal fun ImportStatementRowUiState.requiresManualReviewDecision(): Boolean =
+    !duplicate && suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED
 
 internal fun ImportStatementRowUiState.isPendingManualReviewDecision(): Boolean =
     requiresManualReviewDecision() && !reviewDecisionMade

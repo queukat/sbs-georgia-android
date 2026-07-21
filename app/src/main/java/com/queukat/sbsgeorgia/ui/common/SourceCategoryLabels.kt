@@ -31,6 +31,10 @@ private val knownSourceCategories =
             R.string.source_category_own_account_transfer
         ),
         SourceCategoryMapping(
+            SourceCategoryPresets.CURRENCY_CONVERSION,
+            R.string.source_category_currency_conversion
+        ),
+        SourceCategoryMapping(
             SourceCategoryPresets.TAX_PAYMENT,
             R.string.source_category_tax_payment
         ),
