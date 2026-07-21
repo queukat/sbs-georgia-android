@@ -90,13 +90,13 @@ private fun suggestInclusion(
     hasNonTaxableHint: Boolean,
     hasTaxableHint: Boolean
 ): DeclarationInclusion = when {
-        hasIncoming && hasNonTaxableHint -> DeclarationInclusion.EXCLUDED
-        hasIncoming && hasTaxableHint -> DeclarationInclusion.INCLUDED
-        hasIncoming -> DeclarationInclusion.REVIEW_REQUIRED
-        hasOutgoing -> DeclarationInclusion.EXCLUDED
-        hasFallbackAmount -> DeclarationInclusion.REVIEW_REQUIRED
-        else -> DeclarationInclusion.EXCLUDED
-    }
+    hasIncoming && hasNonTaxableHint -> DeclarationInclusion.EXCLUDED
+    hasIncoming && hasTaxableHint -> DeclarationInclusion.INCLUDED
+    hasIncoming -> DeclarationInclusion.REVIEW_REQUIRED
+    hasOutgoing -> DeclarationInclusion.EXCLUDED
+    hasFallbackAmount -> DeclarationInclusion.REVIEW_REQUIRED
+    else -> DeclarationInclusion.EXCLUDED
+}
 
 private fun suggestSourceCategory(
     hasIncoming: Boolean,
@@ -107,14 +107,14 @@ private fun suggestSourceCategory(
     isCurrencyConversion: Boolean,
     isTaxPayment: Boolean
 ): String = when {
-        isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
-        isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
-        hasNonTaxableHint && hasBankFeeHint -> SourceCategoryPresets.BANK_FEE
-        hasOutgoing && hasNonTaxableHint -> SourceCategoryPresets.OWN_ACCOUNT_TRANSFER
-        hasIncoming && hasTaxableHint -> SourceCategoryPresets.SOFTWARE_SERVICES
-        hasIncoming -> SourceCategoryPresets.IMPORTED_STATEMENT_INCOME
-        else -> SourceCategoryPresets.IMPORTED_STATEMENT_REVIEW
-    }
+    isTaxPayment -> SourceCategoryPresets.TAX_PAYMENT
+    isCurrencyConversion -> SourceCategoryPresets.CURRENCY_CONVERSION
+    hasNonTaxableHint && hasBankFeeHint -> SourceCategoryPresets.BANK_FEE
+    hasOutgoing && hasNonTaxableHint -> SourceCategoryPresets.OWN_ACCOUNT_TRANSFER
+    hasIncoming && hasTaxableHint -> SourceCategoryPresets.SOFTWARE_SERVICES
+    hasIncoming -> SourceCategoryPresets.IMPORTED_STATEMENT_INCOME
+    else -> SourceCategoryPresets.IMPORTED_STATEMENT_REVIEW
+}
 
 internal val taxableHints =
     listOf(
