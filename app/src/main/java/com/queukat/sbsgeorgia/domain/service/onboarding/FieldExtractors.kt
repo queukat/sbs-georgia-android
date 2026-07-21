@@ -5,6 +5,7 @@ import com.queukat.sbsgeorgia.domain.model.ParsedDateField
 import com.queukat.sbsgeorgia.domain.model.ParsedTextField
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.format.ResolverStyle
 
 internal fun List<String>.extractTextField(
     primaryLabels: List<String>,
@@ -353,8 +354,8 @@ private fun String.parseKnownDate(): LocalDate? {
 
 private val knownDateFormatters =
     listOf(
-        DateTimeFormatter.ofPattern("dd/MM/yyyy"),
-        DateTimeFormatter.ofPattern("dd.MM.yyyy"),
+        DateTimeFormatter.ofPattern("dd/MM/uuuu").withResolverStyle(ResolverStyle.STRICT),
+        DateTimeFormatter.ofPattern("dd.MM.uuuu").withResolverStyle(ResolverStyle.STRICT),
         DateTimeFormatter.ISO_LOCAL_DATE
     )
 
