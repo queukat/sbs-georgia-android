@@ -62,7 +62,9 @@ class AppNavigationState internal constructor(
     }
 
     override fun openMonths() {
-        selectTopLevel(TopLevelDestination.Months)
+        monthsBackStack.clear()
+        monthsBackStack.add(MonthsDestination)
+        currentTopLevelDestination = TopLevelDestination.Months
     }
 
     override fun openSettings() {

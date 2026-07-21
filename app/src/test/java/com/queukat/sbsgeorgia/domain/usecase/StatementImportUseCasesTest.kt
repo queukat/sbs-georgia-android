@@ -195,6 +195,7 @@ class StatementImportUseCasesTest {
 
         assertEquals(1, result.importResult.importedIncomeCount)
         assertEquals(1, result.importResult.skippedDuplicateCount)
+        assertEquals(0, result.importResult.excludedCount)
         assertEquals(0, result.autoResolvedFxEntryCount)
         assertEquals(1, repository.confirmedRows.size)
         assertEquals("EUR", repository.confirmedRows.single().currency)
@@ -629,7 +630,9 @@ private class FakeStatementImportRepository(
             importedIncomeCount = confirmedRows.size,
             storedTransactionCount = rows.count { !it.duplicate },
             skippedDuplicateCount = rows.count { it.duplicate },
-            excludedCount = rows.count { it.finalInclusion != DeclarationInclusion.INCLUDED }
+            excludedCount = rows.count {
+                !it.duplicate && it.finalInclusion != DeclarationInclusion.INCLUDED
+            }
         )
     }
 }

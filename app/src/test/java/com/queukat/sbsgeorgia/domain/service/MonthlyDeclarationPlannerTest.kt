@@ -159,6 +159,86 @@ class MonthlyDeclarationPlannerTest {
     }
 
     @Test
+    fun `due date itself is not overdue and filing window opens on its first day`() {
+        val period =
+            planner.declarationPeriodFor(
+                incomeMonth = YearMonth.parse("2026-03"),
+                config = null
+            )
+
+        assertTrue(planner.isFilingWindowOpen(period, LocalDate.parse("2026-04-01")))
+        assertFalse(planner.isFilingWindowOpen(period, LocalDate.parse("2026-03-31")))
+        assertEquals(
+            MonthlyWorkflowStatus.DRAFT,
+            planner.deriveWorkflowStatus(
+                baseStatus = MonthlyWorkflowStatus.DRAFT,
+                period = period,
+                referenceDate = LocalDate.parse("2026-04-15")
+            )
+        )
+    }
+
+    @Test
+    fun `only incomplete filing and payment states become overdue`() {
+        val period =
+            planner.declarationPeriodFor(
+                incomeMonth = YearMonth.parse("2026-03"),
+                config = null
+            )
+        val afterDueDate = LocalDate.parse("2026-04-16")
+
+        assertEquals(
+            MonthlyWorkflowStatus.OVERDUE,
+            planner.deriveWorkflowStatus(MonthlyWorkflowStatus.FILED, period, afterDueDate)
+        )
+        assertEquals(
+            MonthlyWorkflowStatus.OVERDUE,
+            planner.deriveWorkflowStatus(MonthlyWorkflowStatus.TAX_PAYMENT_PENDING, period, afterDueDate)
+        )
+        assertEquals(
+            MonthlyWorkflowStatus.PAYMENT_SENT,
+            planner.deriveWorkflowStatus(MonthlyWorkflowStatus.PAYMENT_SENT, period, afterDueDate)
+        )
+        assertEquals(
+            MonthlyWorkflowStatus.PAYMENT_CREDITED,
+            planner.deriveWorkflowStatus(MonthlyWorkflowStatus.PAYMENT_CREDITED, period, afterDueDate)
+        )
+        assertEquals(
+            MonthlyWorkflowStatus.SETTLED,
+            planner.deriveWorkflowStatus(MonthlyWorkflowStatus.SETTLED, period, afterDueDate)
+        )
+    }
+
+    @Test
+    fun `zero declaration is suggested only when in-scope month has no included or review rows`() {
+        val config =
+            SmallBusinessStatusConfig(
+                effectiveDate = LocalDate.parse("2026-01-01"),
+                defaultTaxRatePercent = BigDecimal("1.0")
+            )
+        val snapshots =
+            planner.buildYearSnapshots(
+                year = 2026,
+                profile = profile,
+                config = config,
+                entries =
+                    listOf(
+                        manualEntry("2026-01-05", "20.00").copy(
+                            declarationInclusion = DeclarationInclusion.EXCLUDED
+                        ),
+                        manualEntry("2026-02-05", "20.00").copy(
+                            declarationInclusion = DeclarationInclusion.REVIEW_REQUIRED
+                        )
+                    ),
+                records = emptyList()
+            )
+
+        assertTrue(snapshots[0].zeroDeclarationSuggested)
+        assertFalse(snapshots[1].zeroDeclarationSuggested)
+        assertTrue(snapshots[1].reviewNeeded)
+    }
+
+    @Test
     fun `payment sent does not become overdue after due date`() {
         val period =
             planner.declarationPeriodFor(

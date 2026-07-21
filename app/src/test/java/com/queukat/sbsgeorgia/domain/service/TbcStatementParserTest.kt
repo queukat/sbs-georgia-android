@@ -255,6 +255,33 @@ class TbcStatementParserTest {
     }
 
     @Test
+    fun infersDirectionWhenPdfExtractionOmitsEmptyMoneyColumn() {
+        val preview =
+            parser.parse(
+                sourceFileName = "statement-missing-money-column.pdf",
+                sourceFingerprint = "fixture-fingerprint",
+                extractedText =
+                """
+                    Account Statement:
+                    Opening Balance 2000.00USD
+                    01/01/2099   Transfer between your accounts   Counterparty redacted   100.00   1900.00
+                    02/01/2099   Client payment   Reference DEMO-1   250.00   2150.00
+                """.trimIndent()
+            )
+
+        assertEquals(2, preview.rows.size)
+        val outgoing = preview.rows.first()
+        assertEquals("100.00", outgoing.paidOut?.amount?.toPlainString())
+        assertEquals(null, outgoing.paidIn)
+        assertEquals(DeclarationInclusion.EXCLUDED, outgoing.suggestedInclusion)
+
+        val incoming = preview.rows.last()
+        assertEquals(null, incoming.paidOut)
+        assertEquals("250.00", incoming.paidIn?.amount?.toPlainString())
+        assertEquals(DeclarationInclusion.REVIEW_REQUIRED, incoming.suggestedInclusion)
+    }
+
+    @Test
     fun trimsInlinePageHeaderArtifactsAfterBalance() {
         val preview =
             parser.parse(

@@ -161,11 +161,18 @@ class ImportStatementScreenTest {
                     sampleRow(
                         fingerprint = "tx-3",
                         finalInclusion = DeclarationInclusion.EXCLUDED,
-                        isTaxPaymentCandidate = true
+                        isTaxPaymentCandidate = true,
+                        reviewDecisionMade = true
                     ),
                     sampleRow(
                         fingerprint = "tx-4",
                         finalInclusion = DeclarationInclusion.EXCLUDED,
+                        duplicate = true
+                    ),
+                    sampleRow(
+                        fingerprint = "tx-5",
+                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                        isTaxPaymentCandidate = true,
                         duplicate = true
                     )
                 ),
@@ -183,16 +190,24 @@ class ImportStatementScreenTest {
             )
         }
 
-        composeRule.onNodeWithTag("import-summary-needs-review").assertTextContains("2")
-        composeRule.onNodeWithTag("import-review-pending-decisions").assertTextContains("2")
+        composeRule.onNodeWithTag("import-summary-needs-review").assertTextContains("1")
+        composeRule.onNodeWithTag("import-review-pending-decisions").assertTextContains("1")
         composeRule.onNodeWithTag("import-review-exclude-pending").performClick()
         composeRule.runOnIdle {
             assertTrue(excludePendingReviewClicked)
         }
-        composeRule.onNodeWithTag("import-filter-needs-review").assertIsDisplayed()
-        composeRule.onNodeWithTag("import-row-tx-2").assertIsDisplayed()
+        composeRule.onNodeWithTag("import-filter-tax-payments").assertIsDisplayed()
         composeRule.onNodeWithTag("import-row-tx-3").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("import-row-tx-2").assertCountEquals(0)
+        composeRule.onAllNodesWithTag("import-row-tx-5").assertCountEquals(0)
         composeRule.onAllNodesWithTag("import-row-tx-1").assertCountEquals(0)
+
+        composeRule.onNodeWithTag("import-filter-needs-review").performClick()
+        composeRule.onNodeWithTag("import-row-tx-2").assertIsDisplayed()
+        composeRule.onAllNodesWithTag("import-row-tx-3").assertCountEquals(0)
+
+        composeRule.onNodeWithTag("import-summary-tax-payments").performClick()
+        composeRule.onNodeWithTag("import-row-tx-3").assertIsDisplayed()
 
         composeRule.onNodeWithTag("import-filter-will-import").performClick()
         composeRule.onNodeWithTag("import-row-tx-1").assertIsDisplayed()

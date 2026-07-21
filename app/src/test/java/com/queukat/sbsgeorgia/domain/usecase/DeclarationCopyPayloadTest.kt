@@ -8,6 +8,7 @@ import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class DeclarationCopyPayloadTest {
@@ -44,6 +45,29 @@ class DeclarationCopyPayloadTest {
             "${bundle.declarationText}\n${bundle.paymentText}",
             bundle.fullText
         )
+    }
+
+    @Test
+    fun `payment payload normalizes registration id and does not create a comment from blank data`() {
+        val yearMonth = YearMonth.of(2026, 3)
+
+        assertEquals(
+            "123456789 small business tax for March 2026",
+            buildPaymentComment(" 123456789 ", yearMonth)
+        )
+        assertEquals("", buildPaymentComment("   ", yearMonth))
+        assertEquals("", buildPaymentComment(null, yearMonth))
+
+        val bundle = buildDeclarationCopyBundle(sampleSnapshot(yearMonth), "   ", yearMonth)
+
+        requireNotNull(bundle)
+        assertEquals(TREASURY_CODE, bundle.treasuryCode)
+        assertEquals("", bundle.paymentComment)
+        assertEquals(
+            "Treasury code: 101001000\nTax amount: 1.23\nPayment comment: ",
+            bundle.paymentText
+        )
+        assertNull(buildDeclarationCopyBundle(null, "123456789", yearMonth))
     }
 
     private fun sampleSnapshot(yearMonth: YearMonth): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(

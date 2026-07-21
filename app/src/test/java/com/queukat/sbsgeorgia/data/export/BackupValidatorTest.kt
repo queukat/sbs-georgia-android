@@ -430,6 +430,96 @@ class BackupValidatorTest {
     }
 
     @Test
+    fun buildRestorePlanRejectsNegativeSmallBusinessTaxRate() {
+        assertRestorePlanFails(
+            content =
+            """
+                    {
+                      "formatVersion": 1,
+                      "exportedAtEpochMillis": 1,
+                      "statusConfig": {
+                        "effectiveDate": "2026-03-01",
+                        "defaultTaxRatePercent": "-1.0"
+                      }
+                    }
+            """.trimIndent(),
+            messagePart = "must have non-negative defaultTaxRatePercent"
+        )
+    }
+
+    @Test
+    fun buildRestorePlanRejectsIncomeEntryWithOnlyOneImportReference() {
+        assertRestorePlanFails(
+            content =
+            backupDocument(
+                incomeEntries =
+                """
+                        [
+                          {
+                            "id": 1,
+                            "sourceType": "imported_statement",
+                            "incomeDate": "2026-03-10",
+                            "originalAmount": "125.50",
+                            "originalCurrency": "USD",
+                            "sourceCategory": "Software services",
+                            "note": "",
+                            "declarationInclusion": "included",
+                            "rateSource": "none",
+                            "manualFxOverride": false,
+                            "sourceStatementId": 42,
+                            "createdAtEpochMillis": 1,
+                            "updatedAtEpochMillis": 1
+                          }
+                        ]
+                """.trimIndent()
+            ),
+            messagePart = "must provide both sourceStatementId and sourceTransactionFingerprint"
+        )
+    }
+
+    @Test
+    fun buildRestorePlanRejectsDuplicateImportedTransactionFingerprints() {
+        assertRestorePlanFails(
+            content =
+            backupDocument(
+                importedStatements =
+                """
+                        [
+                          {
+                            "id": 42,
+                            "sourceFileName": "statement.pdf",
+                            "sourceFingerprint": "statement-1",
+                            "importedAtEpochMillis": 1
+                          }
+                        ]
+                """.trimIndent(),
+                importedTransactions =
+                """
+                        [
+                          {
+                            "id": 1,
+                            "statementId": 42,
+                            "transactionFingerprint": "tx-1",
+                            "description": "Payment",
+                            "suggestedInclusion": "excluded",
+                            "finalInclusion": "excluded"
+                          },
+                          {
+                            "id": 2,
+                            "statementId": 42,
+                            "transactionFingerprint": "tx-1",
+                            "description": "Correction",
+                            "suggestedInclusion": "excluded",
+                            "finalInclusion": "excluded"
+                          }
+                        ]
+                """.trimIndent()
+            ),
+            messagePart = "duplicate imported transaction fingerprints"
+        )
+    }
+
+    @Test
     fun buildRestorePlanRejectsConflictingIncomeSourceLinkage() {
         assertRestorePlanFails(
             content =

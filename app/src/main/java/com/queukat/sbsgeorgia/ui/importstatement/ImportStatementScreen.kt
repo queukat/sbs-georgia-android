@@ -174,7 +174,18 @@ fun ImportStatementScreen(
                     item {
                         ImportStatementReviewSummary(
                             rows = uiState.rows,
-                            onExcludePendingReviewRows = onExcludePendingReviewRows
+                            onExcludePendingReviewRows = {
+                                onExcludePendingReviewRows()
+                                selectedFilter =
+                                    if (uiState.rows.taxPaymentCandidateCount() > 0) {
+                                        ImportStatementFilter.TAX_PAYMENTS
+                                    } else {
+                                        ImportStatementFilter.WILL_IMPORT
+                                    }
+                            },
+                            onTaxPaymentsSelected = {
+                                selectedFilter = ImportStatementFilter.TAX_PAYMENTS
+                            }
                         )
                     }
                     item {
@@ -240,7 +251,8 @@ private fun ImportStatementFlowSummary(uiState: ImportStatementUiState) {
 @Composable
 private fun ImportStatementReviewSummary(
     rows: List<ImportStatementRowUiState>,
-    onExcludePendingReviewRows: () -> Unit
+    onExcludePendingReviewRows: () -> Unit,
+    onTaxPaymentsSelected: () -> Unit
 ) {
     AppSection(
         title = stringResource(R.string.import_statement_summary_title),
@@ -270,7 +282,8 @@ private fun ImportStatementReviewSummary(
         SummaryRow(
             label = stringResource(R.string.import_statement_summary_tax_payments),
             value = rows.taxPaymentCandidateCount(),
-            testTag = "import-summary-tax-payments"
+            testTag = "import-summary-tax-payments",
+            onClick = onTaxPaymentsSelected
         )
         if (pendingReviewDecisionCount > 0) {
             Text(
@@ -292,9 +305,23 @@ private fun ImportStatementReviewSummary(
 }
 
 @Composable
-private fun SummaryRow(label: String, value: Int, testTag: String) {
+private fun SummaryRow(
+    label: String,
+    value: Int,
+    testTag: String,
+    onClick: (() -> Unit)? = null
+) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .then(
+                    if (onClick != null && value > 0) {
+                        Modifier.clickable(onClick = onClick)
+                    } else {
+                        Modifier
+                    }
+                ),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -599,37 +626,6 @@ private fun ImportStatementSuccessState(
         }
     }
 }
-
-private enum class ImportStatementFilter(val titleRes: Int, val testTag: String) {
-    NEEDS_REVIEW(
-        R.string.import_statement_filter_needs_review,
-        "needs-review"
-    ),
-    WILL_IMPORT(
-        R.string.import_statement_filter_will_import,
-        "will-import"
-    ),
-    EXCLUDED(
-        R.string.import_statement_filter_excluded,
-        "excluded"
-    ),
-    DUPLICATES(
-        R.string.import_statement_filter_duplicates,
-        "duplicates"
-    )
-}
-
-private fun List<ImportStatementRowUiState>.filterFor(filter: ImportStatementFilter): List<ImportStatementRowUiState> =
-    when (filter) {
-        ImportStatementFilter.NEEDS_REVIEW -> filter(ImportStatementRowUiState::needsReview)
-        ImportStatementFilter.WILL_IMPORT ->
-            filter { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate }
-        ImportStatementFilter.EXCLUDED ->
-            filter { it.finalInclusion == DeclarationInclusion.EXCLUDED && !it.duplicate }
-        ImportStatementFilter.DUPLICATES -> filter(ImportStatementRowUiState::duplicate)
-    }
-
-private fun List<ImportStatementRowUiState>.countFor(filter: ImportStatementFilter): Int = filterFor(filter).size
 
 private fun ImportStatementRowUiState.statusLabelRes(): Int = when {
     duplicate -> R.string.import_statement_duplicate

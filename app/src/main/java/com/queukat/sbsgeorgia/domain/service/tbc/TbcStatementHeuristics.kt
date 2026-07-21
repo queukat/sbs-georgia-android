@@ -111,6 +111,7 @@ internal val taxableHints =
 internal val nonTaxableHints =
     listOf(
         "internal transfer",
+        "transfer between your accounts",
         "own account",
         "fee",
         "commission",
@@ -129,12 +130,7 @@ internal val incomingDirectionHints =
             "კლიენტის გადახდა"
         )
 
-internal val outgoingDirectionHints =
-    nonTaxableHints +
-        listOf(
-            "transfer between your accounts",
-            "საკუთარ ანგარიშებს შორის გადარიცხვა"
-        )
+internal val outgoingDirectionHints = nonTaxableHints
 
 internal val bankFeeHints =
     listOf(

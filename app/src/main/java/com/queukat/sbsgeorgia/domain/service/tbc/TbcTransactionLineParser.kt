@@ -9,17 +9,22 @@ internal fun parseTransactionLine(
     line: String,
     statementCurrency: String?,
     previousBalance: BigDecimal?
-): ImportedStatementPreviewRow? = parseColumnSeparatedTransactionLine(line, statementCurrency)
+): ImportedStatementPreviewRow? = parseColumnSeparatedTransactionLine(
+    line = line,
+    statementCurrency = statementCurrency,
+    previousBalance = previousBalance
+)
     ?: parseCollapsedTransactionLine(line, statementCurrency, previousBalance)
 
 private fun parseColumnSeparatedTransactionLine(
     line: String,
-    statementCurrency: String?
+    statementCurrency: String?,
+    previousBalance: BigDecimal?
 ): ImportedStatementPreviewRow? {
     val parts = line.split(TbcStatementFormat.columnSeparator).map {
         it.trim()
     }.filter { it.isNotBlank() }
-    if (parts.size < 5) return null
+    if (parts.size < 4) return null
 
     val dateToken = parts.first()
     if (!TbcStatementFormat.dateRegex.matches(dateToken)) return null
@@ -27,21 +32,54 @@ private fun parseColumnSeparatedTransactionLine(
     val incomeDate =
         runCatching { LocalDate.parse(dateToken, TbcStatementFormat.dateFormatter) }.getOrNull()
             ?: return null
-    val trailingColumns = parts.takeLast(3)
-    val leadingColumns = parts.drop(1).dropLast(3)
+    val hasCompleteMoneyColumns = parts.size > 5 || parts.takeLast(3).all(::isMoneyColumn)
+    val moneyColumnCount = if (hasCompleteMoneyColumns) 3 else 2
+    val trailingColumns = parts.takeLast(moneyColumnCount)
+    val leadingColumns = parts.drop(1).dropLast(moneyColumnCount)
     if (leadingColumns.isEmpty()) return null
+
+    val paidOut: StatementMoney?
+    val paidIn: StatementMoney?
+    val balance: StatementMoney?
+    val fallbackAmount: BigDecimal?
+    if (hasCompleteMoneyColumns) {
+        paidOut = parseMoney(trailingColumns[0], statementCurrency)
+        paidIn = parseMoney(trailingColumns[1], statementCurrency)
+        balance = parseMoney(trailingColumns[2], statementCurrency)
+        fallbackAmount = null
+    } else {
+        val movement = parseMoney(trailingColumns[0], statementCurrency) ?: return null
+        balance = parseMoney(trailingColumns[1], statementCurrency) ?: return null
+        val delta = previousBalance?.let { balance.amount.subtract(it) }
+        val inferredDirection =
+            when {
+                delta?.signum() == 1 -> null to movement
+                delta?.signum() == -1 -> movement to null
+                else -> inferCollapsedDirection(
+                    amount = movement.amount,
+                    lineText = leadingColumns.joinToString(" "),
+                    currency = movement.currency ?: statementCurrency
+                )
+            }
+        paidOut = inferredDirection.first
+        paidIn = inferredDirection.second
+        fallbackAmount = movement.amount.takeIf { paidOut == null && paidIn == null }
+    }
 
     return buildPreviewRow(
         incomeDate = incomeDate,
         description = leadingColumns.first(),
         additionalInformation = leadingColumns.drop(1).joinToString(" ").ifBlank { null },
-        paidOut = parseMoney(trailingColumns[0], statementCurrency),
-        paidIn = parseMoney(trailingColumns[1], statementCurrency),
-        balance = parseMoney(trailingColumns[2], statementCurrency),
-        fallbackAmount = null,
+        paidOut = paidOut,
+        paidIn = paidIn,
+        balance = balance,
+        fallbackAmount = fallbackAmount,
         fallbackCurrency = statementCurrency
     )
 }
+
+private fun isMoneyColumn(value: String): Boolean =
+    value == "-" || value == "—" || parseMoney(value, fallbackCurrency = null) != null
 
 private fun parseCollapsedTransactionLine(
     line: String,

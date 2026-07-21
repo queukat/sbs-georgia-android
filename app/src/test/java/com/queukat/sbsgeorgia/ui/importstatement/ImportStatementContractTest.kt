@@ -77,7 +77,8 @@ class ImportStatementContractTest {
                 validRow().copy(
                     transactionFingerprint = "tx-4",
                     duplicate = true,
-                    finalInclusion = DeclarationInclusion.EXCLUDED
+                    finalInclusion = DeclarationInclusion.EXCLUDED,
+                    isTaxPaymentCandidate = true
                 )
             )
 
@@ -104,6 +105,41 @@ class ImportStatementContractTest {
         assertTrue(row.requiresManualReviewDecision())
         assertFalse(row.isPendingManualReviewDecision())
         assertFalse(row.needsReview())
+    }
+
+    @Test
+    fun everyReviewFilterUsesTheSameRowsAsItsCount() {
+        val rows =
+            listOf(
+                validRow(),
+                validRow().copy(
+                    transactionFingerprint = "tx-review",
+                    suggestedInclusion = DeclarationInclusion.REVIEW_REQUIRED,
+                    finalInclusion = DeclarationInclusion.EXCLUDED
+                ),
+                validRow().copy(
+                    transactionFingerprint = "tx-tax",
+                    finalInclusion = DeclarationInclusion.EXCLUDED,
+                    isTaxPaymentCandidate = true,
+                    reviewDecisionMade = true
+                ),
+                validRow().copy(
+                    transactionFingerprint = "tx-duplicate-tax",
+                    finalInclusion = DeclarationInclusion.EXCLUDED,
+                    isTaxPaymentCandidate = true,
+                    duplicate = true
+                )
+            )
+
+        ImportStatementFilter.entries.forEach { filter ->
+            assertEquals(rows.filterFor(filter).size, rows.countFor(filter))
+        }
+        assertEquals(
+            listOf("tx-tax"),
+            rows
+                .filterFor(ImportStatementFilter.TAX_PAYMENTS)
+                .map(ImportStatementRowUiState::transactionFingerprint)
+        )
     }
 
     @Test

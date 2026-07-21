@@ -63,6 +63,7 @@
     <string name="import_statement_review_pending_decisions">%1$d review decisions are still pending.</string>
     <string name="import_statement_review_exclude_pending">Exclude pending review rows</string>
     <string name="import_statement_filter_needs_review">Needs review (%1$d)</string>
+    <string name="import_statement_filter_tax_payments">Tax payments (%1$d)</string>
     <string name="import_statement_filter_will_import">Will import (%1$d)</string>
     <string name="import_statement_filter_excluded">Excluded (%1$d)</string>
     <string name="import_statement_filter_duplicates">Duplicates (%1$d)</string>

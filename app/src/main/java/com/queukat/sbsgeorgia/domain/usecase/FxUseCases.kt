@@ -102,6 +102,8 @@ constructor(
     private val clock: Clock
 ) {
     suspend operator fun invoke(entryId: Long, units: Int, rateToGel: BigDecimal): IncomeEntry {
+        require(units > 0) { "FX units must be greater than zero." }
+        require(rateToGel > BigDecimal.ZERO) { "FX rate must be greater than zero." }
         val entry =
             requireNotNull(incomeRepository.getById(entryId)) {
                 "Income entry $entryId was not found."

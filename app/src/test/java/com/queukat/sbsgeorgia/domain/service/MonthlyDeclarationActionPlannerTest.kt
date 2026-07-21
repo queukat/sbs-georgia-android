@@ -115,6 +115,75 @@ class MonthlyDeclarationActionPlannerTest {
         assertFalse(state.canPreparePayment)
     }
 
+    @Test
+    fun terminalStoredStatusBlocksQuickSettleEvenWhenSnapshotStatusIsDerivedDifferently() {
+        val state =
+            planner.plan(
+                snapshot = sampleSnapshot(
+                    workflowStatus = MonthlyWorkflowStatus.OVERDUE,
+                    record = MonthlyDeclarationRecord(
+                        yearMonth = INCOME_MONTH,
+                        workflowStatus = MonthlyWorkflowStatus.PAYMENT_SENT,
+                        zeroDeclarationPrepared = false,
+                        declarationFiledDate = LocalDate.of(2026, 4, 10),
+                        paymentSentDate = LocalDate.of(2026, 4, 10)
+                    )
+                ),
+                registrationId = "123456789"
+            )
+
+        assertTrue(state.monthAlreadySettled)
+        assertFalse(state.canQuickSettleMonth)
+        assertFalse(state.canPreparePayment)
+    }
+
+    @Test
+    fun zeroTaxFiledMonthNeedsNoPaymentCommentAndCanBeSettled() {
+        val state =
+            planner.plan(
+                snapshot = sampleSnapshot(
+                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                    graph20 = "0.00",
+                    estimatedTax = "0.00"
+                ).copy(zeroDeclarationPrepared = true),
+                registrationId = null
+            )
+
+        assertEquals(MonthUserJourneyState.SETTLED, state.journeyState)
+        assertTrue(MonthlyActionBlocker.NO_PAYMENT_DUE in state.blockers)
+        assertFalse(MonthlyActionBlocker.MISSING_PAYMENT_COMMENT in state.blockers)
+        assertTrue(state.canCopyDeclarationValues)
+        assertFalse(state.canCopyPaymentText)
+        assertFalse(state.canPreparePayment)
+        assertTrue(state.canQuickSettleMonth)
+    }
+
+    @Test
+    fun setupAndOutOfScopeBlockEveryDeclarationAndPaymentAction() {
+        val setupBlocked =
+            planner.plan(
+                snapshot = sampleSnapshot(reviewNeeded = true).copy(setupRequired = true),
+                registrationId = "123456789"
+            )
+        val outOfScope =
+            planner.plan(
+                snapshot = sampleSnapshot().copy(
+                    period = sampleSnapshot().period.copy(inScope = false, outOfScope = true)
+                ),
+                registrationId = "123456789"
+            )
+
+        assertEquals(MonthUserJourneyState.SETUP_REQUIRED, setupBlocked.journeyState)
+        assertTrue(MonthlyActionBlocker.SETUP_REQUIRED in setupBlocked.blockers)
+        assertFalse(setupBlocked.canCopyDeclarationValues)
+        assertFalse(setupBlocked.canPreparePayment)
+        assertEquals(MonthUserJourneyState.OUT_OF_SCOPE, outOfScope.journeyState)
+        assertTrue(MonthlyActionBlocker.OUT_OF_SCOPE in outOfScope.blockers)
+        assertFalse(outOfScope.canCopyDeclarationValues)
+        assertFalse(outOfScope.canCopyPaymentText)
+        assertFalse(outOfScope.canQuickSettleMonth)
+    }
+
     private fun sampleSnapshot(
         workflowStatus: MonthlyWorkflowStatus = MonthlyWorkflowStatus.DRAFT,
         graph20: String = "2500.00",

@@ -38,6 +38,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
@@ -152,6 +153,24 @@ class QuickSettleGatingViewModelTest {
 
         assertTrue(monthsViewModel.uiState.value.monthItem(MARCH_2026).canQuickSettleMonth)
     }
+
+    @Test
+    fun sameSafeSnapshotHasMatchingQuickSettleReadinessAcrossHomeAndMonths() = runTest {
+        val fixture =
+            QuickSettleFixture(
+                entries = listOf(incomeEntry(currency = "GEL", gelEquivalent = BigDecimal("100.00")))
+            )
+        val homeViewModel = fixture.homeViewModel()
+        val monthsViewModel = fixture.monthsViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { homeViewModel.uiState.collect {} }
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { monthsViewModel.uiState.collect {} }
+        advanceUntilIdle()
+
+        val home = requireNotNull(homeViewModel.uiState.value.duePeriodQuickAccess)
+        val months = monthsViewModel.uiState.value.monthItem(MARCH_2026)
+        assertTrue(home.canCopyDeclarationValues)
+        assertEquals(home.canQuickSettleMonth, months.canQuickSettleMonth)
+    }
 }
 
 private class QuickSettleFixture(entries: List<IncomeEntry>) {
@@ -201,6 +220,7 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         actionPlanner = actionPlanner,
         clock = clock
     )
+
 }
 
 private class FakeSettingsRepository : SettingsRepository {

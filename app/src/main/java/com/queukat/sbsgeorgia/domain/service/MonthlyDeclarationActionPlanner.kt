@@ -61,7 +61,7 @@ class MonthlyDeclarationActionPlanner @Inject constructor(private val clock: Clo
 
         val filingWindowOpen = !referenceDate.isBefore(snapshot.period.filingWindow.start)
         val baseStatus = snapshot.record?.workflowStatus ?: snapshot.workflowStatus
-        val monthAlreadySettled = WorkflowStatusPolicy.isPaymentTerminal(snapshot.workflowStatus)
+        val monthAlreadySettled = WorkflowStatusPolicy.isPaymentTerminal(baseStatus)
         val positiveTaxDue = (snapshot.estimatedTaxAmountGel ?: BigDecimal.ZERO).signum() > 0
         val blockers =
             buildList {

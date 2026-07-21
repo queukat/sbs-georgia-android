@@ -119,6 +119,12 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
+    statusConfig?.let { entity ->
+        require(entity.defaultTaxRatePercent.signum() >= 0) {
+            "Backup status config must have non-negative defaultTaxRatePercent."
+        }
+    }
+
     fxRates.forEach { entity ->
         require(isIsoLikeCurrencyCode(entity.currencyCode)) {
             "Backup FX rate '${entity.id}' must have valid currencyCode."

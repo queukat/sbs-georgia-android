@@ -29,9 +29,10 @@ internal object DeclarationCopyPayloadLabels {
 }
 
 fun buildPaymentComment(registrationId: String?, yearMonth: YearMonth): String {
-    if (registrationId.isNullOrBlank()) return ""
+    val normalizedRegistrationId = registrationId?.trim().orEmpty()
+    if (normalizedRegistrationId.isBlank()) return ""
     val monthLabel = yearMonth.atDay(1).format(paymentMonthFormatter)
-    return "$registrationId small business tax for $monthLabel"
+    return "$normalizedRegistrationId small business tax for $monthLabel"
 }
 
 fun buildDeclarationCopyBundle(

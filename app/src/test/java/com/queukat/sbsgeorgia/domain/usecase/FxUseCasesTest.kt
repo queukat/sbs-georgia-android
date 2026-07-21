@@ -23,6 +23,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 
 class FxUseCasesTest {
@@ -69,6 +70,29 @@ class FxUseCasesTest {
         assertEquals(FxRateSource.OFFICIAL_NBG_JSON, updatedEntry.rateSource)
         assertEquals(1, result.resolvedEntryCount)
         assertEquals(0, result.unresolvedEntryCount)
+    }
+
+    @Test
+    fun resolveMonthFxPrefersCachedManualOverrideOverOfficialRate() = runTest {
+        val incomeRepository =
+            FakeIncomeRepository(listOf(sampleEntry(id = 7L, amount = "100.00", currency = "USD")))
+        val manualRate = rate("3.10", manualOverride = true)
+        val fxRateRepository =
+            FakeFxRateRepository(
+                bestRate = manualRate,
+                fetchResult = FxRateFetchResult.Success(rate("2.70", manualOverride = false))
+            )
+
+        val result =
+            ResolveMonthFxUseCase(fxRateRepository, incomeRepository, fixedClock)
+                .invoke(incomeRepository.entries.values.toList())
+
+        val updatedEntry = incomeRepository.entries.getValue(7L)
+        assertEquals("310.00", updatedEntry.gelEquivalent?.toPlainString())
+        assertEquals(FxRateSource.MANUAL_OVERRIDE, updatedEntry.rateSource)
+        assertTrue(updatedEntry.manualFxOverride)
+        assertEquals(1, result.resolvedEntryCount)
+        assertEquals(0, fxRateRepository.fetchCalls)
     }
 
     @Test
@@ -134,6 +158,20 @@ class FxUseCasesTest {
     }
 
     @Test
+    fun applyManualFxOverrideRejectsNonPositiveUnitsAndRates() = runTest {
+        val incomeRepository = FakeIncomeRepository(listOf(sampleEntry(8L, "100.00", "USD")))
+        val useCase = ApplyManualFxOverrideUseCase(FakeFxRateRepository(), incomeRepository, fixedClock)
+
+        assertIllegalArgument("units") {
+            useCase.invoke(8L, units = 0, rateToGel = BigDecimal("2.70"))
+        }
+        assertIllegalArgument("rate") {
+            useCase.invoke(8L, units = 1, rateToGel = BigDecimal.ZERO)
+        }
+        assertEquals(0, incomeRepository.upsertCount)
+    }
+
+    @Test
     fun requiresFxResolutionReturnsTrueForUnresolvedNonGelEntry() {
         assertTrue(
             sampleEntry(
@@ -178,10 +216,29 @@ class FxUseCasesTest {
         createdAtEpochMillis = 1L,
         updatedAtEpochMillis = 1L
     )
+
+    private fun rate(value: String, manualOverride: Boolean): FxRate = FxRate(
+        rateDate = LocalDate.of(2026, 3, 15),
+        currencyCode = "USD",
+        units = 1,
+        rateToGel = BigDecimal(value),
+        source = if (manualOverride) FxRateSource.MANUAL_OVERRIDE else FxRateSource.OFFICIAL_NBG_JSON,
+        manualOverride = manualOverride
+    )
+
+    private suspend fun assertIllegalArgument(messagePart: String, action: suspend () -> Unit) {
+        try {
+            action()
+            fail("Expected IllegalArgumentException")
+        } catch (error: IllegalArgumentException) {
+            assertTrue(error.message.orEmpty().contains(messagePart, ignoreCase = true))
+        }
+    }
 }
 
 private class FakeIncomeRepository(initialEntries: List<IncomeEntry> = emptyList()) : IncomeRepository {
     val entries: MutableMap<Long, IncomeEntry> = initialEntries.associateBy { it.id }.toMutableMap()
+    var upsertCount = 0
     private val state = MutableStateFlow(entries.values.sortedBy { it.id })
 
     override fun observeAll(): Flow<List<IncomeEntry>> = state
@@ -193,6 +250,7 @@ private class FakeIncomeRepository(initialEntries: List<IncomeEntry> = emptyList
     override suspend fun getById(id: Long): IncomeEntry? = entries[id]
 
     override suspend fun upsert(entry: IncomeEntry): Long {
+        upsertCount += 1
         val persistedId =
             if (entry.id == 0L) {
                 (entries.keys.maxOrNull() ?: 0L) + 1L
@@ -214,12 +272,16 @@ private class FakeFxRateRepository(
     private val bestRate: FxRate? = null,
     private val fetchResult: FxRateFetchResult = FxRateFetchResult.NotFound
 ) : FxRateRepository {
+    var fetchCalls = 0
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? = bestRate
 
     override suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate? =
         bestRate?.takeIf { it.manualOverride == manualOverride }
 
-    override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult = fetchResult
+    override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult {
+        fetchCalls += 1
+        return fetchResult
+    }
 
     override suspend fun upsertManualOverride(
         rateDate: LocalDate,

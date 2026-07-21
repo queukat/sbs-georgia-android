@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.importstatement
 
+import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
@@ -100,3 +101,43 @@ internal fun List<ImportStatementRowUiState>.duplicateCount(): Int = count(
 
 internal fun List<ImportStatementRowUiState>.taxPaymentCandidateCount(): Int =
     count { it.isTaxPaymentCandidate && !it.duplicate }
+
+internal enum class ImportStatementFilter(val titleRes: Int, val testTag: String) {
+    NEEDS_REVIEW(
+        R.string.import_statement_filter_needs_review,
+        "needs-review"
+    ),
+    TAX_PAYMENTS(
+        R.string.import_statement_filter_tax_payments,
+        "tax-payments"
+    ),
+    WILL_IMPORT(
+        R.string.import_statement_filter_will_import,
+        "will-import"
+    ),
+    EXCLUDED(
+        R.string.import_statement_filter_excluded,
+        "excluded"
+    ),
+    DUPLICATES(
+        R.string.import_statement_filter_duplicates,
+        "duplicates"
+    )
+}
+
+internal fun List<ImportStatementRowUiState>.filterFor(
+    filter: ImportStatementFilter
+): List<ImportStatementRowUiState> =
+    when (filter) {
+        ImportStatementFilter.NEEDS_REVIEW -> filter(ImportStatementRowUiState::needsReview)
+        ImportStatementFilter.TAX_PAYMENTS ->
+            filter { it.isTaxPaymentCandidate && !it.duplicate }
+        ImportStatementFilter.WILL_IMPORT ->
+            filter { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate }
+        ImportStatementFilter.EXCLUDED ->
+            filter { it.finalInclusion == DeclarationInclusion.EXCLUDED && !it.duplicate }
+        ImportStatementFilter.DUPLICATES -> filter(ImportStatementRowUiState::duplicate)
+    }
+
+internal fun List<ImportStatementRowUiState>.countFor(filter: ImportStatementFilter): Int =
+    filterFor(filter).size

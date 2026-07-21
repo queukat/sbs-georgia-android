@@ -33,4 +33,12 @@ class GeorgiaTaxBusinessCalendarTest {
             calendar.adjustToNextBusinessDay(LocalDate.of(2026, 4, 12))
         )
     }
+
+    @Test
+    fun `adjusts a weekend due date through orthodox easter monday`() {
+        assertEquals(
+            LocalDate.of(2028, 4, 18),
+            calendar.adjustToNextBusinessDay(LocalDate.of(2028, 4, 15))
+        )
+    }
 }

@@ -109,6 +109,33 @@ class AppSetupViewModelTest {
         assertFalse(viewModel.uiState.value.shouldShowQuickStartGuide)
         assertTrue(preferencesRepository.quickStartGuideState.value.dismissed)
     }
+
+    @Test
+    fun incompleteRestoredProfileKeepsOnboardingActive() = runTest {
+        val settingsRepository =
+            SetupFakeSettingsRepository(
+                initialProfile = TaxpayerProfile(registrationId = "test-registration", displayName = " "),
+                initialStatusConfig =
+                SmallBusinessStatusConfig(
+                    effectiveDate = LocalDate.of(2026, 1, 1),
+                    defaultTaxRatePercent = BigDecimal("1.0")
+                )
+            )
+        val preferencesRepository = FakeAppPreferencesRepository()
+        val viewModel = AppSetupViewModel(settingsRepository, preferencesRepository)
+
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            viewModel.uiState.collect {}
+        }
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.needsOnboarding)
+        assertFalse(viewModel.uiState.value.shouldShowQuickStartGuide)
+        assertEquals(
+            QuickStartGuideState(initialized = true, dismissed = false),
+            preferencesRepository.quickStartGuideState.value
+        )
+    }
 }
 
 private class FakeAppPreferencesRepository : AppPreferencesRepository {

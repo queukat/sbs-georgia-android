@@ -74,4 +74,33 @@ class SettingsValidatorTest {
             result
         )
     }
+
+    @Test
+    fun validateRejectsInvalidReminderTimeBeforeReminderDays() {
+        val result =
+            validator.validate(
+                SettingsUiState(
+                    registrationId = "test-registration",
+                    displayName = "Test account",
+                    defaultReminderTime = "09:75",
+                    declarationReminderDays = "not-a-day"
+                )
+            )
+
+        assertEquals(SettingsValidationResult.Invalid("reminderTimeInvalid"), result)
+    }
+
+    @Test
+    fun validateRejectsInvalidPaymentReminderDays() {
+        val result =
+            validator.validate(
+                SettingsUiState(
+                    registrationId = "test-registration",
+                    displayName = "Test account",
+                    paymentReminderDays = "1,16"
+                )
+            )
+
+        assertEquals(SettingsValidationResult.Invalid("paymentDaysInvalid"), result)
+    }
 }

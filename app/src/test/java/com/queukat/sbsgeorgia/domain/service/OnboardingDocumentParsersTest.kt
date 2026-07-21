@@ -232,6 +232,25 @@ class OnboardingDocumentParsersTest {
         )
     }
 
+    @Test
+    fun invalidCertificateEffectiveDateRemainsReviewRequired() {
+        val preview =
+            coordinator.parse(
+                sourceFileName = "certificate-invalid-date.pdf",
+                sourceFingerprint = "fingerprint",
+                extractedText =
+                    """
+                    მცირე ბიზნესის სტატუსის სერტიფიკატი
+                    სერტიფიკატი
+                    მცირე ბიზნესის სტატუსი მინიჭებულია 31/02/2026
+                    """.trimIndent(),
+                expectedDocumentType = OnboardingDocumentType.SMALL_BUSINESS_STATUS_CERTIFICATE
+            )
+
+        assertEquals(null, preview.effectiveDate.value)
+        assertEquals(ExtractionConfidence.REVIEW_REQUIRED, preview.effectiveDate.confidence)
+    }
+
     private fun loadFixture(name: String): String = checkNotNull(javaClass.classLoader?.getResource("fixtures/$name")) {
         "Missing fixture $name"
     }

@@ -11,6 +11,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.YearMonth
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -125,6 +126,100 @@ class ReminderPlannerTest {
     }
 
     @Test
+    fun respectsEachReminderChannelEnablementIndependently() {
+        val notifications =
+            planner.buildNotifications(
+                today = LocalDate.of(2026, 4, 10),
+                reminderConfig = reminderConfig.copy(declarationRemindersEnabled = false),
+                snapshot =
+                sampleSnapshot(
+                    workflowStatus = MonthlyWorkflowStatus.DRAFT,
+                    graph20 = "2500.00",
+                    zeroDeclarationSuggested = false,
+                    estimatedTax = "25.00"
+                )
+            )
+
+        assertEquals(listOf(ReminderType.PAYMENT), notifications.map(ReminderNotification::type))
+    }
+
+    @Test
+    fun suppressesAllNotificationsWhenBothChannelsAreDisabled() {
+        val notifications =
+            planner.buildNotifications(
+                today = LocalDate.of(2026, 4, 10),
+                reminderConfig =
+                reminderConfig.copy(
+                    declarationRemindersEnabled = false,
+                    paymentRemindersEnabled = false
+                ),
+                snapshot =
+                sampleSnapshot(
+                    workflowStatus = MonthlyWorkflowStatus.DRAFT,
+                    graph20 = "2500.00",
+                    zeroDeclarationSuggested = false,
+                    estimatedTax = "25.00"
+                )
+            )
+
+        assertTrue(notifications.isEmpty())
+    }
+
+    @Test
+    fun usesAdjustedDueDateAndBlockerInputsForLocalizedMessage() {
+        val strings = RecordingReminderNotificationStrings()
+        val planner = ReminderPlanner(strings)
+        val snapshot =
+            sampleSnapshot(
+                workflowStatus = MonthlyWorkflowStatus.OVERDUE,
+                graph20 = "2500.00",
+                zeroDeclarationSuggested = false,
+                estimatedTax = "25.00",
+                reviewNeeded = true,
+                unresolvedFxCount = 2,
+                incomeMonth = YearMonth.of(2028, 3),
+                dueDate = LocalDate.of(2028, 4, 18)
+            )
+
+        val notifications =
+            planner.buildNotifications(
+                today = LocalDate.of(2028, 4, 15),
+                reminderConfig = reminderConfig,
+                snapshot = snapshot
+            )
+
+        assertEquals(2, notifications.size)
+        assertEquals(
+            listOf(
+                ReminderNotificationMessage.DECLARATION_REVIEW_AND_FX,
+                ReminderNotificationMessage.PAYMENT_REVIEW_AND_FX
+            ),
+            strings.bodyRequests.map(RecordingReminderNotificationStrings.BodyRequest::message)
+        )
+        assertTrue(strings.bodyRequests.all { it.incomeMonth == YearMonth.of(2028, 3) })
+        assertTrue(strings.bodyRequests.all { it.unresolvedFxCount == 2 })
+        assertTrue(strings.bodyRequests.all { it.dueDate == LocalDate.of(2028, 4, 18) })
+    }
+
+    @Test
+    fun suppressesPaymentForZeroOrMissingEstimatedTax() {
+        val zeroTaxNotifications =
+            planner.buildNotifications(
+                today = LocalDate.of(2026, 4, 10),
+                reminderConfig = reminderConfig.copy(declarationRemindersEnabled = false),
+                snapshot =
+                sampleSnapshot(
+                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                    graph20 = "0.00",
+                    zeroDeclarationSuggested = true,
+                    estimatedTax = "0.00"
+                )
+            )
+
+        assertFalse(zeroTaxNotifications.any { it.type == ReminderType.PAYMENT })
+    }
+
+    @Test
     fun skipsOutOfScopeMonths() {
         val notifications =
             planner.buildNotifications(
@@ -150,9 +245,10 @@ class ReminderPlannerTest {
         estimatedTax: String,
         outOfScope: Boolean = false,
         reviewNeeded: Boolean = false,
-        unresolvedFxCount: Int = 0
+        unresolvedFxCount: Int = 0,
+        incomeMonth: YearMonth = YearMonth.of(2026, 3),
+        dueDate: LocalDate = LocalDate.of(2026, 4, 15)
     ): MonthlyDeclarationSnapshot {
-        val incomeMonth = YearMonth.of(2026, 3)
         return MonthlyDeclarationSnapshot(
             period =
             MonthlyDeclarationPeriod(
@@ -161,7 +257,7 @@ class ReminderPlannerTest {
                 FilingWindow(
                     start = LocalDate.of(2026, 4, 1),
                     endInclusive = LocalDate.of(2026, 4, 15),
-                    dueDate = LocalDate.of(2026, 4, 15)
+                    dueDate = dueDate
                 ),
                 inScope = !outOfScope,
                 outOfScope = outOfScope
@@ -178,6 +274,29 @@ class ReminderPlannerTest {
             setupRequired = false,
             record = null
         )
+    }
+}
+
+private class RecordingReminderNotificationStrings : ReminderNotificationStrings {
+    data class BodyRequest(
+        val message: ReminderNotificationMessage,
+        val incomeMonth: YearMonth,
+        val unresolvedFxCount: Int,
+        val dueDate: LocalDate
+    )
+
+    val bodyRequests = mutableListOf<BodyRequest>()
+
+    override fun title(type: ReminderType): String = type.name
+
+    override fun body(
+        message: ReminderNotificationMessage,
+        incomeMonth: YearMonth,
+        unresolvedFxCount: Int,
+        dueDate: LocalDate
+    ): String {
+        bodyRequests += BodyRequest(message, incomeMonth, unresolvedFxCount, dueDate)
+        return message.name
     }
 }
 

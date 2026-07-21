@@ -63,6 +63,7 @@
     <string name="import_statement_review_pending_decisions">Ещё требуют решения: %1$d.</string>
     <string name="import_statement_review_exclude_pending">Исключить строки, требующие проверки</string>
     <string name="import_statement_filter_needs_review">Требуют проверки (%1$d)</string>
+    <string name="import_statement_filter_tax_payments">Налоговые платежи (%1$d)</string>
     <string name="import_statement_filter_will_import">К импорту (%1$d)</string>
     <string name="import_statement_filter_excluded">Исключены (%1$d)</string>
     <string name="import_statement_filter_duplicates">Дубли (%1$d)</string>

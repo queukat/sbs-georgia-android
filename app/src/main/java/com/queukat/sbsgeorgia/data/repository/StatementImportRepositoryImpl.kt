@@ -122,7 +122,7 @@ constructor(
             storedTransactionCount = storedTransactionCount,
             skippedDuplicateCount = skippedDuplicateCount,
             excludedCount = rows.count {
-                it.finalInclusion != DeclarationInclusion.INCLUDED
+                !it.duplicate && it.finalInclusion != DeclarationInclusion.INCLUDED
             }
         )
     }

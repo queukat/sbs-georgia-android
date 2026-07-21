@@ -73,9 +73,10 @@ internal fun List<String>.extractDateFromSentence(sentenceMarkers: List<String>)
         sentenceMarkers.any { marker -> line.contains(marker, ignoreCase = true) }
     }?.let { line ->
         val candidate = line.extractDateCandidate()
-        if (candidate != null) {
+        val date = candidate?.parseKnownDate()
+        if (date != null) {
             return ParsedDateField(
-                value = candidate.parseKnownDate(),
+                value = date,
                 confidence = ExtractionConfidence.CONFIDENT
             )
         }

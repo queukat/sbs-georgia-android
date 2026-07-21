@@ -32,5 +32,13 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
-      - name: Run unit tests, debug build, and lint
-        run: ./gradlew testDebugUnitTest assembleDebug lintDebug --console=plain
+      - name: Run tests, builds, and static analysis
+        run: >-
+          ./gradlew
+          testDebugUnitTest
+          assembleDebug
+          compileDebugAndroidTestKotlin
+          lintDebug
+          detekt
+          ktlintCheck
+          --console=plain

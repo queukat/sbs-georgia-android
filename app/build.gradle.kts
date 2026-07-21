@@ -101,7 +101,15 @@ android {
 
     packaging {
         resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes +=
+                setOf(
+                    "/META-INF/{AL2.0,LGPL2.1}",
+                    "/org/bouncycastle/pqc/crypto/picnic/lowmc.properties",
+                    "/org/bouncycastle/pqc/crypto/sike/p434.properties",
+                    "/org/bouncycastle/pqc/crypto/sike/p503.properties",
+                    "/org/bouncycastle/pqc/crypto/sike/p610.properties",
+                    "/org/bouncycastle/pqc/crypto/sike/p751.properties"
+                )
         }
     }
 
