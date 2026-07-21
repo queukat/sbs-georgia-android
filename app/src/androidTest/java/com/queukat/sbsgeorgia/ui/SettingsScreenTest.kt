@@ -5,11 +5,12 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.test.assertDoesNotExist
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -140,10 +141,10 @@ class SettingsScreenTest {
             .performScrollTo()
             .performClick()
 
-        composeRule.onNodeWithTag("settings-declaration-field-18-option").assertDoesNotExist()
-        composeRule.onNodeWithTag("settings-declaration-field-19-option").assertDoesNotExist()
-        composeRule.onNodeWithTag("settings-declaration-field-20-option").assertDoesNotExist()
-        composeRule.onNodeWithTag("settings-declaration-field-21-option").assertDoesNotExist()
+        composeRule.onAllNodesWithTag("settings-declaration-field-18-option").assertCountEquals(0)
+        composeRule.onAllNodesWithTag("settings-declaration-field-19-option").assertCountEquals(0)
+        composeRule.onAllNodesWithTag("settings-declaration-field-20-option").assertCountEquals(0)
+        composeRule.onAllNodesWithTag("settings-declaration-field-21-option").assertCountEquals(0)
     }
 
     @Test
