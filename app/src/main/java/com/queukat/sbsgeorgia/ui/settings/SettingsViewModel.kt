@@ -6,10 +6,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.ReminderNotification
 import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
@@ -43,6 +46,7 @@ class SettingsViewModel
 @Inject
 constructor(
     private val settingsRepository: SettingsRepository,
+    private val declarationFormConfigRepository: DeclarationFormConfigRepository,
     private val upsertSettingsUseCase: UpsertSettingsUseCase,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val exportIncomeEntriesCsvUseCase: ExportIncomeEntriesCsvUseCase,
@@ -198,6 +202,18 @@ constructor(
         }
     }
 
+    fun updateIncludeCumulativeIncome(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(includeCumulativeIncomeField = enabled)
+    }
+
+    fun updateIncludeMonthlyIncome(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(includeMonthlyIncomeField = enabled)
+    }
+
+    fun updateMonthlyIncomeField(field: DeclarationFormField) {
+        _uiState.value = _uiState.value.copy(monthlyIncomeField = field)
+    }
+
     fun loadDocument(uri: Uri, action: DocumentImportAction) {
         viewModelScope.launch {
             _uiState.value = SettingsFormReducer.startDocumentLoading(_uiState.value)
@@ -239,6 +255,13 @@ constructor(
                         profile = input.setup.toTaxpayerProfile(persistedProfile),
                         config = input.setup.toStatusConfig(persistedStatusConfig),
                         reminders = reminders
+                    )
+                    declarationFormConfigRepository.upsertConfig(
+                        DeclarationFormConfig(
+                            includeCumulativeIncome = current.includeCumulativeIncomeField,
+                            includeMonthlyIncome = current.includeMonthlyIncomeField,
+                            monthlyIncomeField = current.monthlyIncomeField
+                        )
                     )
                     reminderScheduler.reschedule(reminders)
                     _uiState.value = _uiState.value.copy(isSaving = false)
@@ -329,6 +352,7 @@ constructor(
         val profile = settingsRepository.observeTaxpayerProfile().first()
         val config = settingsRepository.observeStatusConfig().first()
         val reminderConfig = settingsRepository.observeReminderConfig().first()
+        val declarationFormConfig = declarationFormConfigRepository.observeConfig().first()
         persistedProfile = profile
         persistedStatusConfig = config
         _uiState.value =
@@ -337,6 +361,7 @@ constructor(
                 profile = profile,
                 config = config,
                 reminderConfig = reminderConfig,
+                declarationFormConfig = declarationFormConfig,
                 today = LocalDate.now(clock)
             )
     }

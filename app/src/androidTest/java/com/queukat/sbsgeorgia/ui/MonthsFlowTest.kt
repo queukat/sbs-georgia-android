@@ -195,7 +195,7 @@ class MonthsFlowTest {
         }
 
         composeRule
-            .onNodeWithTag("home-copy-graph-20-button")
+            .onNodeWithTag("home-field-20-copy")
             .performScrollTo()
             .assertIsDisplayed()
         composeRule

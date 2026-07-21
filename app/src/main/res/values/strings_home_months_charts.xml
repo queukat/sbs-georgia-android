@@ -49,6 +49,6 @@
     <string name="charts_no_income_for_selected_year">No income for the selected year yet.</string>
     <string name="charts_no_monthly_data">No monthly data is available yet.</string>
     <string name="charts_no_cumulative_data">No cumulative data is available yet.</string>
-    <string name="charts_monthly_body">Graph 20 totals per declaration month. Unresolved FX months remain visibly lower until rates are resolved.</string>
-    <string name="charts_cumulative_body">Graph 15 cumulative total for the current tax year. December locks the year-end total and January restarts the line.</string>
+    <string name="charts_monthly_body">Income totals per declaration month. Months with unresolved currency rates remain visibly lower until rates are resolved.</string>
+    <string name="charts_cumulative_body">Cumulative income for the current tax year. December locks the year-end total and January restarts the line.</string>
 </resources>

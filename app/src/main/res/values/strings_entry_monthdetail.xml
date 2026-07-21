@@ -7,7 +7,7 @@
     <string name="manual_entry_currency">Currency</string>
     <string name="manual_entry_source_category">Source category</string>
     <string name="manual_entry_note">Note</string>
-    <string name="manual_entry_include_graph_20">Include in declaration graph 20</string>
+    <string name="manual_entry_include_graph_20">Include in monthly declaration income</string>
     <string name="manual_entry_unresolved_fx_hint">Non-GEL entries stay unresolved until an official NBG rate or manual rate is applied.</string>
     <string name="manual_entry_save">Save income</string>
     <string name="manual_entry_save_changes">Save changes</string>
@@ -44,11 +44,16 @@
     <string name="month_detail_ready">This month is ready for filing and payment review. Effective due date: %1$s.</string>
     <string name="month_detail_edit_status">Edit filing and payment status</string>
     <string name="month_detail_section_copy_tools">Declaration and payment values</string>
+    <string name="month_detail_section_payment_tools">Payment values</string>
     <string name="month_detail_copy_waiting_for_window">Copy actions unlock once the filing window opens on %1$s.</string>
     <string name="month_detail_copy_blocked_unresolved_fx">Copy actions stay blocked until all FX entries are resolved.</string>
     <string name="month_detail_copy_blocked_review">Copy actions stay blocked until the month no longer needs review.</string>
-    <string name="month_detail_copy_graph_20">Copy Graph 20</string>
-    <string name="month_detail_copy_graph_15">Copy Graph 15</string>
+    <string name="declaration_field_15_label">Field (15): Income since year start</string>
+    <string name="declaration_field_18_label">Field (18): Cash-register income for the month</string>
+    <string name="declaration_field_19_label">Field (19): POS-terminal income for the month</string>
+    <string name="declaration_field_20_label">Field (20): Non-cash income for the month, excluding POS</string>
+    <string name="declaration_field_21_label">Field (21): Other income for the month</string>
+    <string name="declaration_field_copy">Copy %1$s</string>
     <string name="month_detail_copy_payment_text">Copy bank text</string>
     <string name="month_detail_copy_all_text">Copy all text</string>
     <string name="month_detail_no_entries">No income entries in this month yet.</string>

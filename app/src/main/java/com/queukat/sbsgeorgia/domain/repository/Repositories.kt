@@ -2,6 +2,7 @@ package com.queukat.sbsgeorgia.domain.repository
 
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmImportedStatementResult
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
@@ -35,6 +36,12 @@ interface SettingsRepository {
     suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig)
 
     suspend fun upsertReminderConfig(config: ReminderConfig)
+}
+
+interface DeclarationFormConfigRepository {
+    fun observeConfig(): Flow<DeclarationFormConfig?>
+
+    suspend fun upsertConfig(config: DeclarationFormConfig)
 }
 
 interface IncomeRepository {

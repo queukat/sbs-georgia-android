@@ -1,5 +1,7 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationPeriod
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
@@ -23,8 +25,19 @@ class DeclarationCopyPayloadTest {
             )
 
         requireNotNull(bundle)
-        assertEquals("123.45", bundle.graph20)
-        assertEquals("456.78", bundle.graph15)
+        assertEquals(
+            listOf(
+                DeclarationCopyValue(
+                    DeclarationFormField.CUMULATIVE_INCOME,
+                    "456.78"
+                ),
+                DeclarationCopyValue(
+                    DeclarationFormField.MONTHLY_NON_CASH_INCOME,
+                    "123.45"
+                )
+            ),
+            bundle.declarationValues
+        )
         assertEquals("1.23", bundle.taxAmount)
         assertEquals("101001000", bundle.treasuryCode)
         assertEquals(
@@ -32,7 +45,8 @@ class DeclarationCopyPayloadTest {
             bundle.paymentComment
         )
         assertEquals(
-            "Graph 20: 123.45\nGraph 15: 456.78",
+            "Field (15) - cumulative income since year start: 456.78\n" +
+                "Field (20) - monthly non-cash income excluding POS: 123.45",
             bundle.declarationText
         )
         assertEquals(
@@ -45,6 +59,65 @@ class DeclarationCopyPayloadTest {
             "${bundle.declarationText}\n${bundle.paymentText}",
             bundle.fullText
         )
+    }
+
+    @Test
+    fun `monthly income uses configured portal field and keeps portal order`() {
+        val yearMonth = YearMonth.of(2026, 3)
+        val bundle =
+            buildDeclarationCopyBundle(
+                snapshot = sampleSnapshot(yearMonth),
+                registrationId = "123456789",
+                yearMonth = yearMonth,
+                formConfig =
+                DeclarationFormConfig(
+                    monthlyIncomeField = DeclarationFormField.MONTHLY_POS_INCOME
+                )
+            )
+
+        requireNotNull(bundle)
+        assertEquals(
+            listOf(15, 19),
+            bundle.declarationValues.map { it.field.fieldNumber }
+        )
+        assertEquals(
+            "Field (15) - cumulative income since year start: 456.78\n" +
+                "Field (19) - monthly POS-terminal income: 123.45",
+            bundle.declarationText
+        )
+    }
+
+    @Test
+    fun `declaration fields can be hidden independently`() {
+        val yearMonth = YearMonth.of(2026, 3)
+        val onlyMonthly =
+            buildDeclarationCopyBundle(
+                snapshot = sampleSnapshot(yearMonth),
+                registrationId = "123456789",
+                yearMonth = yearMonth,
+                formConfig =
+                DeclarationFormConfig(
+                    includeCumulativeIncome = false,
+                    monthlyIncomeField = DeclarationFormField.MONTHLY_OTHER_INCOME
+                )
+            )
+        val noDeclarationValues =
+            buildDeclarationCopyBundle(
+                snapshot = sampleSnapshot(yearMonth),
+                registrationId = "123456789",
+                yearMonth = yearMonth,
+                formConfig =
+                DeclarationFormConfig(
+                    includeCumulativeIncome = false,
+                    includeMonthlyIncome = false
+                )
+            )
+
+        requireNotNull(onlyMonthly)
+        requireNotNull(noDeclarationValues)
+        assertEquals(listOf(21), onlyMonthly.declarationValues.map { it.field.fieldNumber })
+        assertEquals("", noDeclarationValues.declarationText)
+        assertEquals(noDeclarationValues.paymentText, noDeclarationValues.fullText)
     }
 
     @Test

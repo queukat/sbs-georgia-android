@@ -49,6 +49,6 @@
     <string name="charts_no_income_for_selected_year">За выбранный год пока нет дохода.</string>
     <string name="charts_no_monthly_data">Пока нет месячных данных.</string>
     <string name="charts_no_cumulative_data">Пока нет накопительных данных.</string>
-    <string name="charts_monthly_body">Итоги Graph 20 по каждому месяцу декларации. Месяцы с неразрешённым FX остаются визуально ниже, пока курсы не подтверждены.</string>
-    <string name="charts_cumulative_body">Накопительный итог Graph 15 за текущий налоговый год. Декабрь фиксирует итог года, а январь начинает новую линию.</string>
+    <string name="charts_monthly_body">Итоги дохода по каждому месяцу декларации. Месяцы с неподтверждёнными валютными курсами остаются визуально ниже, пока курсы не разрешены.</string>
+    <string name="charts_cumulative_body">Накопительный доход за текущий налоговый год. Декабрь фиксирует итог года, а январь начинает новую линию.</string>
 </resources>

@@ -21,13 +21,13 @@ SBS Georgia turns a monthly TBC bank statement into the values needed for a Geor
 2. Import a TBC bank statement PDF for the month.
 3. Review the preview: income rows are suggested automatically, duplicates are skipped, and tax payments/transfers/review-needed rows are called out.
 4. Let the app calculate GEL totals, cumulative yearly totals, estimated tax, filing deadline, payment details, and reminder state.
-5. Copy the ready values for Graph 20, Graph 15, tax amount, treasury code, payment comment, or the full declaration/payment text.
+5. Copy cumulative income for field 15 and the monthly total for the configured RS field (18, 19, 20, or 21), plus payment details or the full text.
 6. Paste the copied values into the declaration and payment flows, then mark the month as filed or paid in the app.
 
 ## What it handles
 
 - TBC PDF statement import with editable preview, taxable-income suggestions, duplicate detection, and detected tax-payment rows.
-- Monthly declaration snapshots with Graph 20, cumulative Graph 15, zero-declaration handling, filing windows, due dates, overdue state, and estimated tax.
+- Monthly declaration snapshots with monthly and cumulative income, configurable RS form-field labels, zero-declaration handling, filing windows, due dates, overdue state, and estimated tax.
 - Official NBG FX conversion to GEL with local caching, visible unresolved states, and manual FX overrides when needed.
 - Payment helper with treasury code, generated payment comment, and the exact amount to pay.
 - Workflow tracking for declaration filing, payment sent/credited dates, notes, and month status.
@@ -37,7 +37,7 @@ SBS Georgia turns a monthly TBC bank statement into the values needed for a Geor
 
 ## Scope
 
-The app is intentionally focused on Georgian small business status declarations for one local taxpayer profile. It is optimized for TBC statement PDFs and does not try to be a general accounting system, VAT tool, bank API client, or rs.ge automation bot.
+The app is intentionally focused on Georgian small business status declarations for one local taxpayer profile. It is optimized for TBC statement PDFs and does not try to be a general accounting system, VAT tool, bank API client, or rs.ge automation bot. The current lightweight form setting routes the whole monthly total to one selected income field; splitting a month across cash, POS, bank transfers, and other income is not yet supported.
 
 ## Stack
 

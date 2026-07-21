@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
@@ -9,6 +10,7 @@ import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
@@ -33,6 +35,7 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -199,6 +202,7 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
                 observeCurrentYearSnapshotsUseCase = observeCurrentYearSnapshotsUseCase,
                 planner = planner
             ),
+            declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,
             upsertMonthlyDeclarationRecordUseCase =
             UpsertMonthlyDeclarationRecordUseCase(monthlyDeclarationRepository),
             actionPlanner = actionPlanner,
@@ -220,6 +224,12 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         actionPlanner = actionPlanner,
         clock = clock
     )
+}
+
+private object DefaultDeclarationFormConfigRepository : DeclarationFormConfigRepository {
+    override fun observeConfig(): Flow<DeclarationFormConfig?> = flowOf(null)
+
+    override suspend fun upsertConfig(config: DeclarationFormConfig) = Unit
 }
 
 private class FakeSettingsRepository : SettingsRepository {

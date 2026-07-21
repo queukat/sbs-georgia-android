@@ -64,8 +64,8 @@
     <string name="onboarding_effective_date">Дата начала действия статуса малого бизнеса</string>
     <string name="onboarding_default_tax_rate">Ставка налога по умолчанию (%)</string>
     <string name="onboarding_continue_to_app">Перейти в приложение</string>
-    <string name="snapshot_graph_20">Graph 20</string>
-    <string name="snapshot_graph_15_cumulative">Накопительный Graph 15</string>
+    <string name="snapshot_graph_20">Доход за месяц</string>
+    <string name="snapshot_graph_15_cumulative">Доход с начала года</string>
     <string name="snapshot_due_date">Крайний срок подачи</string>
     <string name="snapshot_status">Статус</string>
     <string name="snapshot_estimated_tax">Расчётный налог</string>

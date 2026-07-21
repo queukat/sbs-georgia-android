@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.settings
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import java.time.LocalDate
@@ -22,6 +23,10 @@ data class SettingsUiState(
     val declarationRemindersEnabled: Boolean = true,
     val paymentRemindersEnabled: Boolean = true,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
+    val includeCumulativeIncomeField: Boolean = true,
+    val includeMonthlyIncomeField: Boolean = true,
+    val monthlyIncomeField: DeclarationFormField =
+        DeclarationFormField.MONTHLY_NON_CASH_INCOME,
     val isDocumentLoading: Boolean = false,
     val documentInfoMessage: String? = null,
     val documentErrorMessage: String? = null,

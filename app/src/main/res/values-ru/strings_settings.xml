@@ -2,6 +2,7 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_saved">Настройки сохранены локально.</string>
     <string name="settings_group_profile_sbs">Профиль и SBS-статус</string>
+    <string name="settings_group_declaration">Декларация</string>
     <string name="settings_group_reminders">Напоминания</string>
     <string name="settings_group_data_backup">Данные и backup</string>
     <string name="settings_group_appearance">Внешний вид</string>
@@ -10,6 +11,15 @@
     <string name="settings_document_imports_body">Здесь можно повторно импортировать выписку из реестра или сертификат малого бизнеса и применить распознанные поля. Выписка TBC импортируется отдельно на экране импорта выписки.</string>
     <string name="settings_section_taxpayer_profile">Профиль налогоплательщика</string>
     <string name="settings_section_small_business_status">Статус малого бизнеса</string>
+    <string name="settings_section_declaration_fields">Поля для переноса в декларацию RS</string>
+    <string name="settings_monthly_income_field_enabled">Показывать доход за месяц</string>
+    <string name="settings_monthly_income_destination">Поле для дохода за месяц</string>
+    <string name="settings_monthly_income_single_field_notice">Весь включённый доход за месяц копируется в одно выбранное поле. Разделение месяца по способам оплаты пока не поддерживается.</string>
+    <string name="settings_declaration_field_15_description">Доход от бизнеса нарастающим итогом с января по выбранный месяц.</string>
+    <string name="settings_declaration_field_18_description">Наличные поступления через кассовый аппарат.</string>
+    <string name="settings_declaration_field_19_description">Оплаты, полученные через POS-терминал.</string>
+    <string name="settings_declaration_field_20_description">Переводы на счёт, кроме поступлений через POS-терминал.</string>
+    <string name="settings_declaration_field_21_description">Доход, не указанный в полях 18-20, например бартер или другая форма.</string>
     <string name="settings_section_reminder_preferences">Настройки напоминаний</string>
     <string name="settings_section_appearance">Оформление</string>
     <string name="settings_section_data_management">Данные</string>

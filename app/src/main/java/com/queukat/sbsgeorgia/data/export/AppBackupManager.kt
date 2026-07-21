@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.data.export
 
 import androidx.room.withTransaction
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigDao
 import com.queukat.sbsgeorgia.data.local.FxRateDao
 import com.queukat.sbsgeorgia.data.local.FxRateEntity
 import com.queukat.sbsgeorgia.data.local.ImportedStatementDao
@@ -15,7 +16,9 @@ import com.queukat.sbsgeorgia.data.local.ReminderConfigDao
 import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigDao
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
+import com.queukat.sbsgeorgia.data.local.toEntity
 import com.queukat.sbsgeorgia.di.IoDispatcher
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -31,6 +34,7 @@ constructor(
     private val taxpayerProfileDao: TaxpayerProfileDao,
     private val statusConfigDao: SmallBusinessStatusConfigDao,
     private val reminderConfigDao: ReminderConfigDao,
+    private val declarationFormConfigDao: DeclarationFormConfigDao,
     private val incomeEntryDao: IncomeEntryDao,
     private val monthlyDeclarationRecordDao: MonthlyDeclarationRecordDao,
     private val fxRateDao: FxRateDao,
@@ -42,12 +46,15 @@ constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
     suspend fun exportJson(): String = withContext(ioDispatcher) {
+        val declarationFormConfig =
+            declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
         val document =
             AppBackupDocument(
                 exportedAtEpochMillis = clock.millis(),
                 taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
                 statusConfig = statusConfigDao.get()?.toPayload(),
                 reminderConfig = reminderConfigDao.get()?.toPayload(),
+                declarationFormConfig = declarationFormConfig.toPayload(),
                 incomeEntries = incomeEntryDao.getAll().map(IncomeEntryEntity::toPayload),
                 monthlyDeclarationRecords = monthlyDeclarationRecordDao.getAll().map(
                     MonthlyDeclarationRecordEntity::toPayload
@@ -72,6 +79,7 @@ constructor(
             restorePlan.taxpayerProfile?.let { taxpayerProfileDao.upsert(it) }
             restorePlan.statusConfig?.let { statusConfigDao.upsert(it) }
             restorePlan.reminderConfig?.let { reminderConfigDao.upsert(it) }
+            declarationFormConfigDao.upsert(restorePlan.declarationFormConfig)
             if (restorePlan.incomeEntries.isNotEmpty()) {
                 incomeEntryDao.insertAll(restorePlan.incomeEntries)
             }
@@ -98,6 +106,7 @@ constructor(
         incomeEntryDao.clear()
         monthlyDeclarationRecordDao.clear()
         fxRateDao.clear()
+        declarationFormConfigDao.clear()
         reminderConfigDao.clear()
         statusConfigDao.clear()
         taxpayerProfileDao.clear()

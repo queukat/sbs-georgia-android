@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.data.export
 
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigEntity
 import com.queukat.sbsgeorgia.data.local.FxRateEntity
 import com.queukat.sbsgeorgia.data.local.ImportedStatementEntity
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionEntity
@@ -8,6 +9,8 @@ import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordEntity
 import com.queukat.sbsgeorgia.data.local.ReminderConfigEntity
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigEntity
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileEntity
+import com.queukat.sbsgeorgia.data.local.toEntity
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
@@ -19,6 +22,7 @@ internal data class BackupRestorePlan(
     val taxpayerProfile: TaxpayerProfileEntity?,
     val statusConfig: SmallBusinessStatusConfigEntity?,
     val reminderConfig: ReminderConfigEntity?,
+    val declarationFormConfig: DeclarationFormConfigEntity,
     val incomeEntries: List<IncomeEntryEntity>,
     val monthlyDeclarationRecords: List<MonthlyDeclarationRecordEntity>,
     val fxRates: List<FxRateEntity>,
@@ -59,6 +63,11 @@ constructor(private val json: Json) {
                 reminderConfig = document.reminderConfig?.validateAs("reminder config") {
                     toEntity()
                 },
+                declarationFormConfig = document.declarationFormConfig?.validateAs(
+                    "declaration form config"
+                ) {
+                    toEntity()
+                } ?: DeclarationFormConfig().toEntity(),
                 incomeEntries =
                 document.incomeEntries.mapIndexed { index, payload ->
                     payload.validateAs("income entry #$index") { toEntity() }

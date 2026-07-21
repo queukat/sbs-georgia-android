@@ -4,6 +4,8 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.queukat.sbsgeorgia.domain.model.BaseCurrencyView
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
@@ -45,6 +47,14 @@ data class ReminderConfigEntity(
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: LocalTime,
     val themeMode: ThemeMode
+)
+
+@Entity(tableName = "declaration_form_config")
+data class DeclarationFormConfigEntity(
+    @PrimaryKey val singletonId: Int = 1,
+    val includeCumulativeIncome: Boolean,
+    val includeMonthlyIncome: Boolean,
+    val monthlyIncomeFieldNumber: Int
 )
 
 @Entity(
@@ -186,3 +196,24 @@ fun ReminderConfig.toEntity(): ReminderConfigEntity = ReminderConfigEntity(
     defaultReminderTime = defaultReminderTime,
     themeMode = themeMode
 )
+
+fun DeclarationFormConfigEntity.toDomain(): DeclarationFormConfig = DeclarationFormConfig(
+    includeCumulativeIncome = includeCumulativeIncome,
+    includeMonthlyIncome = includeMonthlyIncome,
+    monthlyIncomeField = monthlyIncomeFieldNumber.toMonthlyIncomeField()
+)
+
+fun DeclarationFormConfig.toEntity(): DeclarationFormConfigEntity = DeclarationFormConfigEntity(
+    includeCumulativeIncome = includeCumulativeIncome,
+    includeMonthlyIncome = includeMonthlyIncome,
+    monthlyIncomeFieldNumber = monthlyIncomeField.fieldNumber
+)
+
+private fun Int.toMonthlyIncomeField(): DeclarationFormField {
+    val field = DeclarationFormField.fromFieldNumber(this)
+        ?: throw IllegalArgumentException("Unknown declaration field number: $this.")
+    require(field in com.queukat.sbsgeorgia.domain.model.MONTHLY_INCOME_FIELDS) {
+        "Unsupported monthly declaration field number: $this."
+    }
+    return field
+}

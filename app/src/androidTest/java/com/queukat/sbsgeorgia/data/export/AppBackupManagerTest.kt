@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigEntity
 import com.queukat.sbsgeorgia.data.local.FxRateEntity
 import com.queukat.sbsgeorgia.data.local.ImportedStatementEntity
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionEntity
@@ -88,6 +89,13 @@ class AppBackupManagerTest {
                     themeMode = ThemeMode.DARK
                 )
             )
+            sourceDb.declarationFormConfigDao().upsert(
+                DeclarationFormConfigEntity(
+                    includeCumulativeIncome = false,
+                    includeMonthlyIncome = true,
+                    monthlyIncomeFieldNumber = 19
+                )
+            )
             sourceDb.incomeEntryDao().upsert(
                 IncomeEntryEntity(
                     id = 11L,
@@ -162,6 +170,7 @@ class AppBackupManagerTest {
 
             val restoredProfile = restoreDb.taxpayerProfileDao().get()
             val restoredReminder = restoreDb.reminderConfigDao().get()
+            val restoredDeclarationFormConfig = restoreDb.declarationFormConfigDao().get()
             val restoredStatements = restoreDb.importedStatementDao().getAll()
             val restoredTransactions = restoreDb.importedTransactionDao().getAll()
             val restoredIncomeEntries = restoreDb.incomeEntryDao().getAll()
@@ -171,6 +180,9 @@ class AppBackupManagerTest {
             assertEquals("Individual Entrepreneur", restoredProfile?.legalForm)
             assertEquals(LocalDate.of(2023, 11, 24), restoredProfile?.registrationDate)
             assertEquals(LocalTime.of(9, 0), restoredReminder?.defaultReminderTime)
+            assertEquals(false, restoredDeclarationFormConfig?.includeCumulativeIncome)
+            assertEquals(true, restoredDeclarationFormConfig?.includeMonthlyIncome)
+            assertEquals(19, restoredDeclarationFormConfig?.monthlyIncomeFieldNumber)
             assertEquals("march-statement.pdf", restoredStatements.single().sourceFileName)
             assertEquals("statement-fingerprint", restoredStatements.single().sourceFingerprint)
             assertEquals("tx-fingerprint", restoredTransactions.single().transactionFingerprint)
@@ -203,6 +215,7 @@ class AppBackupManagerTest {
         taxpayerProfileDao = database.taxpayerProfileDao(),
         statusConfigDao = database.smallBusinessStatusConfigDao(),
         reminderConfigDao = database.reminderConfigDao(),
+        declarationFormConfigDao = database.declarationFormConfigDao(),
         incomeEntryDao = database.incomeEntryDao(),
         monthlyDeclarationRecordDao = database.monthlyDeclarationRecordDao(),
         fxRateDao = database.fxRateDao(),

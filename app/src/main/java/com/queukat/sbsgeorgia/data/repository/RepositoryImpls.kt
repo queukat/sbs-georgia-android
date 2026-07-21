@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.data.repository
 
 import androidx.room.withTransaction
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigDao
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
 import com.queukat.sbsgeorgia.data.local.IncomeEntryDao
 import com.queukat.sbsgeorgia.data.local.IncomeEntryEntity
@@ -12,6 +13,7 @@ import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigDao
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.local.toDomain
 import com.queukat.sbsgeorgia.data.local.toEntity
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
@@ -19,6 +21,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
@@ -58,6 +61,21 @@ constructor(
 
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfigDao.upsert(config.toEntity())
+    }
+}
+
+@Singleton
+class DeclarationFormConfigRepositoryImpl
+@Inject
+constructor(
+    private val declarationFormConfigDao: DeclarationFormConfigDao
+) : DeclarationFormConfigRepository {
+    override fun observeConfig(): Flow<DeclarationFormConfig?> = declarationFormConfigDao.observe().map {
+        it?.toDomain()
+    }
+
+    override suspend fun upsertConfig(config: DeclarationFormConfig) {
+        declarationFormConfigDao.upsert(config.toEntity())
     }
 }
 

@@ -64,8 +64,8 @@
     <string name="onboarding_effective_date">Small business status effective date</string>
     <string name="onboarding_default_tax_rate">Default tax rate (%)</string>
     <string name="onboarding_continue_to_app">Continue to app</string>
-    <string name="snapshot_graph_20">Graph 20</string>
-    <string name="snapshot_graph_15_cumulative">Graph 15 cumulative</string>
+    <string name="snapshot_graph_20">Income for the month</string>
+    <string name="snapshot_graph_15_cumulative">Income since year start</string>
     <string name="snapshot_due_date">Filing deadline</string>
     <string name="snapshot_status">Status</string>
     <string name="snapshot_estimated_tax">Estimated tax</string>

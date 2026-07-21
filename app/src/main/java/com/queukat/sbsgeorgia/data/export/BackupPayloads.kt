@@ -9,6 +9,7 @@ data class AppBackupDocument(
     val taxpayerProfile: TaxpayerProfilePayload? = null,
     val statusConfig: SmallBusinessStatusConfigPayload? = null,
     val reminderConfig: ReminderConfigPayload? = null,
+    val declarationFormConfig: DeclarationFormConfigPayload? = null,
     val incomeEntries: List<IncomeEntryPayload> = emptyList(),
     val monthlyDeclarationRecords: List<MonthlyDeclarationRecordPayload> = emptyList(),
     val fxRates: List<FxRatePayload> = emptyList(),
@@ -43,6 +44,13 @@ data class ReminderConfigPayload(
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: String,
     val themeMode: String
+)
+
+@Serializable
+data class DeclarationFormConfigPayload(
+    val includeCumulativeIncome: Boolean = true,
+    val includeMonthlyIncome: Boolean = true,
+    val monthlyIncomeFieldNumber: Int = 20
 )
 
 @Serializable

@@ -9,6 +9,7 @@ import com.queukat.sbsgeorgia.data.importer.AndroidStatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.PdfBoxStatementTextExtractor
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigDao
 import com.queukat.sbsgeorgia.data.local.FxRateDao
 import com.queukat.sbsgeorgia.data.local.ImportedStatementDao
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionDao
@@ -21,12 +22,14 @@ import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.remote.NbgFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.repository.AppPreferencesRepositoryImpl
+import com.queukat.sbsgeorgia.data.repository.DeclarationFormConfigRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.FxRateRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.IncomeRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.MonthlyDeclarationRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.SettingsRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.StatementImportRepositoryImpl
 import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
@@ -63,6 +66,11 @@ abstract class RepositoryBindingsModule {
 
     @Binds
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository
+
+    @Binds
+    abstract fun bindDeclarationFormConfigRepository(
+        impl: DeclarationFormConfigRepositoryImpl
+    ): DeclarationFormConfigRepository
 
     @Binds
     abstract fun bindIncomeRepository(impl: IncomeRepositoryImpl): IncomeRepository
@@ -102,7 +110,8 @@ object AppModule {
             SbsGeorgiaDatabase.MIGRATION_1_2,
             SbsGeorgiaDatabase.MIGRATION_2_3,
             SbsGeorgiaDatabase.MIGRATION_3_4,
-            SbsGeorgiaDatabase.MIGRATION_4_5
+            SbsGeorgiaDatabase.MIGRATION_4_5,
+            SbsGeorgiaDatabase.MIGRATION_5_6
         ).build()
 
     @Provides
@@ -114,6 +123,10 @@ object AppModule {
 
     @Provides
     fun provideReminderConfigDao(database: SbsGeorgiaDatabase): ReminderConfigDao = database.reminderConfigDao()
+
+    @Provides
+    fun provideDeclarationFormConfigDao(database: SbsGeorgiaDatabase): DeclarationFormConfigDao =
+        database.declarationFormConfigDao()
 
     @Provides
     fun provideIncomeEntryDao(database: SbsGeorgiaDatabase): IncomeEntryDao = database.incomeEntryDao()

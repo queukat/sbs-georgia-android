@@ -55,6 +55,21 @@ interface ReminderConfigDao {
 }
 
 @Dao
+interface DeclarationFormConfigDao {
+    @Query("SELECT * FROM declaration_form_config WHERE singletonId = 1")
+    fun observe(): Flow<DeclarationFormConfigEntity?>
+
+    @Query("SELECT * FROM declaration_form_config WHERE singletonId = 1")
+    suspend fun get(): DeclarationFormConfigEntity?
+
+    @Upsert
+    suspend fun upsert(entity: DeclarationFormConfigEntity)
+
+    @Query("DELETE FROM declaration_form_config")
+    suspend fun clear()
+}
+
+@Dao
 interface IncomeEntryDao {
     @Query("SELECT * FROM income_entry ORDER BY incomeDate DESC, id DESC")
     fun observeAll(): Flow<List<IncomeEntryEntity>>

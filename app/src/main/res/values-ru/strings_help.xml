@@ -37,7 +37,7 @@
     <string name="help_faq_missing_rate_question">Что делать, если на дату нет FX-курса?</string>
     <string name="help_faq_missing_rate_answer">Если официальный курс на эту дату не найден, запись остаётся неразрешённой, а месяц не считается полностью готовым. Позже можно повторить автоматическое разрешение или задать ручное FX-переопределение для записи.</string>
     <string name="help_faq_monthly_declarations_question">Как работают monthly declarations?</string>
-    <string name="help_faq_monthly_declarations_answer">Каждый месяц дохода связан с окном подачи в следующем месяце. Экран месяца показывает Graph 20, накопительный Graph 15, оценку налога, подсказки по нулевой декларации и copy-инструменты, когда месяц готов.</string>
+    <string name="help_faq_monthly_declarations_answer">Каждый месяц дохода связан с окном подачи в следующем месяце. Экран месяца показывает доход за месяц, накопительный доход с начала года, оценку налога, подсказки по нулевой декларации и инструменты копирования, когда месяц готов.</string>
     <string name="help_faq_reminders_question">Как работают reminders и statuses?</string>
     <string name="help_faq_reminders_answer">Дни и время напоминаний настраиваются в Settings. Статусы месяца проходят путь от draft через filed и payment-состояния к settled, а overdue выводится автоматически по due date.</string>
     <string name="help_faq_backup_question">Когда использовать backup или export?</string>

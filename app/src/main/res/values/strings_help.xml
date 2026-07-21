@@ -37,7 +37,7 @@
     <string name="help_faq_missing_rate_question">What if there is no FX rate for the date?</string>
     <string name="help_faq_missing_rate_answer">If no official rate is available for that date, the entry stays unresolved and the month remains not fully ready. You can retry official resolution later or set a manual FX override for that entry.</string>
     <string name="help_faq_monthly_declarations_question">How do monthly declarations work?</string>
-    <string name="help_faq_monthly_declarations_answer">Each income month maps to the next month’s filing window. The month screen shows Graph 20, cumulative Graph 15, estimated tax, zero-declaration guidance, and copy tools when the month is ready.</string>
+    <string name="help_faq_monthly_declarations_answer">Each income month maps to the next month’s filing window. The month screen shows monthly income, cumulative income since the year start, estimated tax, zero-declaration guidance, and copy tools when the month is ready.</string>
     <string name="help_faq_reminders_question">How do reminders and statuses work?</string>
     <string name="help_faq_reminders_answer">Reminder days and time are configured in Settings. Month statuses move from draft through filed and payment states to settled, and overdue is derived automatically from the due date.</string>
     <string name="help_faq_backup_question">When should I use backup or export?</string>

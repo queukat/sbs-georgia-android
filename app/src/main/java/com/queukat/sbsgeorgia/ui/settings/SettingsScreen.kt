@@ -40,6 +40,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
@@ -51,6 +52,7 @@ import com.queukat.sbsgeorgia.ui.help.openFeedbackPage
 import com.queukat.sbsgeorgia.ui.help.openPlayStoreListing
 import com.queukat.sbsgeorgia.ui.settings.components.AppearanceSettingsSection
 import com.queukat.sbsgeorgia.ui.settings.components.DataManagementSection
+import com.queukat.sbsgeorgia.ui.settings.components.DeclarationFormSettingsSection
 import com.queukat.sbsgeorgia.ui.settings.components.DocumentImportSection
 import com.queukat.sbsgeorgia.ui.settings.components.DocumentPreviewSection
 import com.queukat.sbsgeorgia.ui.settings.components.HelpFeedbackSection
@@ -150,6 +152,9 @@ fun SettingsRoute(innerPadding: PaddingValues) {
         onDeclarationEnabledChanged = viewModel::updateDeclarationEnabled,
         onPaymentEnabledChanged = viewModel::updatePaymentEnabled,
         onThemeModeChanged = viewModel::updateThemeMode,
+        onIncludeCumulativeIncomeChanged = viewModel::updateIncludeCumulativeIncome,
+        onIncludeMonthlyIncomeChanged = viewModel::updateIncludeMonthlyIncome,
+        onMonthlyIncomeFieldChanged = viewModel::updateMonthlyIncomeField,
         onScheduleTestReminder = viewModel::scheduleTestReminder,
         onImportRegistryExtract = {
             pendingDocumentImportAction = DocumentImportAction.IMPORT_REGISTRY_EXTRACT
@@ -245,6 +250,9 @@ fun SettingsScreen(
     onDeclarationEnabledChanged: (Boolean) -> Unit = {},
     onPaymentEnabledChanged: (Boolean) -> Unit = {},
     onThemeModeChanged: (ThemeMode) -> Unit = {},
+    onIncludeCumulativeIncomeChanged: (Boolean) -> Unit = {},
+    onIncludeMonthlyIncomeChanged: (Boolean) -> Unit = {},
+    onMonthlyIncomeFieldChanged: (DeclarationFormField) -> Unit = {},
     onScheduleTestReminder: (ReminderType, Long) -> Unit = { _, _ -> },
     onImportRegistryExtract: () -> Unit = {},
     onImportCertificate: () -> Unit = {},
@@ -348,6 +356,18 @@ fun SettingsScreen(
                     onCertificateIssuedDateChanged = onCertificateIssuedDateChanged,
                     onEffectiveDateChanged = onEffectiveDateChanged,
                     onTaxRateChanged = onTaxRateChanged
+                )
+            }
+
+            SettingsGroup(
+                title = stringResource(R.string.settings_group_declaration),
+                testTag = "settings-group-declaration"
+            ) {
+                DeclarationFormSettingsSection(
+                    uiState = uiState,
+                    onIncludeCumulativeIncomeChanged = onIncludeCumulativeIncomeChanged,
+                    onIncludeMonthlyIncomeChanged = onIncludeMonthlyIncomeChanged,
+                    onMonthlyIncomeFieldChanged = onMonthlyIncomeFieldChanged
                 )
             }
 

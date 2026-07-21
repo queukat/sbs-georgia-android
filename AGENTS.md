@@ -30,7 +30,7 @@ SBS Georgia Android - offline-first Android-приложение для инди
 Что приложение делает:
 
 - превращает TBC PDF statement в editable import preview;
-- считает `Graph 20`, накопительный `Graph 15`, `estimated tax`, due date и blockers;
+- считает месячный доход, накопительный доход с начала года, `estimated tax`, due date и blockers;
 - использует official NBG FX rates и local cache, но не делает silent FX guesses;
 - хранит данные локально в Room без developer backend, аккаунтов и cloud sync;
 - поддерживает reminders, Android widgets, CSV export и full JSON backup/restore.
@@ -49,7 +49,7 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - Android: `compileSdk = 36`, `targetSdk = 36`, `minSdk = 24`.
 - App id/namespace: `com.queukat.sbsgeorgia`.
 - UI: Jetpack Compose, Material 3, typed Navigation 3 destinations.
-- Data: Room database `SbsGeorgiaDatabase`, schema version 5, checked schemas in
+- Data: Room database `SbsGeorgiaDatabase`, schema version 6, checked schemas in
   `app/schemas/com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase/`.
 - DI/background: Hilt, Hilt WorkManager integration, WorkManager.
 - Parsing/network/export: PdfBox Android, official NBG JSON endpoint,
@@ -94,8 +94,14 @@ SBS Georgia Android - offline-first Android-приложение для инди
   taxpayer profile.
 - `TBC statement` - text-based PDF bank statement from TBC Bank. Текущий importer
   оптимизирован под текущий TBC v1 layout и его English/Georgian/bilingual variants.
-- `Graph 20` - месячный in-scope taxable income total в GEL.
-- `Graph 15` - cumulative yearly `Graph 20` total.
+- `graph20TotalGel` - legacy/internal name месячного in-scope income total в GEL;
+  это не универсальная привязка к номеру строки формы.
+- `graph15CumulativeGel` - legacy/internal name накопительного дохода с начала года.
+- `RS field 15` - накопительный доход с начала календарного года по отчётный месяц.
+- `RS fields 18/19/20/21` - взаимоисключающий light-mode destination месячного
+  итога: cash register, POS terminal, non-cash excluding POS, other income.
+- `DeclarationFormConfig` - включает/скрывает cumulative/monthly copy values и
+  выбирает одну строку `18-21`; default - поля `15 + 20`.
 - `GEL equivalent` - сумма записи в GEL. Для `GEL` равна original amount; для
   foreign currency нужна official NBG rate или manual override.
 - `NBG FX` - официальный курс National Bank of Georgia из JSON endpoint.
@@ -129,6 +135,8 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - `SmallBusinessStatusConfig` - effective date, default tax rate percent,
   certificate number and issued date.
 - `ReminderConfig` - reminder days/time, enable flags and `ThemeMode`.
+- `DeclarationFormConfig` - persisted copy-field visibility and the selected monthly
+  RS income field; входит в Room migration и full JSON backup/restore.
 - `IncomeEntry` - ручной или imported доход: date, amount, currency, category,
   note, declaration inclusion, GEL equivalent and source linkage.
 - `MonthlyDeclarationRecord` - user workflow state for month: status,
@@ -137,7 +145,7 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - `ImportedStatement` - metadata for imported PDF source.
 - `ImportedTransaction` - parsed transaction row and duplicate-protection metadata.
 - `MonthlyDeclarationSnapshot` - calculated read model for UI/widgets/charts/export:
-  period, Graph 20/15, tax, FX count, review/setup flags and stored record.
+  period, monthly/cumulative income, tax, FX count, review/setup flags and stored record.
 - `AppBackupDocument` and `*Payload` classes - JSON backup wire shape. Restore
   validates uniqueness, references and positive amounts before replacing tables.
 
@@ -158,6 +166,9 @@ SBS Georgia Android - offline-first Android-приложение для инди
   substitute nearest dates or guessed rates unless product requirements change.
 - Declaration planning lives in `MonthlyDeclarationPlanner`; Georgian non-business
   day adjustment lives in `GeorgiaTaxBusinessCalendar`.
+- Home and Month Detail build copy rows from the persisted `DeclarationFormConfig`.
+  Field 15 is cumulative; the whole monthly total goes to exactly one selected
+  field 18/19/20/21. Mixed per-account/per-payment-method allocation is not modeled.
 - Backup restore replaces local tables inside a Room transaction. If imported setup
   is incomplete, onboarding remains active.
 - Reminders are daily WorkManager jobs scheduled by stored reminder config and
@@ -245,6 +256,8 @@ GitHub auth and CI:
 - `AGENTS.md` is intentionally in repo root and should be tracked.
 - Keep Room entities, migrations, schema JSON and backup validation in sync.
 - Keep EN/RU resource strings aligned when changing user-facing UI.
+- Do not expose internal `graph15*`/`graph20*` names as portal field labels. The
+  current RS form mapping is modeled by `DeclarationFormField` and user config.
 - Do not add silent FX fallback behavior. Visible unresolved states are a product
   principle.
 - `PaymentHelperDestination` and screen exist. The primary payment preparation flow

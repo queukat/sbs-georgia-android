@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.data.export
 
+import com.queukat.sbsgeorgia.data.local.DeclarationFormConfigEntity
 import com.queukat.sbsgeorgia.data.local.FxRateEntity
 import com.queukat.sbsgeorgia.data.local.ImportedStatementEntity
 import com.queukat.sbsgeorgia.data.local.ImportedTransactionEntity
@@ -9,9 +10,11 @@ import com.queukat.sbsgeorgia.data.local.ReminderConfigEntity
 import com.queukat.sbsgeorgia.data.local.SmallBusinessStatusConfigEntity
 import com.queukat.sbsgeorgia.data.local.TaxpayerProfileEntity
 import com.queukat.sbsgeorgia.domain.model.BaseCurrencyView
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
+import com.queukat.sbsgeorgia.domain.model.MONTHLY_INCOME_FIELDS
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
@@ -72,6 +75,26 @@ internal fun ReminderConfigPayload.toEntity(): ReminderConfigEntity = ReminderCo
     defaultReminderTime = LocalTime.parse(defaultReminderTime),
     themeMode = ThemeMode.fromPersisted(themeMode)
 )
+
+internal fun DeclarationFormConfigEntity.toPayload(): DeclarationFormConfigPayload = DeclarationFormConfigPayload(
+    includeCumulativeIncome = includeCumulativeIncome,
+    includeMonthlyIncome = includeMonthlyIncome,
+    monthlyIncomeFieldNumber = monthlyIncomeFieldNumber
+)
+
+internal fun DeclarationFormConfigPayload.toEntity(): DeclarationFormConfigEntity = DeclarationFormConfigEntity(
+    includeCumulativeIncome = includeCumulativeIncome,
+    includeMonthlyIncome = includeMonthlyIncome,
+    monthlyIncomeFieldNumber = monthlyIncomeFieldNumber.requireMonthlyIncomeFieldNumber()
+)
+
+private fun Int.requireMonthlyIncomeFieldNumber(): Int {
+    val field = DeclarationFormField.fromFieldNumber(this)
+    require(field in MONTHLY_INCOME_FIELDS) {
+        "Unsupported monthly declaration field number: $this."
+    }
+    return this
+}
 
 internal fun IncomeEntryEntity.toPayload(): IncomeEntryPayload = IncomeEntryPayload(
     id = id,

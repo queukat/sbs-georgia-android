@@ -5,14 +5,18 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.test.assertDoesNotExist
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.ui.help.HelpFaqDialog
 import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
@@ -20,6 +24,7 @@ import com.queukat.sbsgeorgia.ui.settings.SettingsScreen
 import com.queukat.sbsgeorgia.ui.settings.SettingsUiState
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.time.LocalDate
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -91,6 +96,54 @@ class SettingsScreenTest {
 
         assertTrue(saveClicked)
         composeRule.onNodeWithTag("settings-display-name-field").assertTextContains("Jane Doe")
+    }
+
+    @Test
+    fun declarationFieldSettingsUseDefaultFieldsAndAllowPosSelection() {
+        var uiState by mutableStateOf(SettingsUiState())
+        var selectedMonthlyField: DeclarationFormField? = null
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                SettingsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState = uiState,
+                    snackbarHostState = SnackbarHostState(),
+                    notificationPermissionGranted = true,
+                    onIncludeCumulativeIncomeChanged = {
+                        uiState = uiState.copy(includeCumulativeIncomeField = it)
+                    },
+                    onIncludeMonthlyIncomeChanged = {
+                        uiState = uiState.copy(includeMonthlyIncomeField = it)
+                    },
+                    onMonthlyIncomeFieldChanged = {
+                        selectedMonthlyField = it
+                        uiState = uiState.copy(monthlyIncomeField = it)
+                    },
+                    onSave = {}
+                )
+            }
+        }
+
+        composeRule.onNodeWithTag("settings-declaration-field-15-switch").assertIsOn()
+        composeRule.onNodeWithTag("settings-declaration-field-20-option")
+            .performScrollTo()
+            .assertIsDisplayed()
+
+        composeRule.onNodeWithTag("settings-declaration-field-19-option")
+            .performScrollTo()
+            .performClick()
+
+        assertEquals(DeclarationFormField.MONTHLY_POS_INCOME, selectedMonthlyField)
+
+        composeRule.onNodeWithTag("settings-declaration-monthly-income-switch")
+            .performScrollTo()
+            .performClick()
+
+        composeRule.onNodeWithTag("settings-declaration-field-18-option").assertDoesNotExist()
+        composeRule.onNodeWithTag("settings-declaration-field-19-option").assertDoesNotExist()
+        composeRule.onNodeWithTag("settings-declaration-field-20-option").assertDoesNotExist()
+        composeRule.onNodeWithTag("settings-declaration-field-21-option").assertDoesNotExist()
     }
 
     @Test

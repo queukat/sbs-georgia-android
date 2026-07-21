@@ -2,6 +2,7 @@
     <string name="settings_title">Settings</string>
     <string name="settings_saved">Settings saved locally.</string>
     <string name="settings_group_profile_sbs">Profile and SBS status</string>
+    <string name="settings_group_declaration">Declaration</string>
     <string name="settings_group_reminders">Reminders</string>
     <string name="settings_group_data_backup">Data and backup</string>
     <string name="settings_group_appearance">Appearance</string>
@@ -10,6 +11,15 @@
     <string name="settings_document_imports_body">You can re-import a registry extract or small business certificate here and apply the parsed fields. TBC statement import stays separate on the statement import screen.</string>
     <string name="settings_section_taxpayer_profile">Taxpayer profile</string>
     <string name="settings_section_small_business_status">Small business status</string>
+    <string name="settings_section_declaration_fields">Fields copied to the RS declaration</string>
+    <string name="settings_monthly_income_field_enabled">Show monthly income</string>
+    <string name="settings_monthly_income_destination">Monthly income field</string>
+    <string name="settings_monthly_income_single_field_notice">All included income for the month is copied to one selected field. Splitting a month across payment methods is not supported yet.</string>
+    <string name="settings_declaration_field_15_description">Cumulative business income from January through the selected month.</string>
+    <string name="settings_declaration_field_18_description">Cash received through a cash register.</string>
+    <string name="settings_declaration_field_19_description">Payments received through a POS terminal.</string>
+    <string name="settings_declaration_field_20_description">Transfers to an account, excluding POS-terminal receipts.</string>
+    <string name="settings_declaration_field_21_description">Income not reported in fields 18-20, such as barter or another form.</string>
     <string name="settings_section_reminder_preferences">Reminder preferences</string>
     <string name="settings_section_appearance">Appearance</string>
     <string name="settings_section_data_management">Data management</string>

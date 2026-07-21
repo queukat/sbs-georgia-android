@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.settings
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
@@ -101,6 +102,7 @@ internal object SettingsFormReducer {
         profile: TaxpayerProfile?,
         config: SmallBusinessStatusConfig?,
         reminderConfig: ReminderConfig?,
+        declarationFormConfig: DeclarationFormConfig?,
         today: LocalDate
     ): SettingsUiState = currentState.copy(
         preview = null,
@@ -124,6 +126,11 @@ internal object SettingsFormReducer {
         declarationRemindersEnabled = reminderConfig?.declarationRemindersEnabled ?: true,
         paymentRemindersEnabled = reminderConfig?.paymentRemindersEnabled ?: true,
         themeMode = reminderConfig?.themeMode ?: currentState.themeMode,
+        includeCumulativeIncomeField =
+        declarationFormConfig?.includeCumulativeIncome ?: true,
+        includeMonthlyIncomeField = declarationFormConfig?.includeMonthlyIncome ?: true,
+        monthlyIncomeField =
+        declarationFormConfig?.monthlyIncomeField ?: currentState.monthlyIncomeField,
         isDocumentLoading = false,
         documentInfoMessage = null,
         documentErrorMessage = null,

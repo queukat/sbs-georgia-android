@@ -7,7 +7,7 @@
     <string name="manual_entry_currency">Валюта</string>
     <string name="manual_entry_source_category">Категория источника</string>
     <string name="manual_entry_note">Заметка</string>
-    <string name="manual_entry_include_graph_20">Включать в graph 20 декларации</string>
+    <string name="manual_entry_include_graph_20">Включать в доход за месяц для декларации</string>
     <string name="manual_entry_unresolved_fx_hint">Записи не в GEL остаются неразрешёнными, пока не применён официальный курс NBG или ручной курс.</string>
     <string name="manual_entry_save">Сохранить доход</string>
     <string name="manual_entry_save_changes">Сохранить изменения</string>
@@ -44,11 +44,16 @@
     <string name="month_detail_ready">Месяц готов к подаче и оплате. Фактический срок: %1$s.</string>
     <string name="month_detail_edit_status">Изменить статус подачи и оплаты</string>
     <string name="month_detail_section_copy_tools">Значения для декларации и оплаты</string>
+    <string name="month_detail_section_payment_tools">Значения для оплаты</string>
     <string name="month_detail_copy_waiting_for_window">Кнопки копирования станут доступны, когда откроется окно подачи: %1$s.</string>
     <string name="month_detail_copy_blocked_unresolved_fx">Копирование заблокировано, пока все FX-записи не будут разрешены.</string>
     <string name="month_detail_copy_blocked_review">Копирование заблокировано, пока месяц требует проверки.</string>
-    <string name="month_detail_copy_graph_20">Скопировать Graph 20</string>
-    <string name="month_detail_copy_graph_15">Скопировать Graph 15</string>
+    <string name="declaration_field_15_label">Поле (15): доход с начала года</string>
+    <string name="declaration_field_18_label">Поле (18): наличный доход за месяц через кассу</string>
+    <string name="declaration_field_19_label">Поле (19): доход за месяц через POS-терминал</string>
+    <string name="declaration_field_20_label">Поле (20): безналичный доход за месяц, кроме POS</string>
+    <string name="declaration_field_21_label">Поле (21): другой доход за месяц</string>
+    <string name="declaration_field_copy">Скопировать: %1$s</string>
     <string name="month_detail_copy_payment_text">Скопировать текст для банка</string>
     <string name="month_detail_copy_all_text">Скопировать всё</string>
     <string name="month_detail_no_entries">В этом месяце пока нет записей о доходах.</string>

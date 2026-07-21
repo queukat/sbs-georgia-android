@@ -97,6 +97,27 @@ class SbsGeorgiaDatabaseMigrationTest {
             }
     }
 
+    @Test
+    @Throws(IOException::class)
+    fun migrate5To6AddsDefaultDeclarationFormConfig() {
+        helper.createDatabase(TEST_DB, 5).close()
+
+        helper
+            .runMigrationsAndValidate(TEST_DB, 6, true, SbsGeorgiaDatabase.MIGRATION_5_6)
+            .query(
+                """
+                SELECT includeCumulativeIncome, includeMonthlyIncome, monthlyIncomeFieldNumber
+                FROM declaration_form_config WHERE singletonId = 1
+                """.trimIndent()
+            ).use { cursor ->
+                assertEquals(1, cursor.count)
+                cursor.moveToFirst()
+                assertEquals(1, cursor.getInt(0))
+                assertEquals(1, cursor.getInt(1))
+                assertEquals(20, cursor.getInt(2))
+            }
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }

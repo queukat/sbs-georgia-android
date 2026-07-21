@@ -58,6 +58,28 @@ class BackupValidatorTest {
             MonthlyWorkflowStatus.READY_TO_FILE.dbCode,
             plan.monthlyDeclarationRecords.single().workflowStatus
         )
+        assertTrue(plan.declarationFormConfig.includeCumulativeIncome)
+        assertTrue(plan.declarationFormConfig.includeMonthlyIncome)
+        assertEquals(20, plan.declarationFormConfig.monthlyIncomeFieldNumber)
+    }
+
+    @Test
+    fun buildRestorePlanRejectsDeclarationFieldOutsideMonthlyIncomeFields() {
+        assertRestorePlanFails(
+            content =
+            """
+                {
+                  "formatVersion": 1,
+                  "exportedAtEpochMillis": 1,
+                  "declarationFormConfig": {
+                    "includeCumulativeIncome": true,
+                    "includeMonthlyIncome": true,
+                    "monthlyIncomeFieldNumber": 15
+                  }
+                }
+            """.trimIndent(),
+            messagePart = "invalid declaration form config"
+        )
     }
 
     @Test

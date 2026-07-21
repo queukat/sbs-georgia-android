@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
@@ -42,6 +44,7 @@ class MonthDetailViewModel
 constructor(
     observeMonthDetailUseCase: ObserveMonthDetailUseCase,
     settingsRepository: SettingsRepository,
+    declarationFormConfigRepository: DeclarationFormConfigRepository,
     private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
     private val incomeRepository: IncomeRepository,
     private val fxRateRepository: FxRateRepository,
@@ -62,13 +65,15 @@ constructor(
                 .flatMapLatest { yearMonth ->
                     combine(
                         observeMonthDetailUseCase(yearMonth),
-                        settingsRepository.observeTaxpayerProfile()
-                    ) { (snapshot, entries), profile ->
+                        settingsRepository.observeTaxpayerProfile(),
+                        declarationFormConfigRepository.observeConfig()
+                    ) { (snapshot, entries), profile, savedFormConfig ->
                         MonthDetailSourceState(
                             yearMonth = yearMonth,
                             snapshot = snapshot,
                             entries = entries,
-                            registrationId = profile?.registrationId
+                            registrationId = profile?.registrationId,
+                            formConfig = savedFormConfig ?: DeclarationFormConfig()
                         )
                     }.mapLatest { sourceState ->
                         val actionState =
@@ -84,7 +89,8 @@ constructor(
                             buildDeclarationCopyBundle(
                                 snapshot = sourceState.snapshot,
                                 registrationId = sourceState.registrationId,
-                                yearMonth = sourceState.yearMonth
+                                yearMonth = sourceState.yearMonth,
+                                formConfig = sourceState.formConfig
                             ),
                             actionState = actionState,
                             fxRateDetails = sourceState.entries.loadFxRateDetails(),
@@ -207,7 +213,8 @@ constructor(
         val yearMonth: YearMonth,
         val snapshot: MonthlyDeclarationSnapshot?,
         val entries: List<IncomeEntry>,
-        val registrationId: String?
+        val registrationId: String?,
+        val formConfig: DeclarationFormConfig
     )
 
     private companion object {

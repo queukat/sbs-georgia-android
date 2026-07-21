@@ -11,13 +11,14 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TaxpayerProfileEntity::class,
         SmallBusinessStatusConfigEntity::class,
         ReminderConfigEntity::class,
+        DeclarationFormConfigEntity::class,
         IncomeEntryEntity::class,
         MonthlyDeclarationRecordEntity::class,
         ImportedStatementEntity::class,
         ImportedTransactionEntity::class,
         FxRateEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(AppTypeConverters::class)
@@ -27,6 +28,8 @@ abstract class SbsGeorgiaDatabase : RoomDatabase() {
     abstract fun smallBusinessStatusConfigDao(): SmallBusinessStatusConfigDao
 
     abstract fun reminderConfigDao(): ReminderConfigDao
+
+    abstract fun declarationFormConfigDao(): DeclarationFormConfigDao
 
     abstract fun incomeEntryDao(): IncomeEntryDao
 
@@ -124,6 +127,33 @@ abstract class SbsGeorgiaDatabase : RoomDatabase() {
                         """
                         CREATE INDEX IF NOT EXISTS index_imported_transaction_statementId
                         ON imported_transaction (statementId)
+                        """.trimIndent()
+                    )
+                }
+            }
+
+        val MIGRATION_5_6: Migration =
+            object : Migration(5, 6) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    db.execSQL(
+                        """
+                        CREATE TABLE IF NOT EXISTS declaration_form_config (
+                            singletonId INTEGER NOT NULL,
+                            includeCumulativeIncome INTEGER NOT NULL,
+                            includeMonthlyIncome INTEGER NOT NULL,
+                            monthlyIncomeFieldNumber INTEGER NOT NULL,
+                            PRIMARY KEY(singletonId)
+                        )
+                        """.trimIndent()
+                    )
+                    db.execSQL(
+                        """
+                        INSERT OR IGNORE INTO declaration_form_config(
+                            singletonId,
+                            includeCumulativeIncome,
+                            includeMonthlyIncome,
+                            monthlyIncomeFieldNumber
+                        ) VALUES(1, 1, 1, 20)
                         """.trimIndent()
                     )
                 }

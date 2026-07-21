@@ -41,6 +41,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
@@ -117,13 +118,13 @@ fun MonthDetailScreen(
     val copyToolsRequester = remember { BringIntoViewRequester() }
     val entriesRequester = remember { BringIntoViewRequester() }
     val copiedTemplate = stringResource(R.string.common_copied_template, "%1\$s")
-    val graph20Label = stringResource(R.string.snapshot_graph_20)
-    val graph15Label = stringResource(R.string.snapshot_graph_15_cumulative)
     val paymentTextLabel = stringResource(R.string.month_detail_copy_payment_text)
     val fullTextLabel = stringResource(R.string.month_detail_copy_all_text)
     var pendingDeleteEntryId by rememberSaveable { mutableStateOf<Long?>(null) }
-    val canCopyDeclarationValues =
+    val copyActionsAvailable =
         snapshot != null && copyBundle != null && uiState.actionState?.canCopyDeclarationValues == true
+    val hasDeclarationValues = copyBundle?.declarationValues?.isNotEmpty() == true
+    val canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues
     val activeMonth = uiState.yearMonth ?: snapshot?.period?.incomeMonth
 
     fun copy(label: String, value: String) {
@@ -275,15 +276,26 @@ fun MonthDetailScreen(
                 }
             }
             item {
-                if (snapshot != null && copyBundle != null && canCopyDeclarationValues) {
+                if (snapshot != null && copyBundle != null && copyActionsAvailable) {
                     val canCopyPaymentText = uiState.actionState?.canCopyPaymentText == true
 
                     AppSection(
-                        title = stringResource(R.string.month_detail_section_copy_tools),
+                        title =
+                        stringResource(
+                            if (hasDeclarationValues) {
+                                R.string.month_detail_section_copy_tools
+                            } else {
+                                R.string.month_detail_section_payment_tools
+                            }
+                        ),
                         modifier = Modifier.bringIntoViewRequester(copyToolsRequester)
                     ) {
-                        KeyValueRow(graph20Label, copyBundle.graph20)
-                        KeyValueRow(graph15Label, copyBundle.graph15)
+                        DeclarationCopyValues(
+                            values = copyBundle.declarationValues,
+                            enabled = canCopyDeclarationValues,
+                            testTagPrefix = "month-detail",
+                            onCopy = { label, value -> copy(label = label, value = value) }
+                        )
                         KeyValueRow(
                             stringResource(R.string.snapshot_estimated_tax),
                             copyBundle.taxAmount
@@ -301,30 +313,6 @@ fun MonthDetailScreen(
                             }
                         )
 
-                        ActionFlowRow {
-                            OutlinedButton(
-                                onClick = {
-                                    copy(
-                                        label = graph20Label,
-                                        value = copyBundle.graph20
-                                    )
-                                },
-                                enabled = canCopyDeclarationValues
-                            ) {
-                                Text(stringResource(R.string.month_detail_copy_graph_20))
-                            }
-                            OutlinedButton(
-                                onClick = {
-                                    copy(
-                                        label = graph15Label,
-                                        value = copyBundle.graph15
-                                    )
-                                },
-                                enabled = canCopyDeclarationValues
-                            ) {
-                                Text(stringResource(R.string.month_detail_copy_graph_15))
-                            }
-                        }
                         ActionFlowRow {
                             OutlinedButton(
                                 onClick = {

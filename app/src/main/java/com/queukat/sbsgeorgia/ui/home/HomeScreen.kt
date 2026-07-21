@@ -49,6 +49,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SimpleChip
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
@@ -302,8 +303,6 @@ private fun DuePeriodQuickAccess(
 
     val snapshot = quickAccess.snapshot
     val copyBundle = quickAccess.copyBundle
-    val graph20Label = stringResource(R.string.snapshot_graph_20)
-    val graph15Label = stringResource(R.string.snapshot_graph_15_cumulative)
     val paymentTextLabel = stringResource(R.string.month_detail_copy_payment_text)
     val fullTextLabel = stringResource(R.string.month_detail_copy_all_text)
 
@@ -337,28 +336,12 @@ private fun DuePeriodQuickAccess(
             }
         }
 
-        KeyValueRow(graph20Label, copyBundle.graph20)
-        KeyValueRow(graph15Label, copyBundle.graph15)
-
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = { onCopy(graph20Label, copyBundle.graph20) },
-                enabled = quickAccess.canCopyDeclarationValues,
-                modifier = Modifier.testTag("home-copy-graph-20-button")
-            ) {
-                Text(stringResource(R.string.month_detail_copy_graph_20))
-            }
-            OutlinedButton(
-                onClick = { onCopy(graph15Label, copyBundle.graph15) },
-                enabled = quickAccess.canCopyDeclarationValues,
-                modifier = Modifier.testTag("home-copy-graph-15-button")
-            ) {
-                Text(stringResource(R.string.month_detail_copy_graph_15))
-            }
-        }
+        DeclarationCopyValues(
+            values = copyBundle.declarationValues,
+            enabled = quickAccess.canCopyDeclarationValues,
+            testTagPrefix = "home",
+            onCopy = onCopy
+        )
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
