@@ -69,6 +69,8 @@ android {
 
     buildTypes {
         debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
             enableAndroidTestCoverage = coverageRequested
             enableUnitTestCoverage = unitTestCoverageRequested
         }
@@ -190,6 +192,12 @@ tasks.register("installQa") {
     group = "install"
     description = "Installs the signed, non-minified release-like build for device UX testing."
     dependsOn("installNonMinifiedRelease")
+}
+
+tasks.register("installPhone") {
+    group = "install"
+    description = "Installs the fast debug build alongside the Play-signed app."
+    dependsOn("installDebug")
 }
 
 val jacocoGeneratedClassExcludes = listOf(

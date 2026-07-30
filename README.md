@@ -57,6 +57,17 @@ The app is intentionally focused on Georgian small business status declarations 
 ./gradlew.bat assembleDebug --console=plain
 ./gradlew.bat lintDebug --console=plain
 ```
+
+For a fast phone iteration, connect one Android device and run:
+
+```powershell
+./gradlew.bat :app:installPhone --console=plain
+```
+
+The debug build uses `com.queukat.sbsgeorgia.debug` and the launcher name
+`Georgia Small Biz Dev`, so it can coexist with the Play-installed application.
+Its local database is separate from the production application.
+
 ## License
 
 <!-- commercial-license-policy -->

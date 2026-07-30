@@ -187,6 +187,21 @@ Common checks:
 .\gradlew.bat lintDebug --console=plain
 ```
 
+Fast connected-phone install:
+
+```powershell
+.\gradlew.bat :app:installPhone --console=plain
+```
+
+- `installPhone` installs the ordinary `debug` variant with application ID
+  `com.queukat.sbsgeorgia.debug` and launcher label `Georgia Small Biz Dev`.
+  It coexists with the Play-signed app and uses a separate local database.
+- Gradle build cache and configuration cache are enabled. Keep the Gradle/Kotlin
+  daemons warm during an active edit-install loop; do not add `--no-daemon`.
+  Stop stale daemons after parallel investigations, not between normal rebuilds.
+- `installQa` remains the slower, release-like path for startup/performance checks;
+  it is not the default UI iteration command.
+
 Static analysis and coverage:
 
 ```powershell
@@ -264,6 +279,9 @@ GitHub auth and CI:
   is currently embedded in `Home` and `MonthDetail`.
 - Release builds require local `keystore.properties`; Play publishing uses
   `PLAY_KEY_FILE`.
+- A Play-installed `com.queukat.sbsgeorgia` is signed by Google Play and cannot be
+  replaced by a locally signed APK. Do not uninstall it for local QA without an
+  explicit user-approved backup/data-loss plan; use `installPhone` alongside it.
 - `allowBackup=false` is intentional for local-first/privacy positioning.
 - `MonthlyWorkflowStatus.OVERDUE` is derived from dates and base status, not a normal
   user-selected persisted state.
