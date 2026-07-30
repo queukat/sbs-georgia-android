@@ -11,6 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BarChart
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -25,15 +29,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.SbsActionStatus
 import com.queukat.sbsgeorgia.ui.common.SbsSecondaryButton
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
-import com.queukat.sbsgeorgia.ui.common.SimpleChip
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
@@ -44,7 +47,8 @@ fun MonthsRoute(
     innerPadding: PaddingValues,
     onMonthClick: (YearMonth) -> Unit,
     onAddIncome: () -> Unit,
-    onImportStatement: () -> Unit
+    onImportStatement: () -> Unit,
+    onOpenCharts: () -> Unit
 ) {
     val viewModel: MonthsViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -54,7 +58,8 @@ fun MonthsRoute(
         onMonthClick = onMonthClick,
         onSettleMonth = viewModel::settleMonth,
         onAddIncome = onAddIncome,
-        onImportStatement = onImportStatement
+        onImportStatement = onImportStatement,
+        onOpenCharts = onOpenCharts
     )
 }
 
@@ -65,7 +70,8 @@ fun MonthsScreen(
     onMonthClick: (YearMonth) -> Unit,
     onSettleMonth: (YearMonth) -> Unit,
     onAddIncome: () -> Unit,
-    onImportStatement: () -> Unit
+    onImportStatement: () -> Unit,
+    onOpenCharts: () -> Unit
 ) {
     var pendingQuickSettleMonth by rememberSaveable { mutableStateOf<String?>(null) }
 
@@ -124,6 +130,17 @@ fun MonthsScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            item(key = "months-charts-action") {
+                SbsSecondaryButton(
+                    label = stringResource(R.string.months_open_charts),
+                    onClick = onOpenCharts,
+                    modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .testTag("months-open-charts-button"),
+                    leadingIcon = Icons.Outlined.BarChart
+                )
+            }
             if (uiState.sections.isEmpty()) {
                 item {
                     Text(stringResource(R.string.months_empty))
@@ -156,21 +173,30 @@ fun MonthsScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TextButton(
+                            SbsSecondaryButton(
+                                label = stringResource(R.string.months_open_month),
                                 onClick = { onMonthClick(snapshot.period.incomeMonth) },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.months_open_month),
-                                    textAlign = TextAlign.Center
-                                )
-                            }
+                                modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .testTag(
+                                        "months-open-month-button-" +
+                                            snapshot.period.incomeMonth
+                                    )
+                            )
                             when {
                                 snapshot.period.outOfScope -> Unit
                                 item.monthAlreadySettled -> {
-                                    SimpleChip(
+                                    SbsActionStatus(
                                         label = stringResource(R.string.months_month_settled),
-                                        modifier = Modifier.weight(1.55f)
+                                        icon = Icons.Outlined.CheckCircle,
+                                        modifier =
+                                        Modifier
+                                            .weight(1f)
+                                            .testTag(
+                                                "months-closed-status-" +
+                                                    snapshot.period.incomeMonth
+                                            )
                                     )
                                 }
                                 item.canQuickSettleMonth -> {
@@ -182,7 +208,7 @@ fun MonthsScreen(
                                         },
                                         modifier =
                                         Modifier
-                                            .weight(1.55f)
+                                            .weight(1f)
                                             .testTag(
                                                 "months-complete-month-button-" +
                                                     snapshot.period.incomeMonth
@@ -191,13 +217,20 @@ fun MonthsScreen(
                                 }
                                 else -> {
                                     item.filingOpensOn?.let { filingOpenDate ->
-                                        SimpleChip(
+                                        SbsActionStatus(
                                             label =
                                             stringResource(
                                                 R.string.months_filing_opens_on,
                                                 filingOpenDate.formatIsoDate()
                                             ),
-                                            modifier = Modifier.weight(1.55f)
+                                            icon = Icons.Outlined.Schedule,
+                                            modifier =
+                                            Modifier
+                                                .weight(1f)
+                                                .testTag(
+                                                    "months-filing-status-" +
+                                                        snapshot.period.incomeMonth
+                                                )
                                         )
                                     }
                                 }

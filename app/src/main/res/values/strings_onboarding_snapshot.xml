@@ -74,6 +74,8 @@
     <string name="snapshot_tax_underpaid">Tax payment is short by %1$s</string>
     <string name="snapshot_tax_overpaid">Tax payment exceeds estimate by %1$s</string>
     <string name="snapshot_unresolved_fx_entries">Unresolved FX entries: %1$d</string>
+    <string name="snapshot_original_currency_total">Income in %1$s: %2$s</string>
+    <string name="snapshot_fx_rates_in_month_details">The exact rate and source are shown for each entry inside the month.</string>
     <string name="snapshot_zero_declaration_month">Zero declaration month</string>
     <string name="snapshot_zero_declaration_prepared">Zero declaration prepared</string>
     <string name="snapshot_out_of_scope">Out of scope</string>

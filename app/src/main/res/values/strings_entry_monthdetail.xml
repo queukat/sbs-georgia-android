@@ -30,6 +30,9 @@
     <string name="month_detail_next_done_hint">Payment workflow is complete for this month.</string>
     <string name="month_detail_next_prepare_details_hint">Resolve the readiness items below before the next action unlocks.</string>
     <string name="month_detail_section_summary">Declaration summary</string>
+    <string name="month_detail_section_applied_fx">Applied exchange rates</string>
+    <string name="month_detail_applied_fx_body">Rates are shown separately by date and source. A month can use more than one official or manual rate.</string>
+    <string name="month_detail_applied_fx_label">%1$s · %2$s</string>
     <string name="month_detail_section_readiness">Workflow readiness</string>
     <string name="month_detail_section_entries">Entries</string>
     <string name="month_detail_zero_not_prepared">Mark zero declaration prepared</string>
@@ -53,6 +56,12 @@
     <string name="declaration_field_19_label">Field (19): POS-terminal income for the month</string>
     <string name="declaration_field_20_label">Field (20): Non-cash income for the month, excluding POS</string>
     <string name="declaration_field_21_label">Field (21): Other income for the month</string>
+    <string name="declaration_field_number">Field %1$d</string>
+    <string name="declaration_field_15_name">Income since year start</string>
+    <string name="declaration_field_18_name">Cash-register income for the month</string>
+    <string name="declaration_field_19_name">POS-terminal income for the month</string>
+    <string name="declaration_field_20_name">Non-cash income for the month, excluding POS</string>
+    <string name="declaration_field_21_name">Other income for the month</string>
     <string name="declaration_field_copy">Copy %1$s</string>
     <string name="month_detail_copy_payment_text">Copy bank text</string>
     <string name="month_detail_copy_all_text">Copy all text</string>

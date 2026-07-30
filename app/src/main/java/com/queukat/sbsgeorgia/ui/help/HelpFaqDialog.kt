@@ -10,7 +10,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -24,15 +25,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.SbsSecondaryButton
 import com.queukat.sbsgeorgia.ui.common.SbsTopAppBar
 
 @Composable
-fun HelpFaqDialog(
-    onDismiss: () -> Unit,
-    onViewQuickStartGuide: () -> Unit,
-    onRateApp: () -> Unit,
-    onSendFeedback: () -> Unit
-) {
+fun HelpFaqDialog(onDismiss: () -> Unit, onSendFeedback: () -> Unit) {
     Dialog(
         onDismissRequest = onDismiss,
         properties =
@@ -77,27 +74,6 @@ fun HelpFaqDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    AppSection(title = stringResource(R.string.help_section_quick_actions)) {
-                        Button(
-                            onClick = onViewQuickStartGuide,
-                            modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .testTag("help-view-quick-start-button")
-                        ) {
-                            Text(stringResource(R.string.help_view_quick_start_again))
-                        }
-                        Button(onClick = onRateApp, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.help_rate_app))
-                        }
-                        Button(onClick = onSendFeedback, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.help_send_feedback))
-                        }
-                        Text(
-                            text = stringResource(R.string.help_feedback_public_note),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
                     faqItems().forEach { item ->
                         AppSection(title = stringResource(item.questionRes)) {
                             Text(
@@ -105,6 +81,21 @@ fun HelpFaqDialog(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
+                    }
+                    AppSection(title = stringResource(R.string.help_section_feedback)) {
+                        Text(
+                            text = stringResource(R.string.help_feedback_public_note),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        SbsSecondaryButton(
+                            label = stringResource(R.string.help_send_feedback),
+                            onClick = onSendFeedback,
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .testTag("help-send-feedback-button"),
+                            leadingIcon = Icons.Outlined.BugReport
+                        )
                     }
                 }
             }

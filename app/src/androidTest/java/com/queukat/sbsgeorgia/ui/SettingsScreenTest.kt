@@ -153,8 +153,6 @@ class SettingsScreenTest {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
                 HelpFaqDialog(
                     onDismiss = {},
-                    onViewQuickStartGuide = {},
-                    onRateApp = {},
                     onSendFeedback = {}
                 )
             }

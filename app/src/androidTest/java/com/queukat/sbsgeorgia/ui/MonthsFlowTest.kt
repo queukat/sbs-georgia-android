@@ -59,6 +59,79 @@ class MonthsFlowTest {
     }
 
     @Test
+    fun monthsChartsActionIsVisibleAndInvokesNavigation() {
+        var chartsOpened = false
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState = MonthsUiState(),
+                    onMonthClick = {},
+                    onSettleMonth = {},
+                    onAddIncome = {},
+                    onImportStatement = {},
+                    onOpenCharts = { chartsOpened = true }
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithTag("months-open-charts-button")
+            .assertIsDisplayed()
+            .performClick()
+
+        composeRule.runOnIdle {
+            assertEquals(true, chartsOpened)
+        }
+    }
+
+    @Test
+    fun monthPrimaryActionsUseTheSameHeight() {
+        val snapshot = sampleSnapshot(unresolvedFxCount = 0)
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthsUiState(
+                        sections =
+                        listOf(
+                            MonthsYearSection(
+                                year = 2026,
+                                items =
+                                listOf(
+                                    MonthsMonthItemUiState(
+                                        snapshot = snapshot,
+                                        canQuickSettleMonth = true,
+                                        monthAlreadySettled = false
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    onMonthClick = {},
+                    onSettleMonth = {},
+                    onAddIncome = {},
+                    onImportStatement = {},
+                    onOpenCharts = {}
+                )
+            }
+        }
+
+        val openMonth = composeRule.onNodeWithTag("months-open-month-button-2026-03")
+        val completeMonth = composeRule.onNodeWithTag("months-complete-month-button-2026-03")
+        completeMonth.performScrollTo()
+
+        assertEquals(
+            openMonth.fetchSemanticsNode().boundsInRoot.height,
+            completeMonth.fetchSemanticsNode().boundsInRoot.height,
+            1f
+        )
+    }
+
+    @Test
     fun monthsListNavigatesToMonthDetails() {
         val snapshot = sampleSnapshot()
         var selectedMonth: YearMonth? by mutableStateOf(null)
@@ -88,7 +161,8 @@ class MonthsFlowTest {
                         onMonthClick = { selectedMonth = it },
                         onSettleMonth = {},
                         onAddIncome = {},
-                        onImportStatement = {}
+                        onImportStatement = {},
+                        onOpenCharts = {}
                     )
                 } else {
                     MonthDetailScreen(
@@ -164,7 +238,6 @@ class MonthsFlowTest {
                         ),
                         onOpenMonths = {},
                         onOpenDueMonth = { selectedMonth = it },
-                        onOpenCharts = {},
                         onAddIncome = {},
                         onImportStatement = {},
                         onOpenSettings = {},
@@ -262,7 +335,6 @@ class MonthsFlowTest {
                     ),
                     onOpenMonths = {},
                     onOpenDueMonth = {},
-                    onOpenCharts = {},
                     onAddIncome = {},
                     onImportStatement = {},
                     onOpenSettings = {},
@@ -319,7 +391,8 @@ class MonthsFlowTest {
                     onMonthClick = {},
                     onSettleMonth = { settledMonth = it },
                     onAddIncome = {},
-                    onImportStatement = {}
+                    onImportStatement = {},
+                    onOpenCharts = {}
                 )
             }
         }
@@ -382,10 +455,6 @@ class MonthsFlowTest {
         composeRule
             .onAllNodesWithText("Declaration and payment values")
             .assertCountEquals(0)
-        composeRule
-            .onNodeWithTag("month-detail-unresolved-fx-message")
-            .performScrollTo()
-            .assertIsDisplayed()
     }
 
     @Test
@@ -516,7 +585,8 @@ class MonthsFlowTest {
                     onMonthClick = {},
                     onSettleMonth = {},
                     onAddIncome = {},
-                    onImportStatement = {}
+                    onImportStatement = {},
+                    onOpenCharts = {}
                 )
             }
         }

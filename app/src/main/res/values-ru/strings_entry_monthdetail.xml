@@ -30,6 +30,9 @@
     <string name="month_detail_next_done_hint">Процесс оплаты за этот месяц завершён.</string>
     <string name="month_detail_next_prepare_details_hint">Сначала закройте пункты готовности ниже, после этого появится следующее действие.</string>
     <string name="month_detail_section_summary">Сводка декларации</string>
+    <string name="month_detail_section_applied_fx">Применённые курсы валют</string>
+    <string name="month_detail_applied_fx_body">Курсы показаны отдельно по датам и источникам. В одном месяце могут применяться разные официальные или ручные курсы.</string>
+    <string name="month_detail_applied_fx_label">%1$s · %2$s</string>
     <string name="month_detail_section_readiness">Готовность процесса</string>
     <string name="month_detail_section_entries">Записи</string>
     <string name="month_detail_zero_not_prepared">Отметить нулевую декларацию как подготовленную</string>
@@ -53,6 +56,12 @@
     <string name="declaration_field_19_label">Поле (19): доход за месяц через POS-терминал</string>
     <string name="declaration_field_20_label">Поле (20): безналичный доход за месяц, кроме POS</string>
     <string name="declaration_field_21_label">Поле (21): другой доход за месяц</string>
+    <string name="declaration_field_number">Поле %1$d</string>
+    <string name="declaration_field_15_name">Доход с начала года</string>
+    <string name="declaration_field_18_name">Наличный доход за месяц через кассу</string>
+    <string name="declaration_field_19_name">Доход за месяц через POS-терминал</string>
+    <string name="declaration_field_20_name">Безналичный доход за месяц, кроме POS</string>
+    <string name="declaration_field_21_name">Другой доход за месяц</string>
     <string name="declaration_field_copy">Скопировать: %1$s</string>
     <string name="month_detail_copy_payment_text">Скопировать текст для банка</string>
     <string name="month_detail_copy_all_text">Скопировать всё</string>

@@ -129,7 +129,10 @@ class ImportStatementScreenTest {
         composeRule.onNodeWithTag("import-summary-will-import").assertTextContains("1")
         composeRule.onAllNodesWithTag("import-amount-tx-1").assertCountEquals(0)
 
-        composeRule.onNodeWithTag("import-row-toggle-tx-1").performClick()
+        composeRule
+            .onNodeWithTag("import-row-tx-1")
+            .performClick()
+        composeRule.waitForIdle()
         composeRule.onNodeWithTag("import-amount-tx-1").performTextClearance()
         composeRule.onNodeWithTag("import-amount-tx-1").performTextInput("130.00")
         composeRule.onNodeWithTag("import-currency-tx-1").performTextClearance()
@@ -190,8 +193,12 @@ class ImportStatementScreenTest {
             )
         }
 
-        composeRule.onNodeWithTag("import-summary-needs-review").assertTextContains("1")
-        composeRule.onNodeWithTag("import-review-pending-decisions").assertTextContains("1")
+        composeRule
+            .onNodeWithTag("import-summary-needs-review")
+            .assertTextContains("1", substring = true)
+        composeRule
+            .onNodeWithTag("import-review-pending-decisions")
+            .assertTextContains("1", substring = true)
         composeRule.onNodeWithTag("import-review-exclude-pending").performClick()
         composeRule.runOnIdle {
             assertTrue(excludePendingReviewClicked)
@@ -206,7 +213,11 @@ class ImportStatementScreenTest {
         composeRule.onNodeWithTag("import-row-tx-2").assertIsDisplayed()
         composeRule.onAllNodesWithTag("import-row-tx-3").assertCountEquals(0)
 
-        composeRule.onNodeWithTag("import-summary-tax-payments").performClick()
+        composeRule
+            .onNodeWithTag(
+                "import-summary-tax-payments",
+                useUnmergedTree = true
+            ).performClick()
         composeRule.onNodeWithTag("import-row-tx-3").assertIsDisplayed()
 
         composeRule.onNodeWithTag("import-filter-will-import").performClick()

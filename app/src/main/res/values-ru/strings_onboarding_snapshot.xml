@@ -74,6 +74,8 @@
     <string name="snapshot_tax_underpaid">Налог оплачен не полностью: не хватает %1$s</string>
     <string name="snapshot_tax_overpaid">Оплата налога больше расчётной на %1$s</string>
     <string name="snapshot_unresolved_fx_entries">Неразрешённых FX-записей: %1$d</string>
+    <string name="snapshot_original_currency_total">Доход в %1$s: %2$s</string>
+    <string name="snapshot_fx_rates_in_month_details">Точный курс и источник указаны для каждой записи внутри месяца.</string>
     <string name="snapshot_zero_declaration_month">Месяц нулевой декларации</string>
     <string name="snapshot_zero_declaration_prepared">Нулевая декларация подготовлена</string>
     <string name="snapshot_out_of_scope">Вне scope</string>

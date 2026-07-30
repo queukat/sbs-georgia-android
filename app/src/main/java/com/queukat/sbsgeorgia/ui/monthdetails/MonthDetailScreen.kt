@@ -126,6 +126,11 @@ fun MonthDetailScreen(
     val hasDeclarationValues = copyBundle?.declarationValues?.isNotEmpty() == true
     val canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues
     val activeMonth = uiState.yearMonth ?: snapshot?.period?.incomeMonth
+    val appliedFxRates =
+        uiState.fxRateDetails
+            .values
+            .distinct()
+            .sortedWith(compareBy<FxRate> { it.rateDate }.thenBy { it.currencyCode })
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
@@ -217,6 +222,36 @@ fun MonthDetailScreen(
                                     )
                                 )
                             }
+                        }
+                    }
+                }
+            }
+            if (appliedFxRates.isNotEmpty()) {
+                item {
+                    AppSection(
+                        title = stringResource(R.string.month_detail_section_applied_fx),
+                        modifier = Modifier.testTag("month-detail-applied-fx")
+                    ) {
+                        Text(
+                            text = stringResource(R.string.month_detail_applied_fx_body),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        appliedFxRates.forEach { rate ->
+                            KeyValueRow(
+                                label =
+                                stringResource(
+                                    R.string.month_detail_applied_fx_label,
+                                    rate.rateDate.formatIsoDate(),
+                                    fxRateSourceLabel(rate.source)
+                                ),
+                                value =
+                                stringResource(
+                                    R.string.month_detail_fx_rate_value,
+                                    rate.units,
+                                    rate.currencyCode,
+                                    rate.rateToGel.stripTrailingZeros().toPlainString()
+                                )
+                            )
                         }
                     }
                 }

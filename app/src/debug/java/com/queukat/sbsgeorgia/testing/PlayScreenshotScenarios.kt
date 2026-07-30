@@ -215,7 +215,6 @@ private fun HomeDashboardScenario() {
             uiState = sampleHomeUiState(),
             onOpenMonths = {},
             onOpenDueMonth = {},
-            onOpenCharts = {},
             onAddIncome = {},
             onImportStatement = {},
             onOpenSettings = {},
@@ -270,7 +269,8 @@ private fun MonthsOverviewScenario() {
             onMonthClick = {},
             onSettleMonth = {},
             onAddIncome = {},
-            onImportStatement = {}
+            onImportStatement = {},
+            onOpenCharts = {}
         )
     }
 }

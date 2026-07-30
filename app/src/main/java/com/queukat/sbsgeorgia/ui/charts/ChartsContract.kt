@@ -12,5 +12,8 @@ data class ChartsUiState(
     val cumulativePoints: List<ChartPoint> = emptyList(),
     val ytdIncomeGel: BigDecimal = BigDecimal.ZERO,
     val peakMonthLabel: String? = null,
-    val unresolvedMonthsCount: Int = 0
+    val peakMonthIncomeGel: BigDecimal? = null,
+    val incomeMonthsCount: Int = 0,
+    val unresolvedMonthsCount: Int = 0,
+    val unresolvedEntriesCount: Int = 0
 )

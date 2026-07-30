@@ -25,6 +25,7 @@
     <string name="help_section_intro">How this app works</string>
     <string name="help_intro_body">Short practical answers for the main product flows. The app is local-first, so avoid sharing taxpayer IDs, imported PDFs, or backup/export files in public feedback.</string>
     <string name="help_section_quick_actions">Quick actions</string>
+    <string name="help_section_feedback">Report a problem</string>
     <string name="help_view_quick_start_again">View quick start guide again</string>
     <string name="help_rate_app">Rate this app</string>
     <string name="help_send_feedback">Send feedback</string>

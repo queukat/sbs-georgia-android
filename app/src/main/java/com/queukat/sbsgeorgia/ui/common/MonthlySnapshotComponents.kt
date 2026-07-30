@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.common
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -7,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 
@@ -51,11 +53,25 @@ fun SnapshotSummary(snapshot: MonthlyDeclarationSnapshot) {
         )
     }
     if (snapshot.originalCurrencyTotals.isNotEmpty()) {
-        FlowRow {
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             snapshot.originalCurrencyTotals.forEach { total ->
-                SimpleChip("${total.currencyCode}: ${total.amount.toPlainString()}")
+                SimpleChip(
+                    stringResource(
+                        R.string.snapshot_original_currency_total,
+                        total.currencyCode,
+                        total.amount.stripTrailingZeros().toPlainString()
+                    )
+                )
             }
         }
+        Text(
+            text = stringResource(R.string.snapshot_fx_rates_in_month_details),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
     if (snapshot.unresolvedFxCount > 0) {
         Text(stringResource(R.string.snapshot_unresolved_fx_entries, snapshot.unresolvedFxCount))

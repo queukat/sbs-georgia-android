@@ -48,9 +48,7 @@ import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
 import com.queukat.sbsgeorgia.ui.common.StickyPrimaryAction
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.help.HelpFaqDialog
-import com.queukat.sbsgeorgia.ui.help.QuickStartGuideDialog
 import com.queukat.sbsgeorgia.ui.help.openFeedbackPage
-import com.queukat.sbsgeorgia.ui.help.openPlayStoreListing
 import com.queukat.sbsgeorgia.ui.settings.components.AppearanceSettingsSection
 import com.queukat.sbsgeorgia.ui.settings.components.DataManagementSection
 import com.queukat.sbsgeorgia.ui.settings.components.DeclarationFormSettingsSection
@@ -71,7 +69,6 @@ fun SettingsRoute(innerPadding: PaddingValues) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val savedMessage = stringResource(R.string.settings_saved)
-    val openStoreFailedMessage = stringResource(R.string.help_open_store_failed)
     val openFeedbackFailedMessage = stringResource(R.string.help_open_feedback_failed)
     var notificationPermissionGranted by remember {
         mutableStateOf(isNotificationPermissionGranted(context))
@@ -211,13 +208,6 @@ fun SettingsRoute(innerPadding: PaddingValues) {
                 arrayOf("application/json", "text/plain", "application/octet-stream")
             )
         },
-        onRateApp = {
-            if (!openPlayStoreListing(context)) {
-                scope.launch {
-                    snackbarHostState.showSnackbar(openStoreFailedMessage)
-                }
-            }
-        },
         onSendFeedback = {
             if (!openFeedbackPage(context)) {
                 scope.launch {
@@ -287,12 +277,10 @@ fun SettingsScreen(
     onExportMonthlySummariesCsv: () -> Unit = {},
     onExportBackupJson: () -> Unit = {},
     onImportBackupJson: () -> Unit = {},
-    onRateApp: () -> Unit = {},
     onSendFeedback: () -> Unit = {},
     onSave: () -> Unit
 ) {
     var showHelpFaq by rememberSaveable { mutableStateOf(false) }
-    var showQuickStartGuide by rememberSaveable { mutableStateOf(false) }
     var testReminderTypeName by rememberSaveable { mutableStateOf(ReminderType.DECLARATION.name) }
     var testReminderDelaySeconds by rememberSaveable { mutableStateOf(5L) }
     val testReminderType = ReminderType.valueOf(testReminderTypeName)
@@ -326,17 +314,7 @@ fun SettingsScreen(
         if (showHelpFaq) {
             HelpFaqDialog(
                 onDismiss = { showHelpFaq = false },
-                onViewQuickStartGuide = {
-                    showHelpFaq = false
-                    showQuickStartGuide = true
-                },
-                onRateApp = onRateApp,
                 onSendFeedback = onSendFeedback
-            )
-        }
-        if (showQuickStartGuide) {
-            QuickStartGuideDialog(
-                onDismiss = { showQuickStartGuide = false }
             )
         }
         Column(
@@ -444,12 +422,7 @@ fun SettingsScreen(
                 title = stringResource(R.string.settings_group_help),
                 testTag = "settings-group-help"
             ) {
-                HelpFeedbackSection(
-                    onOpenHelpFaq = { showHelpFaq = true },
-                    onViewQuickStart = { showQuickStartGuide = true },
-                    onRateApp = onRateApp,
-                    onSendFeedback = onSendFeedback
-                )
+                HelpFeedbackSection(onOpenHelpFaq = { showHelpFaq = true })
             }
         }
     }

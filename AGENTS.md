@@ -169,6 +169,11 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - Home and Month Detail build copy rows from the persisted `DeclarationFormConfig`.
   Field 15 is cumulative; the whole monthly total goes to exactly one selected
   field 18/19/20/21. Mixed per-account/per-payment-method allocation is not modeled.
+- Charts belongs to the `Months` top-level back stack and is opened from the compact
+  action at the top of Months. Back from Charts must return to Months.
+- Snapshot original-currency totals are source amounts, not FX rates. Exact applied
+  rates are shown in Month Detail as distinct date/currency/source rows; never show
+  one invented or averaged monthly rate.
 - Backup restore replaces local tables inside a Room transaction. If imported setup
   is incomplete, onboarding remains active.
 - Reminders are daily WorkManager jobs scheduled by stored reminder config and
@@ -214,6 +219,9 @@ Connected phone/emulator tests:
 ```powershell
 .\scripts\run_phone_connected_tests.ps1
 ```
+
+The connected-test script auto-selects the only ready device. When a phone and an
+emulator are both present, pass `-Serial <adb-serial>` explicitly.
 
 Play screenshots:
 

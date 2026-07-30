@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -106,12 +107,30 @@ fun ChartsScreen(
                     formatAmount(uiState.ytdIncomeGel, "GEL")
                 )
                 KeyValueRow(
-                    stringResource(R.string.charts_unresolved_months),
-                    uiState.unresolvedMonthsCount.toString()
+                    stringResource(R.string.charts_income_months),
+                    uiState.incomeMonthsCount.toString()
                 )
+                if (uiState.unresolvedMonthsCount > 0) {
+                    KeyValueRow(
+                        stringResource(R.string.charts_unresolved_months),
+                        uiState.unresolvedMonthsCount.toString()
+                    )
+                    KeyValueRow(
+                        stringResource(R.string.charts_unresolved_entries),
+                        uiState.unresolvedEntriesCount.toString()
+                    )
+                }
                 KeyValueRow(
                     stringResource(R.string.charts_peak_month),
-                    uiState.peakMonthLabel ?: stringResource(R.string.charts_peak_month_empty)
+                    if (uiState.peakMonthLabel != null && uiState.peakMonthIncomeGel != null) {
+                        stringResource(
+                            R.string.charts_peak_month_value,
+                            uiState.peakMonthLabel,
+                            formatAmount(uiState.peakMonthIncomeGel, CHART_CURRENCY)
+                        )
+                    } else {
+                        stringResource(R.string.charts_peak_month_empty)
+                    }
                 )
             }
 
@@ -123,10 +142,10 @@ fun ChartsScreen(
                 } else {
                     Text(
                         stringResource(R.string.charts_monthly_body),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     BarChart(points = uiState.monthlyIncomePoints)
-                    ChartSummary(points = uiState.monthlyIncomePoints)
                 }
             }
 
@@ -138,10 +157,10 @@ fun ChartsScreen(
                 } else {
                     Text(
                         stringResource(R.string.charts_cumulative_body),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                     CumulativeLineChart(points = uiState.cumulativePoints)
-                    ChartSummary(points = uiState.cumulativePoints)
                 }
             }
         }
@@ -182,18 +201,23 @@ private fun BarChart(points: List<ChartPoint>) {
                         modifier = Modifier.height(140.dp),
                         contentAlignment = Alignment.BottomCenter
                     ) {
-                        Surface(
-                            modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .height((12 + (ratio * 128f)).dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
-                        ) {}
+                        if (point.value.signum() > 0) {
+                            Surface(
+                                modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(maxOf(4.dp, (ratio * 140f).dp)),
+                                color = MaterialTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)
+                            ) {}
+                        }
                     }
                     Text(
                         text = point.label,
-                        style = MaterialTheme.typography.labelMedium
+                        modifier = Modifier.fillMaxWidth(),
+                        style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
                     )
                 }
             }
@@ -228,8 +252,9 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
                     .width(chartWidth)
                     .height(180.dp)
             ) {
-                val usableHeight = size.height * 0.82f
-                val baseline = usableHeight
+                val top = 1f
+                val baseline = size.height - 1f
+                val usableHeight = baseline - top
                 val stepX = if (points.size <=
                     1
                 ) {
@@ -238,8 +263,8 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
                     size.width / (points.size - 1)
                 }
 
-                for (index in 0..3) {
-                    val y = baseline - (baseline / 3f) * index
+                for (index in 0..2) {
+                    val y = top + (usableHeight / 2f) * index
                     drawLine(
                         color = outlineColor,
                         start = Offset(0f, y),
@@ -296,8 +321,10 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
                 points.forEach { point ->
                     Text(
                         text = point.label,
-                        modifier = Modifier.width(32.dp),
-                        style = MaterialTheme.typography.labelMedium
+                        modifier = Modifier.width(48.dp),
+                        style = MaterialTheme.typography.labelMedium,
+                        textAlign = TextAlign.Center,
+                        maxLines = 1
                     )
                 }
             }
@@ -323,15 +350,6 @@ private fun ChartScaleLabels(maxValue: java.math.BigDecimal, chartHeight: androi
             text = formatAmount(java.math.BigDecimal.ZERO, CHART_CURRENCY),
             style = MaterialTheme.typography.labelSmall
         )
-    }
-}
-
-@Composable
-private fun ChartSummary(points: List<ChartPoint>) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        points.forEach { point ->
-            KeyValueRow(point.label, formatAmount(point.value, CHART_CURRENCY))
-        }
     }
 }
 

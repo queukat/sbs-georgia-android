@@ -142,7 +142,6 @@ fun SbsGeorgiaApp() {
                             innerPadding = innerPadding,
                             onOpenMonths = navigationState::openMonths,
                             onOpenDueMonth = navigationState::openMonthDetails,
-                            onOpenCharts = navigationState::openCharts,
                             onAddIncome = { navigationState.openManualEntry() },
                             onImportStatement = navigationState::openImportStatement,
                             onOpenSettings = navigationState::openSettings
@@ -159,7 +158,8 @@ fun SbsGeorgiaApp() {
                             innerPadding = innerPadding,
                             onMonthClick = navigationState::openMonthDetails,
                             onAddIncome = { navigationState.openManualEntry() },
-                            onImportStatement = navigationState::openImportStatement
+                            onImportStatement = navigationState::openImportStatement,
+                            onOpenCharts = navigationState::openCharts
                         )
                     }
                     entry<MonthDetailDestination> { destination ->

@@ -68,7 +68,6 @@ fun HomeRoute(
     innerPadding: PaddingValues,
     onOpenMonths: () -> Unit,
     onOpenDueMonth: (YearMonth) -> Unit,
-    onOpenCharts: () -> Unit,
     onAddIncome: () -> Unit,
     onImportStatement: () -> Unit,
     onOpenSettings: () -> Unit
@@ -80,7 +79,6 @@ fun HomeRoute(
         uiState = uiState,
         onOpenMonths = onOpenMonths,
         onOpenDueMonth = onOpenDueMonth,
-        onOpenCharts = onOpenCharts,
         onAddIncome = onAddIncome,
         onImportStatement = onImportStatement,
         onOpenSettings = onOpenSettings,
@@ -94,7 +92,6 @@ fun HomeScreen(
     uiState: HomeUiState,
     onOpenMonths: () -> Unit,
     onOpenDueMonth: (YearMonth) -> Unit,
-    onOpenCharts: () -> Unit,
     onAddIncome: () -> Unit,
     onImportStatement: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -268,9 +265,6 @@ fun HomeScreen(
                         modifier = Modifier.testTag("open-months-button")
                     ) {
                         Text(stringResource(R.string.home_open_months))
-                    }
-                    OutlinedButton(onClick = onOpenCharts) {
-                        Text(stringResource(R.string.home_open_charts))
                     }
                     OutlinedButton(onClick = onImportStatement) {
                         Text(stringResource(R.string.home_import_pdf))

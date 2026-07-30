@@ -72,10 +72,10 @@ class AppNavigationState internal constructor(
     }
 
     override fun openCharts() {
-        if (homeBackStack.lastOrNull() != ChartsDestination) {
-            homeBackStack.add(ChartsDestination)
+        if (monthsBackStack.lastOrNull() != ChartsDestination) {
+            monthsBackStack.add(ChartsDestination)
         }
-        currentTopLevelDestination = TopLevelDestination.Home
+        currentTopLevelDestination = TopLevelDestination.Months
     }
 
     override fun openMonthDetails(yearMonth: YearMonth) {

@@ -59,15 +59,15 @@ class AppNavigationStateTest {
     }
 
     @Test
-    fun selectingTopLevelDestinationPreservesThatDestinationNestedStack() {
+    fun chartsLiveInMonthsBackStackAndArePreservedAcrossTopLevelSwitches() {
         val navigationState = createNavigationState()
 
         navigationState.openCharts()
         navigationState.selectTopLevel(TopLevelDestination.Settings)
-        navigationState.selectTopLevel(TopLevelDestination.Home)
+        navigationState.selectTopLevel(TopLevelDestination.Months)
 
-        assertEquals(TopLevelDestination.Home, navigationState.currentTopLevelDestination)
-        assertEquals(listOf(HomeDestination, ChartsDestination), navigationState.currentBackStack)
+        assertEquals(TopLevelDestination.Months, navigationState.currentTopLevelDestination)
+        assertEquals(listOf(MonthsDestination, ChartsDestination), navigationState.currentBackStack)
         assertFalse(navigationState.shouldShowBottomBar)
     }
 

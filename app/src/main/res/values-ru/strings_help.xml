@@ -25,6 +25,7 @@
     <string name="help_section_intro">Как работает приложение</string>
     <string name="help_intro_body">Короткие практические ответы по основным сценариям. Приложение локальное, поэтому не отправляйте налоговые ID, импортированные PDF или backup/export-файлы в публичную обратную связь.</string>
     <string name="help_section_quick_actions">Быстрые действия</string>
+    <string name="help_section_feedback">Сообщить о проблеме</string>
     <string name="help_view_quick_start_again">Открыть краткий гид снова</string>
     <string name="help_rate_app">Оценить приложение</string>
     <string name="help_send_feedback">Отправить отзыв</string>
