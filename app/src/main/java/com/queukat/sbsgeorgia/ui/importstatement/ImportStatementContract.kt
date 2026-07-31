@@ -81,6 +81,9 @@ internal fun List<ImportStatementRowUiState>.invalidIncludedCount(): Int =
 internal fun List<ImportStatementRowUiState>.willImportCount(): Int =
     count { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate }
 
+internal fun List<ImportStatementRowUiState>.canConfirmImport(): Boolean =
+    any { !it.duplicate } && invalidIncludedCount() == 0
+
 internal fun List<ImportStatementRowUiState>.needsReviewCount(): Int = count(
     ImportStatementRowUiState::needsReview
 )

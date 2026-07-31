@@ -4,10 +4,13 @@ package com.queukat.sbsgeorgia.ui.months
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -93,10 +96,35 @@ fun MonthsScreen(
     ) { contentPadding ->
         pendingQuickSettleMonth?.let { monthText ->
             val yearMonth = YearMonth.parse(monthText)
+            val paymentRequired =
+                uiState.sections
+                    .flatMap(MonthsYearSection::items)
+                    .firstOrNull { it.snapshot.period.incomeMonth == yearMonth }
+                    ?.paymentRequired != false
             AlertDialog(
                 onDismissRequest = { pendingQuickSettleMonth = null },
-                title = { Text(stringResource(R.string.months_complete_confirm_title)) },
-                text = { Text(stringResource(R.string.months_complete_confirm_body)) },
+                title = {
+                    Text(
+                        stringResource(
+                            if (paymentRequired) {
+                                R.string.months_complete_confirm_title
+                            } else {
+                                R.string.months_zero_complete_confirm_title
+                            }
+                        )
+                    )
+                },
+                text = {
+                    Text(
+                        stringResource(
+                            if (paymentRequired) {
+                                R.string.months_complete_confirm_body
+                            } else {
+                                R.string.months_zero_complete_confirm_body
+                            }
+                        )
+                    )
+                },
                 dismissButton = {
                     TextButton(onClick = { pendingQuickSettleMonth = null }) {
                         Text(stringResource(R.string.common_cancel))
@@ -110,7 +138,15 @@ fun MonthsScreen(
                         },
                         modifier = Modifier.testTag("months-confirm-complete-month-button")
                     ) {
-                        Text(stringResource(R.string.months_complete_confirm_action))
+                        Text(
+                            stringResource(
+                                if (paymentRequired) {
+                                    R.string.months_complete_confirm_action
+                                } else {
+                                    R.string.months_zero_complete_confirm_action
+                                }
+                            )
+                        )
                     }
                 },
                 modifier = Modifier.testTag("months-complete-month-confirm-dialog")
@@ -169,7 +205,10 @@ fun MonthsScreen(
                     ) {
                         SnapshotSummary(snapshot = snapshot)
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(IntrinsicSize.Min),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -179,6 +218,7 @@ fun MonthsScreen(
                                 modifier =
                                 Modifier
                                     .weight(1f)
+                                    .fillMaxHeight()
                                     .testTag(
                                         "months-open-month-button-" +
                                             snapshot.period.incomeMonth
@@ -193,6 +233,7 @@ fun MonthsScreen(
                                         modifier =
                                         Modifier
                                             .weight(1f)
+                                            .fillMaxHeight()
                                             .testTag(
                                                 "months-closed-status-" +
                                                     snapshot.period.incomeMonth
@@ -201,7 +242,14 @@ fun MonthsScreen(
                                 }
                                 item.canQuickSettleMonth -> {
                                     SbsSecondaryButton(
-                                        label = stringResource(R.string.months_mark_month_settled),
+                                        label =
+                                        stringResource(
+                                            if (item.paymentRequired) {
+                                                R.string.months_mark_month_settled
+                                            } else {
+                                                R.string.months_mark_zero_declaration_filed
+                                            }
+                                        ),
                                         onClick = {
                                             pendingQuickSettleMonth =
                                                 snapshot.period.incomeMonth.toString()
@@ -209,6 +257,7 @@ fun MonthsScreen(
                                         modifier =
                                         Modifier
                                             .weight(1f)
+                                            .fillMaxHeight()
                                             .testTag(
                                                 "months-complete-month-button-" +
                                                     snapshot.period.incomeMonth
@@ -227,6 +276,7 @@ fun MonthsScreen(
                                             modifier =
                                             Modifier
                                                 .weight(1f)
+                                                .fillMaxHeight()
                                                 .testTag(
                                                     "months-filing-status-" +
                                                         snapshot.period.incomeMonth

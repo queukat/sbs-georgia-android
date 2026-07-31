@@ -88,6 +88,35 @@ class DeclarationCopyPayloadTest {
     }
 
     @Test
+    fun `every configured monthly destination is preserved in declaration copy`() {
+        val yearMonth = YearMonth.of(2026, 3)
+        val expectedFields =
+            listOf(
+                DeclarationFormField.MONTHLY_CASH_REGISTER_INCOME,
+                DeclarationFormField.MONTHLY_POS_INCOME,
+                DeclarationFormField.MONTHLY_NON_CASH_INCOME,
+                DeclarationFormField.MONTHLY_OTHER_INCOME
+            )
+
+        expectedFields.forEach { monthlyField ->
+            val bundle =
+                requireNotNull(
+                    buildDeclarationCopyBundle(
+                        snapshot = sampleSnapshot(yearMonth),
+                        registrationId = "123456789",
+                        yearMonth = yearMonth,
+                        formConfig = DeclarationFormConfig(monthlyIncomeField = monthlyField)
+                    )
+                )
+
+            assertEquals(
+                listOf(DeclarationFormField.CUMULATIVE_INCOME, monthlyField),
+                bundle.declarationValues.map { it.field }
+            )
+        }
+    }
+
+    @Test
     fun `declaration fields can be hidden independently`() {
         val yearMonth = YearMonth.of(2026, 3)
         val onlyMonthly =

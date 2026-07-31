@@ -49,6 +49,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.DeclarationCopyActions
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SimpleChip
@@ -130,8 +131,28 @@ fun HomeScreen(
         ) {
             AlertDialog(
                 onDismissRequest = { showQuickSettleConfirmation = false },
-                title = { Text(stringResource(R.string.months_complete_confirm_title)) },
-                text = { Text(stringResource(R.string.months_complete_confirm_body)) },
+                title = {
+                    Text(
+                        stringResource(
+                            if (uiState.duePeriodQuickAccess?.paymentRequired == false) {
+                                R.string.months_zero_complete_confirm_title
+                            } else {
+                                R.string.months_complete_confirm_title
+                            }
+                        )
+                    )
+                },
+                text = {
+                    Text(
+                        stringResource(
+                            if (uiState.duePeriodQuickAccess?.paymentRequired == false) {
+                                R.string.months_zero_complete_confirm_body
+                            } else {
+                                R.string.months_complete_confirm_body
+                            }
+                        )
+                    )
+                },
                 dismissButton = {
                     TextButton(onClick = { showQuickSettleConfirmation = false }) {
                         Text(stringResource(R.string.common_cancel))
@@ -145,7 +166,15 @@ fun HomeScreen(
                         },
                         modifier = Modifier.testTag("home-confirm-complete-month-button")
                     ) {
-                        Text(stringResource(R.string.months_complete_confirm_action))
+                        Text(
+                            stringResource(
+                                if (uiState.duePeriodQuickAccess?.paymentRequired == false) {
+                                    R.string.months_zero_complete_confirm_action
+                                } else {
+                                    R.string.months_complete_confirm_action
+                                }
+                            )
+                        )
                     }
                 },
                 modifier = Modifier.testTag("home-complete-month-confirm-dialog")
@@ -336,32 +365,14 @@ private fun DuePeriodQuickAccess(
             testTagPrefix = "home",
             onCopy = onCopy
         )
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            OutlinedButton(
-                onClick = { onCopy(paymentTextLabel, copyBundle.paymentText) },
-                enabled = canCopyPaymentText,
-                modifier = Modifier.testTag("home-copy-payment-text-button")
-            ) {
-                Text(stringResource(R.string.month_detail_copy_payment_text))
-            }
-            OutlinedButton(
-                onClick = { onCopy(fullTextLabel, copyBundle.fullText) },
-                enabled = quickAccess.canCopyDeclarationValues,
-                modifier = Modifier.testTag("home-copy-all-text-button")
-            ) {
-                Text(stringResource(R.string.month_detail_copy_all_text))
-            }
-            OutlinedButton(
-                onClick = { onShareToTelegram(copyBundle.fullText) },
-                enabled = quickAccess.canCopyDeclarationValues,
-                modifier = Modifier.testTag("home-share-telegram-button")
-            ) {
-                Text(stringResource(R.string.home_share_to_telegram))
-            }
-        }
+        DeclarationCopyActions(
+            canCopyAll = quickAccess.canCopyDeclarationValues,
+            canCopyBankText = canCopyPaymentText,
+            testTagPrefix = "home",
+            onCopyAll = { onCopy(fullTextLabel, copyBundle.fullText) },
+            onCopyBankText = { onCopy(paymentTextLabel, copyBundle.paymentText) },
+            onShareAll = { onShareToTelegram(copyBundle.fullText) }
+        )
     }
 
     FlowRow(
@@ -384,7 +395,15 @@ private fun DuePeriodQuickAccess(
                     onClick = onSettleCurrentDuePeriod,
                     modifier = Modifier.testTag("home-close-due-month-button")
                 ) {
-                    Text(stringResource(R.string.months_mark_month_settled))
+                    Text(
+                        stringResource(
+                            if (quickAccess.paymentRequired) {
+                                R.string.months_mark_month_settled
+                            } else {
+                                R.string.months_mark_zero_declaration_filed
+                            }
+                        )
+                    )
                 }
             }
         }

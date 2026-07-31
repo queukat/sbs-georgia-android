@@ -17,34 +17,34 @@
     <string name="quick_start_step_fx_bullet_two">Итоги декларации считаются полностью готовыми только после разрешения нужного FX.</string>
 
     <string name="quick_start_step_workflow_title">Держите под контролем месячные декларации</string>
-    <string name="quick_start_step_workflow_body">Каждый месяц показывает готовность, статусы подачи и оплаты, напоминания, а также локальные backup/export-инструменты в Settings.</string>
-    <string name="quick_start_step_workflow_bullet_one">Обновляйте статус месяца от draft через подачу и оплату до settled.</string>
-    <string name="quick_start_step_workflow_bullet_two">Если позже понадобится напоминание, откройте Help &amp; feedback в Settings.</string>
+    <string name="quick_start_step_workflow_body">Каждый месяц показывает готовность, статусы подачи и оплаты, напоминания, а также локальные резервные копии и экспорт в Настройках.</string>
+    <string name="quick_start_step_workflow_bullet_one">Проводите месяц от черновика через подачу и оплату до завершённого состояния.</string>
+    <string name="quick_start_step_workflow_bullet_two">Чтобы настроить напоминания или обратиться за помощью, откройте раздел «Помощь и обратная связь» в Настройках.</string>
 
     <string name="help_title">Помощь и FAQ</string>
     <string name="help_section_intro">Как работает приложение</string>
-    <string name="help_intro_body">Короткие практические ответы по основным сценариям. Приложение локальное, поэтому не отправляйте налоговые ID, импортированные PDF или backup/export-файлы в публичную обратную связь.</string>
+    <string name="help_intro_body">Короткие практические ответы по основным сценариям. Приложение локальное, поэтому не отправляйте налоговые ID, импортированные PDF, резервные копии или файлы экспорта в публичную обратную связь.</string>
     <string name="help_section_quick_actions">Быстрые действия</string>
     <string name="help_section_feedback">Сообщить о проблеме</string>
     <string name="help_view_quick_start_again">Открыть краткий гид снова</string>
     <string name="help_rate_app">Оценить приложение</string>
     <string name="help_send_feedback">Отправить отзыв</string>
-    <string name="help_feedback_public_note">Откроется публичная страница в браузере. Всё, что вы напишете, может быть видно другим, поэтому не включайте налоговые ID, PDF и backup/export-файлы.</string>
+    <string name="help_feedback_public_note">Откроется публичная страница в браузере. Всё, что вы напишете, может быть видно другим, поэтому не включайте налоговые ID, PDF, резервные копии и файлы экспорта.</string>
 
     <string name="help_faq_add_income_question">Как добавить доход?</string>
-    <string name="help_faq_add_income_answer">Используйте Add income для ручного ввода или Import TBC statement для поддерживаемого PDF выписки TBC. Для записи нужны дата, сумма, валюта и категория источника, а позже её можно отредактировать с экрана месяца.</string>
+    <string name="help_faq_add_income_answer">Используйте «Добавить доход» для ручного ввода или «Импорт выписки TBC» для поддерживаемого PDF. Для записи нужны дата, сумма, валюта и категория источника; позже её можно отредактировать с экрана месяца.</string>
     <string name="help_faq_gel_conversion_question">Как считается конвертация в GEL?</string>
     <string name="help_faq_gel_conversion_answer">Доход в GEL берётся как есть. Для других валют приложение использует официальный курс NBG, если он доступен, или оставляет запись неразрешённой, чтобы итоги не строились на догадках.</string>
-    <string name="help_faq_missing_rate_question">Что делать, если на дату нет FX-курса?</string>
-    <string name="help_faq_missing_rate_answer">Если официальный курс на эту дату не найден, запись остаётся неразрешённой, а месяц не считается полностью готовым. Позже можно повторить автоматическое разрешение или задать ручное FX-переопределение для записи.</string>
-    <string name="help_faq_monthly_declarations_question">Как работают monthly declarations?</string>
+    <string name="help_faq_missing_rate_question">Что делать, если на дату нет курса валюты?</string>
+    <string name="help_faq_missing_rate_answer">Если официальный курс на эту дату не найден, запись остаётся неразрешённой, а месяц не считается полностью готовым. Позже можно повторить автоматический поиск или задать ручной курс для записи.</string>
+    <string name="help_faq_monthly_declarations_question">Как работают ежемесячные декларации?</string>
     <string name="help_faq_monthly_declarations_answer">Каждый месяц дохода связан с окном подачи в следующем месяце. Экран месяца показывает доход за месяц, накопительный доход с начала года, оценку налога, подсказки по нулевой декларации и инструменты копирования, когда месяц готов.</string>
-    <string name="help_faq_reminders_question">Как работают reminders и statuses?</string>
-    <string name="help_faq_reminders_answer">Дни и время напоминаний настраиваются в Settings. Статусы месяца проходят путь от draft через filed и payment-состояния к settled, а overdue выводится автоматически по due date.</string>
-    <string name="help_faq_backup_question">Когда использовать backup или export?</string>
-    <string name="help_faq_backup_answer">CSV export подходит, когда данные нужны вне приложения в табличном виде. JSON backup нужен при переносе на новое устройство, перед переустановкой или когда позже нужно восстановить полное локальное состояние приложения.</string>
+    <string name="help_faq_reminders_question">Как работают напоминания и статусы?</string>
+    <string name="help_faq_reminders_answer">Дни и время напоминаний настраиваются в Настройках. Статусы проводят месяц от черновика через подачу и оплату до завершения, а просрочка определяется автоматически по крайнему сроку.</string>
+    <string name="help_faq_backup_question">Когда использовать резервную копию или экспорт?</string>
+    <string name="help_faq_backup_answer">Экспорт CSV подходит, когда данные нужны вне приложения в табличном виде. Резервная копия JSON нужна при переносе на новое устройство, перед переустановкой или для восстановления полного локального состояния приложения.</string>
     <string name="help_faq_feedback_question">Где оставить отзыв?</string>
-    <string name="help_faq_feedback_answer">Откройте действие «Отправить отзыв» из Settings или Help. Откроется публичная issue-форма в браузере с предзаполненной версией приложения и данными устройства. Не добавляйте налоговые ID, PDF и backup/export-файлы.</string>
+    <string name="help_faq_feedback_answer">Нажмите «Отправить отзыв» в разделе «Помощь и обратная связь» в Настройках. Откроется публичная форма в браузере с версией приложения и данными устройства. Не добавляйте налоговые ID, PDF, резервные копии и файлы экспорта.</string>
 
     <string name="help_open_store_failed">Не удалось открыть Google Play.</string>
     <string name="help_open_feedback_failed">Не удалось открыть страницу обратной связи.</string>

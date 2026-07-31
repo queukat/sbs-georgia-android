@@ -54,8 +54,8 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - DI/background: Hilt, Hilt WorkManager integration, WorkManager.
 - Parsing/network/export: PdfBox Android, official NBG JSON endpoint,
   kotlinx.serialization.
-- Tooling: KSP, ktlint, detekt, Jacoco/Sonar, Gradle Play Publisher,
-  Baseline Profile module.
+- Tooling: KSP, ktlint, detekt, Jacoco/Sonar, Gradle Play Publisher and a
+  checked-in release startup profile.
 - Localization: English and Russian string resources, locale config in
   `res/xml/locales_config.xml`.
 
@@ -86,7 +86,9 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - `data/export` - CSV/JSON backup/export, backup payloads and validation.
 - `worker` - reminder scheduling, notifications and `MonthlyReminderWorker`.
 - `widget` - Android AppWidget providers and dashboard widget rendering.
-- `baselineprofile` - macrobenchmark/baseline profile generation target.
+- `baselineprofile` - retained macrobenchmark/profile-generation sources. The
+  module is currently detached from `settings.gradle.kts`; release consumes the
+  checked-in `app/src/release/generated/baselineProfiles/startup-prof.txt`.
 
 ## Доменный глоссарий
 
@@ -169,6 +171,13 @@ SBS Georgia Android - offline-first Android-приложение для инди
 - Home and Month Detail build copy rows from the persisted `DeclarationFormConfig`.
   Field 15 is cumulative; the whole monthly total goes to exactly one selected
   field 18/19/20/21. Mixed per-account/per-payment-method allocation is not modeled.
+- Aggregate declaration actions use shared `DeclarationCopyActions`: one full-width
+  primary copy-all action, then a stable bank-text/share row. Do not reintroduce
+  width-by-label `FlowRow` layouts independently on Home and Month Detail.
+- A zero-tax month is complete only after the declaration is persisted as `FILED`
+  with a filing date. It must not require or invent payment dates/amounts. An
+  unfiled zero month can still be overdue; Home/Months expose a direct action that
+  files the zero declaration and then presents the month as closed.
 - Charts belongs to the `Months` top-level back stack and is opened from the compact
   action at the top of Months. Back from Charts must return to Months.
 - Snapshot original-currency totals are source amounts, not FX rates. Exact applied
@@ -222,6 +231,11 @@ Connected phone/emulator tests:
 
 The connected-test script auto-selects the only ready device. When a phone and an
 emulator are both present, pass `-Serial <adb-serial>` explicitly.
+
+Do not run the connected suite on a physical phone that holds the user's restored
+dev backup. UTP may uninstall the active dev package before a replacement install
+fails on a signature mismatch, erasing its local data. Use an AVD for instrumentation
+and reserve the phone for `installPhone`, launch, UI-tree and screenshot checks.
 
 Play screenshots:
 
@@ -287,9 +301,15 @@ GitHub auth and CI:
   is currently embedded in `Home` and `MonthDetail`.
 - Release builds require local `keystore.properties`; Play publishing uses
   `PLAY_KEY_FILE`.
+- Do not document `:baselineprofile:*` as directly runnable while the module is
+  detached. Re-enable it in `settings.gradle.kts` as an explicit profile-regeneration
+  task, or keep using the checked-in release profile.
 - A Play-installed `com.queukat.sbsgeorgia` is signed by Google Play and cannot be
   replaced by a locally signed APK. Do not uninstall it for local QA without an
   explicit user-approved backup/data-loss plan; use `installPhone` alongside it.
+- Installing over the same debug signature preserves the dev database, but connected
+  test infrastructure may remove the package during setup. Treat physical-phone
+  instrumentation as destructive unless the device contains disposable data.
 - `allowBackup=false` is intentional for local-first/privacy positioning.
 - `MonthlyWorkflowStatus.OVERDUE` is derived from dates and base status, not a normal
   user-selected persisted state.

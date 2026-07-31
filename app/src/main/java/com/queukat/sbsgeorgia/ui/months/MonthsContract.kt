@@ -7,7 +7,8 @@ data class MonthsMonthItemUiState(
     val snapshot: MonthlyDeclarationSnapshot,
     val canQuickSettleMonth: Boolean,
     val monthAlreadySettled: Boolean,
-    val filingOpensOn: LocalDate? = null
+    val filingOpensOn: LocalDate? = null,
+    val paymentRequired: Boolean = true
 )
 
 data class MonthsYearSection(val year: Int, val items: List<MonthsMonthItemUiState>)

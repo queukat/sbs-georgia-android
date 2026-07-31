@@ -229,6 +229,39 @@ class ImportStatementScreenTest {
     }
 
     @Test
+    fun duplicatesFilterRendersEveryRepeatedFingerprint() {
+        val uiState =
+            ImportStatementUiState(
+                sourceFileName = "tbc-statement.pdf",
+                rows =
+                listOf(
+                    sampleRow(fingerprint = "repeated-tx"),
+                    sampleRow(
+                        fingerprint = "repeated-tx",
+                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                        duplicate = true
+                    ),
+                    sampleRow(
+                        fingerprint = "repeated-tx",
+                        finalInclusion = DeclarationInclusion.EXCLUDED,
+                        duplicate = true
+                    )
+                ),
+                selectedIncomeCount = 1,
+                canImport = true
+            )
+
+        composeRule.setContent {
+            TestImportStatementScreen(uiState = uiState)
+        }
+
+        composeRule.onNodeWithTag("import-filter-duplicates").performClick()
+        composeRule
+            .onAllNodesWithTag("import-row-repeated-tx")
+            .assertCountEquals(2)
+    }
+
+    @Test
     fun successStateOffersMonthAndMonthsNavigation() {
         var openedMonth: YearMonth? = null
         var openedMonths = false

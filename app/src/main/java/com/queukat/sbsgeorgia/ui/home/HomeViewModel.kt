@@ -3,17 +3,12 @@ package com.queukat.sbsgeorgia.ui.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
-import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
+import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
-import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigDecimal
-import java.time.Clock
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -26,9 +21,8 @@ class HomeViewModel
 constructor(
     observeDashboardSummaryUseCase: ObserveDashboardSummaryUseCase,
     declarationFormConfigRepository: DeclarationFormConfigRepository,
-    private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
     private val actionPlanner: MonthlyDeclarationActionPlanner,
-    private val clock: Clock
+    private val completeMonthlyDeclarationUseCase: CompleteMonthlyDeclarationUseCase
 ) : ViewModel() {
     val uiState =
         combine(
@@ -58,7 +52,8 @@ constructor(
                         canCopyPaymentText = actionState.canCopyPaymentText,
                         canQuickSettleMonth = actionState.canQuickSettleMonth,
                         monthAlreadySettled = actionState.monthAlreadySettled,
-                        filingOpensOn = actionState.filingOpensOn
+                        filingOpensOn = actionState.filingOpensOn,
+                        paymentRequired = actionState.paymentRequired
                     )
                 }
             )
@@ -69,24 +64,8 @@ constructor(
         if (!quickAccess.canQuickSettleMonth) return
 
         val snapshot = quickAccess.snapshot
-        val today = LocalDate.now(clock)
         viewModelScope.launch {
-            upsertMonthlyDeclarationRecordUseCase(
-                MonthlyDeclarationRecord(
-                    yearMonth = snapshot.period.incomeMonth,
-                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
-                    zeroDeclarationPrepared =
-                    snapshot.zeroDeclarationPrepared || snapshot.zeroDeclarationSuggested,
-                    declarationFiledDate = snapshot.record?.declarationFiledDate ?: today,
-                    paymentSentDate = snapshot.record?.paymentSentDate ?: today,
-                    paymentCreditedDate = snapshot.record?.paymentCreditedDate ?: today,
-                    paymentAmountGel =
-                    snapshot.record?.paymentAmountGel
-                        ?: snapshot.estimatedTaxAmountGel
-                        ?: BigDecimal.ZERO.setScale(2),
-                    notes = snapshot.record?.notes.orEmpty()
-                )
-            )
+            completeMonthlyDeclarationUseCase(snapshot)
         }
     }
 }

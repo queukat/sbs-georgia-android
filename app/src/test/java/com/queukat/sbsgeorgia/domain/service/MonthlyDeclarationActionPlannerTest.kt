@@ -144,7 +144,13 @@ class MonthlyDeclarationActionPlannerTest {
                 snapshot = sampleSnapshot(
                     workflowStatus = MonthlyWorkflowStatus.FILED,
                     graph20 = "0.00",
-                    estimatedTax = "0.00"
+                    estimatedTax = "0.00",
+                    record = MonthlyDeclarationRecord(
+                        yearMonth = INCOME_MONTH,
+                        workflowStatus = MonthlyWorkflowStatus.FILED,
+                        zeroDeclarationPrepared = true,
+                        declarationFiledDate = LocalDate.of(2026, 4, 10)
+                    )
                 ).copy(zeroDeclarationPrepared = true),
                 registrationId = null
             )
@@ -155,7 +161,8 @@ class MonthlyDeclarationActionPlannerTest {
         assertTrue(state.canCopyDeclarationValues)
         assertFalse(state.canCopyPaymentText)
         assertFalse(state.canPreparePayment)
-        assertTrue(state.canQuickSettleMonth)
+        assertTrue(state.monthAlreadySettled)
+        assertFalse(state.canQuickSettleMonth)
     }
 
     @Test

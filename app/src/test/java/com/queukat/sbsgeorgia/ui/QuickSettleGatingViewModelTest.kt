@@ -6,6 +6,7 @@ import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -17,10 +18,10 @@ import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.GeorgiaTaxBusinessCalendar
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveCurrentYearSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
-import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import com.queukat.sbsgeorgia.testing.MainDispatcherRule
 import com.queukat.sbsgeorgia.ui.home.HomeViewModel
 import com.queukat.sbsgeorgia.ui.months.MonthsUiState
@@ -174,6 +175,31 @@ class QuickSettleGatingViewModelTest {
         assertTrue(home.canCopyDeclarationValues)
         assertEquals(home.canQuickSettleMonth, months.canQuickSettleMonth)
     }
+
+    @Test
+    fun zeroMonthCompletionFilesDeclarationWithoutInventingPayment() = runTest {
+        val fixture = QuickSettleFixture(entries = emptyList())
+        val homeViewModel = fixture.homeViewModel()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) {
+            homeViewModel.uiState.collect {}
+        }
+        advanceUntilIdle()
+
+        val quickAccess = requireNotNull(homeViewModel.uiState.value.duePeriodQuickAccess)
+        assertTrue(quickAccess.canQuickSettleMonth)
+        assertFalse(quickAccess.paymentRequired)
+
+        homeViewModel.settleCurrentDuePeriod()
+        advanceUntilIdle()
+
+        val saved = fixture.monthlyDeclarationRepository.savedRecords.single()
+        assertEquals(MonthlyWorkflowStatus.FILED, saved.workflowStatus)
+        assertTrue(saved.zeroDeclarationPrepared)
+        assertEquals(LocalDate.of(2026, 4, 10), saved.declarationFiledDate)
+        assertEquals(null, saved.paymentSentDate)
+        assertEquals(null, saved.paymentCreditedDate)
+        assertEquals(null, saved.paymentAmountGel)
+    }
 }
 
 private class QuickSettleFixture(entries: List<IncomeEntry>) {
@@ -184,6 +210,8 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
     private val settingsRepository = FakeSettingsRepository()
     private val incomeRepository = FakeIncomeRepository(entries)
     val monthlyDeclarationRepository = FakeMonthlyDeclarationRepository()
+    private val completeMonthlyDeclarationUseCase =
+        CompleteMonthlyDeclarationUseCase(monthlyDeclarationRepository, clock)
 
     fun homeViewModel(): HomeViewModel {
         val observeCurrentYearSnapshotsUseCase =
@@ -203,10 +231,8 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
                 planner = planner
             ),
             declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,
-            upsertMonthlyDeclarationRecordUseCase =
-            UpsertMonthlyDeclarationRecordUseCase(monthlyDeclarationRepository),
             actionPlanner = actionPlanner,
-            clock = clock
+            completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
         )
     }
 
@@ -219,10 +245,8 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
             planner = planner,
             clock = clock
         ),
-        upsertMonthlyDeclarationRecordUseCase =
-        UpsertMonthlyDeclarationRecordUseCase(monthlyDeclarationRepository),
         actionPlanner = actionPlanner,
-        clock = clock
+        completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
     )
 }
 

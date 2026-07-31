@@ -41,6 +41,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
+import com.queukat.sbsgeorgia.ui.common.DeclarationCopyActions
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
@@ -126,11 +127,32 @@ fun MonthDetailScreen(
     val hasDeclarationValues = copyBundle?.declarationValues?.isNotEmpty() == true
     val canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues
     val activeMonth = uiState.yearMonth ?: snapshot?.period?.incomeMonth
+    val canPreparePayment =
+        uiState.actionState?.canPreparePayment
+            ?: snapshot?.let {
+                val baseStatus = it.record?.workflowStatus ?: it.workflowStatus
+                baseStatus in paymentPreparationStatuses &&
+                    it.estimatedTaxAmountGel?.signum() == 1
+            } == true
+    val includedEntryIds =
+        uiState.entries
+            .asSequence()
+            .filter { it.declarationInclusion == DeclarationInclusion.INCLUDED }
+            .map(IncomeEntry::id)
+            .toSet()
     val appliedFxRates =
         uiState.fxRateDetails
+            .filterKeys(includedEntryIds::contains)
             .values
             .distinct()
-            .sortedWith(compareBy<FxRate> { it.rateDate }.thenBy { it.currencyCode })
+            .sortedWith(
+                compareBy<FxRate> { it.rateDate }
+                    .thenBy { it.currencyCode }
+                    .thenBy { it.manualOverride }
+                    .thenBy { it.source.ordinal }
+                    .thenBy { it.units }
+                    .thenBy { it.rateToGel }
+            )
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
@@ -197,6 +219,7 @@ fun MonthDetailScreen(
                         isFilingWindowOpen = uiState.isFilingWindowOpen,
                         isResolvingFx = uiState.isResolvingFx,
                         canCopyDeclarationValues = canCopyDeclarationValues,
+                        canPreparePayment = canPreparePayment,
                         month = activeMonth,
                         onResolveOfficialRates = onResolveOfficialRates,
                         onReviewEntries = { scrollToSection(entriesRequester) },
@@ -348,30 +371,23 @@ fun MonthDetailScreen(
                             }
                         )
 
-                        ActionFlowRow {
-                            OutlinedButton(
-                                onClick = {
-                                    copy(
-                                        label = paymentTextLabel,
-                                        value = copyBundle.paymentText
-                                    )
-                                },
-                                enabled = canCopyPaymentText
-                            ) {
-                                Text(stringResource(R.string.month_detail_copy_payment_text))
+                        DeclarationCopyActions(
+                            canCopyAll = canCopyDeclarationValues,
+                            canCopyBankText = canCopyPaymentText,
+                            testTagPrefix = "month-detail",
+                            onCopyAll = {
+                                copy(
+                                    label = fullTextLabel,
+                                    value = copyBundle.fullText
+                                )
+                            },
+                            onCopyBankText = {
+                                copy(
+                                    label = paymentTextLabel,
+                                    value = copyBundle.paymentText
+                                )
                             }
-                            OutlinedButton(
-                                onClick = {
-                                    copy(
-                                        label = fullTextLabel,
-                                        value = copyBundle.fullText
-                                    )
-                                },
-                                enabled = canCopyDeclarationValues
-                            ) {
-                                Text(stringResource(R.string.month_detail_copy_all_text))
-                            }
-                        }
+                        )
                     }
                 }
             }
@@ -450,6 +466,7 @@ private fun MonthNextActionSection(
     isFilingWindowOpen: Boolean,
     isResolvingFx: Boolean,
     canCopyDeclarationValues: Boolean,
+    canPreparePayment: Boolean,
     month: YearMonth?,
     onResolveOfficialRates: () -> Unit,
     onReviewEntries: () -> Unit,
@@ -514,7 +531,7 @@ private fun MonthNextActionSection(
                     Text(stringResource(R.string.month_detail_next_mark_payment_credited))
                 }
             }
-            baseStatus in paymentPreparationStatuses && month != null -> {
+            canPreparePayment && month != null -> {
                 Text(stringResource(R.string.month_detail_next_prepare_payment_hint))
                 Button(
                     onClick = { onOpenPaymentHelper(month) },
@@ -556,16 +573,16 @@ private fun MonthNextActionSection(
     }
 }
 
-private val paymentPreparationStatuses =
-    setOf(
-        MonthlyWorkflowStatus.FILED,
-        MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
-    )
-
 private val completedPaymentStatuses =
     setOf(
         MonthlyWorkflowStatus.PAYMENT_CREDITED,
         MonthlyWorkflowStatus.SETTLED
+    )
+
+private val paymentPreparationStatuses =
+    setOf(
+        MonthlyWorkflowStatus.FILED,
+        MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
     )
 
 @Composable

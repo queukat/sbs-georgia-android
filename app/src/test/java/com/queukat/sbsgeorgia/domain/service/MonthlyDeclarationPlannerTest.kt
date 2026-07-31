@@ -239,6 +239,71 @@ class MonthlyDeclarationPlannerTest {
     }
 
     @Test
+    fun `unfiled zero income month remains overdue after its due date`() {
+        val latePlanner = plannerAfterMayDueDate()
+        val config = statusEffectiveFromMay()
+        val snapshots =
+            latePlanner.buildYearSnapshots(
+                year = 2026,
+                profile = profile,
+                config = config,
+                entries = emptyList(),
+                records = emptyList()
+            )
+
+        val maySnapshot = snapshots.single { it.period.incomeMonth == YearMonth.of(2026, 5) }
+        val summary =
+            latePlanner.buildDashboardSummary(
+                profile = profile,
+                config = config,
+                reminders = null,
+                snapshots = snapshots,
+                records = emptyList()
+            )
+
+        assertEquals(BigDecimal("0.00"), maySnapshot.estimatedTaxAmountGel)
+        assertTrue(maySnapshot.zeroDeclarationSuggested)
+        assertEquals(MonthlyWorkflowStatus.OVERDUE, maySnapshot.workflowStatus)
+        assertEquals(1, summary.unsettledMonthsCount)
+    }
+
+    @Test
+    fun `filed zero income month is not overdue or unsettled after its due date`() {
+        val latePlanner = plannerAfterMayDueDate()
+        val config = statusEffectiveFromMay()
+        val filedMayRecord =
+            MonthlyDeclarationRecord(
+                yearMonth = YearMonth.of(2026, 5),
+                workflowStatus = MonthlyWorkflowStatus.FILED,
+                zeroDeclarationPrepared = true,
+                declarationFiledDate = LocalDate.of(2026, 6, 10)
+            )
+        val snapshots =
+            latePlanner.buildYearSnapshots(
+                year = 2026,
+                profile = profile,
+                config = config,
+                entries = emptyList(),
+                records = listOf(filedMayRecord)
+            )
+
+        val maySnapshot = snapshots.single { it.period.incomeMonth == YearMonth.of(2026, 5) }
+        val summary =
+            latePlanner.buildDashboardSummary(
+                profile = profile,
+                config = config,
+                reminders = null,
+                snapshots = snapshots,
+                records = listOf(filedMayRecord)
+            )
+
+        assertEquals(BigDecimal("0.00"), maySnapshot.estimatedTaxAmountGel)
+        assertTrue(maySnapshot.zeroDeclarationPrepared)
+        assertEquals(MonthlyWorkflowStatus.FILED, maySnapshot.workflowStatus)
+        assertEquals(0, summary.unsettledMonthsCount)
+    }
+
+    @Test
     fun `payment sent does not become overdue after due date`() {
         val period =
             planner.declarationPeriodFor(
@@ -350,7 +415,7 @@ class MonthlyDeclarationPlannerTest {
     }
 
     @Test
-    fun `dashboard summary hides next reminder when declaration reminders are disabled`() {
+    fun `dashboard summary hides next reminder when all reminders are disabled`() {
         val summary =
             planner.buildDashboardSummary(
                 profile = profile,
@@ -359,7 +424,11 @@ class MonthlyDeclarationPlannerTest {
                     effectiveDate = LocalDate.parse("2026-01-01"),
                     defaultTaxRatePercent = BigDecimal("1.0")
                 ),
-                reminders = reminderConfig(declarationRemindersEnabled = false),
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = false,
+                    paymentRemindersEnabled = false
+                ),
                 snapshots = emptyList(),
                 records = emptyList()
             )
@@ -369,41 +438,102 @@ class MonthlyDeclarationPlannerTest {
 
     @Test
     fun `dashboard summary uses next reminder day when declaration reminders are enabled`() {
+        val config = activeStatusConfig()
         val upcomingSummary =
             planner.buildDashboardSummary(
                 profile = profile,
-                config =
-                SmallBusinessStatusConfig(
-                    effectiveDate = LocalDate.parse("2026-01-01"),
-                    defaultTaxRatePercent = BigDecimal("1.0")
-                ),
+                config = config,
                 reminders =
                 reminderConfig(
                     declarationRemindersEnabled = true,
                     declarationReminderDays = listOf(5, 25, 10)
                 ),
-                snapshots = emptyList(),
+                snapshots = activeMarchSnapshots(config),
                 records = emptyList()
             )
         val wrappedSummary =
             planner.buildDashboardSummary(
                 profile = profile,
-                config =
-                SmallBusinessStatusConfig(
-                    effectiveDate = LocalDate.parse("2026-01-01"),
-                    defaultTaxRatePercent = BigDecimal("1.0")
-                ),
+                config = config,
                 reminders =
                 reminderConfig(
                     declarationRemindersEnabled = true,
                     declarationReminderDays = listOf(5, 10, 15)
                 ),
-                snapshots = emptyList(),
+                snapshots = activeMarchSnapshots(config),
                 records = emptyList()
             )
 
         assertEquals(25, upcomingSummary.nextReminderDay)
         assertEquals(5, wrappedSummary.nextReminderDay)
+    }
+
+    @Test
+    fun `dashboard summary uses payment reminder day when only payment reminders are enabled`() {
+        val config = activeStatusConfig()
+        val summary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config = config,
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = false,
+                    paymentRemindersEnabled = true,
+                    paymentReminderDays = listOf(5)
+                ),
+                snapshots = activeMarchSnapshots(config),
+                records = emptyList()
+            )
+
+        assertEquals(5, summary.nextReminderDay)
+    }
+
+    @Test
+    fun `dashboard summary chooses earliest applicable declaration or payment reminder day`() {
+        val config = activeStatusConfig()
+        val summary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config = config,
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = true,
+                    declarationReminderDays = listOf(10),
+                    paymentRemindersEnabled = true,
+                    paymentReminderDays = listOf(5)
+                ),
+                snapshots = activeMarchSnapshots(config),
+                records = emptyList()
+            )
+
+        assertEquals(5, summary.nextReminderDay)
+    }
+
+    @Test
+    fun `dashboard summary hides next reminder when due period is terminal`() {
+        val config = activeStatusConfig()
+        val settledRecord =
+            MonthlyDeclarationRecord(
+                yearMonth = YearMonth.of(2026, 3),
+                workflowStatus = MonthlyWorkflowStatus.SETTLED,
+                zeroDeclarationPrepared = false
+            )
+        val summary =
+            planner.buildDashboardSummary(
+                profile = profile,
+                config = config,
+                reminders =
+                reminderConfig(
+                    declarationRemindersEnabled = true,
+                    declarationReminderDays = listOf(10),
+                    paymentRemindersEnabled = true,
+                    paymentReminderDays = listOf(5)
+                ),
+                snapshots = activeMarchSnapshots(config, records = listOf(settledRecord)),
+                records = listOf(settledRecord)
+            )
+
+        assertNull(summary.nextReminderDay)
     }
 
     private fun manualEntry(date: String, amount: String, currency: String = "GEL"): IncomeEntry = IncomeEntry(
@@ -423,13 +553,41 @@ class MonthlyDeclarationPlannerTest {
 
     private fun reminderConfig(
         declarationRemindersEnabled: Boolean,
-        declarationReminderDays: List<Int> = listOf(10, 13, 15)
+        declarationReminderDays: List<Int> = listOf(10, 13, 15),
+        paymentRemindersEnabled: Boolean = true,
+        paymentReminderDays: List<Int> = listOf(10, 13, 15)
     ): ReminderConfig = ReminderConfig(
         declarationReminderDays = declarationReminderDays,
-        paymentReminderDays = listOf(10, 13, 15),
+        paymentReminderDays = paymentReminderDays,
         declarationRemindersEnabled = declarationRemindersEnabled,
-        paymentRemindersEnabled = true,
+        paymentRemindersEnabled = paymentRemindersEnabled,
         defaultReminderTime = LocalTime.of(9, 0),
         themeMode = ThemeMode.SYSTEM
+    )
+
+    private fun activeStatusConfig(): SmallBusinessStatusConfig = SmallBusinessStatusConfig(
+        effectiveDate = LocalDate.parse("2026-01-01"),
+        defaultTaxRatePercent = BigDecimal("1.0")
+    )
+
+    private fun statusEffectiveFromMay(): SmallBusinessStatusConfig = SmallBusinessStatusConfig(
+        effectiveDate = LocalDate.parse("2026-05-01"),
+        defaultTaxRatePercent = BigDecimal("1.0")
+    )
+
+    private fun plannerAfterMayDueDate(): MonthlyDeclarationPlanner = MonthlyDeclarationPlanner(
+        Clock.fixed(Instant.parse("2026-06-16T00:00:00Z"), ZoneOffset.UTC),
+        GeorgiaTaxBusinessCalendar()
+    )
+
+    private fun activeMarchSnapshots(
+        config: SmallBusinessStatusConfig,
+        records: List<MonthlyDeclarationRecord> = emptyList()
+    ) = planner.buildYearSnapshots(
+        year = 2026,
+        profile = profile,
+        config = config,
+        entries = listOf(manualEntry("2026-03-10", "100.00")),
+        records = records
     )
 }

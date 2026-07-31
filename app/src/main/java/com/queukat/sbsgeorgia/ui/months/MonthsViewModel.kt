@@ -2,15 +2,10 @@ package com.queukat.sbsgeorgia.ui.months
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
-import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
+import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
-import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.math.BigDecimal
-import java.time.Clock
-import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -23,9 +18,8 @@ class MonthsViewModel
 @Inject
 constructor(
     observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
-    private val upsertMonthlyDeclarationRecordUseCase: UpsertMonthlyDeclarationRecordUseCase,
     private val actionPlanner: MonthlyDeclarationActionPlanner,
-    private val clock: Clock
+    private val completeMonthlyDeclarationUseCase: CompleteMonthlyDeclarationUseCase
 ) : ViewModel() {
     val uiState =
         observeAllSnapshotsUseCase()
@@ -48,7 +42,8 @@ constructor(
                                             snapshot = snapshot,
                                             canQuickSettleMonth = actionState.canQuickSettleMonth,
                                             monthAlreadySettled = actionState.monthAlreadySettled,
-                                            filingOpensOn = actionState.filingOpensOn
+                                            filingOpensOn = actionState.filingOpensOn,
+                                            paymentRequired = actionState.paymentRequired
                                         )
                                     }
                             )
@@ -68,25 +63,9 @@ constructor(
                 ?: return
         if (!monthItem.canQuickSettleMonth) return
         val snapshot = monthItem.snapshot
-        val today = LocalDate.now(clock)
 
         viewModelScope.launch {
-            upsertMonthlyDeclarationRecordUseCase(
-                MonthlyDeclarationRecord(
-                    yearMonth = yearMonth,
-                    workflowStatus = MonthlyWorkflowStatus.SETTLED,
-                    zeroDeclarationPrepared =
-                    snapshot.zeroDeclarationPrepared || snapshot.zeroDeclarationSuggested,
-                    declarationFiledDate = snapshot.record?.declarationFiledDate ?: today,
-                    paymentSentDate = snapshot.record?.paymentSentDate ?: today,
-                    paymentCreditedDate = snapshot.record?.paymentCreditedDate ?: today,
-                    paymentAmountGel =
-                    snapshot.record?.paymentAmountGel
-                        ?: snapshot.estimatedTaxAmountGel
-                        ?: BigDecimal.ZERO.setScale(2),
-                    notes = snapshot.record?.notes.orEmpty()
-                )
-            )
+            completeMonthlyDeclarationUseCase(snapshot)
         }
     }
 }

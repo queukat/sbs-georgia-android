@@ -65,6 +65,8 @@
     <string name="declaration_field_copy">Скопировать: %1$s</string>
     <string name="month_detail_copy_payment_text">Скопировать текст для банка</string>
     <string name="month_detail_copy_all_text">Скопировать всё</string>
+    <string name="declaration_copy_bank_text">Текст для банка</string>
+    <string name="declaration_copy_share_telegram">Отправить в Telegram</string>
     <string name="month_detail_no_entries">В этом месяце пока нет записей о доходах.</string>
     <string name="month_detail_date">Дата</string>
     <string name="month_detail_category">Категория</string>

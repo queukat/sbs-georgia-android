@@ -74,6 +74,7 @@
     <string name="import_statement_row_status_excluded">Исключена</string>
     <string name="import_statement_row_status_blocked">Блокирует</string>
     <string name="import_statement_import_operations">Импортировать %1$d операций TBC</string>
+    <string name="import_statement_save_statement">Сохранить выписку TBC</string>
     <string name="import_statement_success_title">Импорт завершён</string>
     <string name="import_statement_success_imported">Импортировано %1$d операций.</string>
     <string name="import_statement_success_open_month">Открыть месяц</string>

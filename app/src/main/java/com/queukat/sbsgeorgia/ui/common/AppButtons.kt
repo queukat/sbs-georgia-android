@@ -32,7 +32,13 @@ import androidx.compose.ui.unit.dp
 private val SbsControlShape = RoundedCornerShape(8.dp)
 
 @Composable
-fun SbsPrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun SbsPrimaryButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    leadingIcon: ImageVector? = null
+) {
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -45,6 +51,13 @@ fun SbsPrimaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Mo
         ),
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 10.dp)
     ) {
+        leadingIcon?.let { icon ->
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.padding(end = 8.dp)
+            )
+        }
         Text(
             text = label,
             style = MaterialTheme.typography.labelLarge,

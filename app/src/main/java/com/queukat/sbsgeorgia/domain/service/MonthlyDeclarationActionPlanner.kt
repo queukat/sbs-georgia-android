@@ -2,7 +2,6 @@ package com.queukat.sbsgeorgia.domain.service
 
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
-import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
@@ -43,7 +42,8 @@ data class MonthlyDeclarationActionState(
     val canCopyPaymentText: Boolean = false,
     val canPreparePayment: Boolean = false,
     val canQuickSettleMonth: Boolean = false,
-    val monthAlreadySettled: Boolean = false
+    val monthAlreadySettled: Boolean = false,
+    val paymentRequired: Boolean = false
 )
 
 @Singleton
@@ -61,8 +61,8 @@ class MonthlyDeclarationActionPlanner @Inject constructor(private val clock: Clo
 
         val filingWindowOpen = !referenceDate.isBefore(snapshot.period.filingWindow.start)
         val baseStatus = snapshot.record?.workflowStatus ?: snapshot.workflowStatus
-        val monthAlreadySettled = WorkflowStatusPolicy.isPaymentTerminal(baseStatus)
-        val positiveTaxDue = (snapshot.estimatedTaxAmountGel ?: BigDecimal.ZERO).signum() > 0
+        val monthAlreadySettled = MonthlyCompletionPolicy.isComplete(snapshot)
+        val positiveTaxDue = MonthlyCompletionPolicy.paymentRequired(snapshot.estimatedTaxAmountGel)
         val blockers =
             buildList {
                 if (snapshot.setupRequired) add(MonthlyActionBlocker.SETUP_REQUIRED)
@@ -121,7 +121,8 @@ class MonthlyDeclarationActionPlanner @Inject constructor(private val clock: Clo
             canCopyPaymentText = canCopyPaymentText,
             canPreparePayment = canPreparePayment,
             canQuickSettleMonth = canQuickSettleMonth,
-            monthAlreadySettled = monthAlreadySettled
+            monthAlreadySettled = monthAlreadySettled,
+            paymentRequired = positiveTaxDue
         )
     }
 

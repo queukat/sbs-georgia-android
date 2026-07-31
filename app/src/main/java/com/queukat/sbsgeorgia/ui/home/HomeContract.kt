@@ -17,5 +17,6 @@ data class HomeDuePeriodQuickAccess(
     val canCopyPaymentText: Boolean,
     val canQuickSettleMonth: Boolean,
     val monthAlreadySettled: Boolean,
-    val filingOpensOn: LocalDate?
+    val filingOpensOn: LocalDate?,
+    val paymentRequired: Boolean = true
 )

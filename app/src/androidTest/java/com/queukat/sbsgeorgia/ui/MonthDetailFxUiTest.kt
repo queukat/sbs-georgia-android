@@ -1,12 +1,17 @@
 package com.queukat.sbsgeorgia.ui
 
+import android.content.Context
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performScrollTo
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
 import com.queukat.sbsgeorgia.domain.model.FxRate
@@ -24,6 +29,7 @@ import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.YearMonth
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -33,6 +39,8 @@ import org.junit.runner.RunWith
 class MonthDetailFxUiTest {
     @get:Rule
     val composeRule = createComposeRule()
+
+    private val appContext: Context = ApplicationProvider.getApplicationContext()
 
     @Before
     fun skipOnTvDevices() {
@@ -105,28 +113,195 @@ class MonthDetailFxUiTest {
             .onNodeWithTag("month-detail-applied-fx")
             .performScrollTo()
             .assertIsDisplayed()
-        composeRule.onNodeWithText("1 USD = 2.6647 GEL").assertIsDisplayed()
-        composeRule.onNodeWithText("1 EUR = 3.1 GEL").assertIsDisplayed()
-        composeRule.onNodeWithText("2026-06-05 · Official NBG JSON").assertIsDisplayed()
-        composeRule.onNodeWithText("2026-06-08 · Manual override").assertIsDisplayed()
+        composeRule
+            .onNodeWithText(fxRateValue(units = 1, currency = "USD", rate = "2.6647"))
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithText(fxRateValue(units = 1, currency = "EUR", rate = "3.1"))
+            .assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                appliedFxLabel(
+                    date = "2026-06-05",
+                    sourceRes = R.string.fx_rate_source_official_nbg_json
+                )
+            ).assertIsDisplayed()
+        composeRule
+            .onNodeWithText(
+                appliedFxLabel(
+                    date = "2026-06-08",
+                    sourceRes = R.string.fx_rate_source_manual_override
+                )
+            ).assertIsDisplayed()
     }
 
-    private fun incomeEntry(id: Long, date: LocalDate, currency: String, rateSource: FxRateSource): IncomeEntry =
-        IncomeEntry(
-            id = id,
-            sourceType = IncomeSourceType.MANUAL,
-            incomeDate = date,
-            originalAmount = BigDecimal("10.00"),
-            originalCurrency = currency,
-            sourceCategory = "Services",
-            note = "",
-            declarationInclusion = DeclarationInclusion.INCLUDED,
-            gelEquivalent = BigDecimal("26.65"),
-            rateSource = rateSource,
-            manualFxOverride = rateSource == FxRateSource.MANUAL_OVERRIDE,
-            createdAtEpochMillis = 1L,
-            updatedAtEpochMillis = 1L
-        )
+    @Test
+    fun appliedFxSectionExcludesEntriesOutsideTheDeclaration() {
+        val month = YearMonth.of(2026, 6)
+        val excludedEntry =
+            incomeEntry(
+                id = 1L,
+                date = LocalDate.of(2026, 6, 5),
+                currency = "EUR",
+                rateSource = FxRateSource.MANUAL_OVERRIDE,
+                inclusion = DeclarationInclusion.EXCLUDED
+            )
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthDetailScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthDetailUiState(
+                        yearMonth = month,
+                        snapshot = snapshot(month),
+                        entries = listOf(excludedEntry),
+                        fxRateDetails =
+                        mapOf(
+                            excludedEntry.id to
+                                FxRate(
+                                    rateDate = excludedEntry.incomeDate,
+                                    currencyCode = "EUR",
+                                    units = 1,
+                                    rateToGel = BigDecimal("3.10"),
+                                    source = FxRateSource.MANUAL_OVERRIDE,
+                                    manualOverride = true
+                                )
+                        )
+                    ),
+                    onBack = {},
+                    onAddIncome = {},
+                    onEditEntry = {},
+                    onOpenFxOverride = {},
+                    onOpenWorkflowStatus = {},
+                    onOpenPaymentHelper = {},
+                    onDeleteEntry = {},
+                    onResolveOfficialRates = {},
+                    onToggleZeroPrepared = {}
+                )
+            }
+        }
+
+        composeRule.onAllNodesWithTag("month-detail-applied-fx").assertCountEquals(0)
+    }
+
+    @Test
+    fun appliedFxSectionOrdersOfficialBeforeManualForTheSameCurrencyAndDate() {
+        val month = YearMonth.of(2026, 6)
+        val date = LocalDate.of(2026, 6, 5)
+        val manualEntry =
+            incomeEntry(
+                id = 1L,
+                date = date,
+                currency = "USD",
+                rateSource = FxRateSource.MANUAL_OVERRIDE
+            )
+        val officialEntry =
+            incomeEntry(
+                id = 2L,
+                date = date,
+                currency = "USD",
+                rateSource = FxRateSource.OFFICIAL_NBG_JSON
+            )
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthDetailScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthDetailUiState(
+                        yearMonth = month,
+                        snapshot = snapshot(month),
+                        entries = listOf(manualEntry, officialEntry),
+                        fxRateDetails =
+                        mapOf(
+                            manualEntry.id to
+                                FxRate(
+                                    rateDate = date,
+                                    currencyCode = "USD",
+                                    units = 1,
+                                    rateToGel = BigDecimal("2.70"),
+                                    source = FxRateSource.MANUAL_OVERRIDE,
+                                    manualOverride = true
+                                ),
+                            officialEntry.id to
+                                FxRate(
+                                    rateDate = date,
+                                    currencyCode = "USD",
+                                    units = 1,
+                                    rateToGel = BigDecimal("2.6647"),
+                                    source = FxRateSource.OFFICIAL_NBG_JSON,
+                                    manualOverride = false
+                                )
+                        )
+                    ),
+                    onBack = {},
+                    onAddIncome = {},
+                    onEditEntry = {},
+                    onOpenFxOverride = {},
+                    onOpenWorkflowStatus = {},
+                    onOpenPaymentHelper = {},
+                    onDeleteEntry = {},
+                    onResolveOfficialRates = {},
+                    onToggleZeroPrepared = {}
+                )
+            }
+        }
+
+        val officialTop =
+            composeRule
+                .onNodeWithText(
+                    appliedFxLabel(
+                        date = "2026-06-05",
+                        sourceRes = R.string.fx_rate_source_official_nbg_json
+                    )
+                ).fetchSemanticsNode()
+                .boundsInRoot
+                .top
+        val manualTop =
+            composeRule
+                .onNodeWithText(
+                    appliedFxLabel(
+                        date = "2026-06-05",
+                        sourceRes = R.string.fx_rate_source_manual_override
+                    )
+                ).fetchSemanticsNode()
+                .boundsInRoot
+                .top
+
+        assertTrue(officialTop < manualTop)
+    }
+
+    private fun fxRateValue(units: Int, currency: String, rate: String): String =
+        appContext.getString(R.string.month_detail_fx_rate_value, units, currency, rate)
+
+    private fun appliedFxLabel(date: String, sourceRes: Int): String = appContext.getString(
+        R.string.month_detail_applied_fx_label,
+        date,
+        appContext.getString(sourceRes)
+    )
+
+    private fun incomeEntry(
+        id: Long,
+        date: LocalDate,
+        currency: String,
+        rateSource: FxRateSource,
+        inclusion: DeclarationInclusion = DeclarationInclusion.INCLUDED
+    ): IncomeEntry = IncomeEntry(
+        id = id,
+        sourceType = IncomeSourceType.MANUAL,
+        incomeDate = date,
+        originalAmount = BigDecimal("10.00"),
+        originalCurrency = currency,
+        sourceCategory = "Services",
+        note = "",
+        declarationInclusion = inclusion,
+        gelEquivalent = BigDecimal("26.65"),
+        rateSource = rateSource,
+        manualFxOverride = rateSource == FxRateSource.MANUAL_OVERRIDE,
+        createdAtEpochMillis = 1L,
+        updatedAtEpochMillis = 1L
+    )
 
     private fun snapshot(month: YearMonth): MonthlyDeclarationSnapshot = MonthlyDeclarationSnapshot(
         period =

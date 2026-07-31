@@ -65,6 +65,8 @@
     <string name="declaration_field_copy">Copy %1$s</string>
     <string name="month_detail_copy_payment_text">Copy bank text</string>
     <string name="month_detail_copy_all_text">Copy all text</string>
+    <string name="declaration_copy_bank_text">Bank text</string>
+    <string name="declaration_copy_share_telegram">Send to Telegram</string>
     <string name="month_detail_no_entries">No income entries in this month yet.</string>
     <string name="month_detail_date">Date</string>
     <string name="month_detail_category">Category</string>

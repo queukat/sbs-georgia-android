@@ -31,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -134,7 +135,10 @@ fun ChartsScreen(
                 )
             }
 
-            AppSection(title = stringResource(R.string.charts_section_monthly_income)) {
+            AppSection(
+                title = stringResource(R.string.charts_section_monthly_income),
+                modifier = Modifier.testTag("charts-monthly-section")
+            ) {
                 if (uiState.monthlyIncomePoints.isEmpty()) {
                     Text(stringResource(R.string.charts_no_monthly_data))
                 } else if (uiState.monthlyIncomePoints.all { it.value.signum() == 0 }) {
@@ -146,10 +150,14 @@ fun ChartsScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     BarChart(points = uiState.monthlyIncomePoints)
+                    ChartValueStrip(points = uiState.monthlyIncomePoints)
                 }
             }
 
-            AppSection(title = stringResource(R.string.charts_section_yearly_cumulative)) {
+            AppSection(
+                title = stringResource(R.string.charts_section_yearly_cumulative),
+                modifier = Modifier.testTag("charts-cumulative-section")
+            ) {
                 if (uiState.cumulativePoints.isEmpty()) {
                     Text(stringResource(R.string.charts_no_cumulative_data))
                 } else if (uiState.cumulativePoints.all { it.value.signum() == 0 }) {
@@ -161,6 +169,7 @@ fun ChartsScreen(
                         style = MaterialTheme.typography.bodyMedium
                     )
                     CumulativeLineChart(points = uiState.cumulativePoints)
+                    ChartValueStrip(points = uiState.cumulativePoints)
                 }
             }
         }
@@ -179,10 +188,7 @@ private fun BarChart(points: List<ChartPoint>) {
             modifier =
             Modifier
                 .weight(1f)
-                .horizontalScroll(rememberScrollState())
-                .semantics {
-                    contentDescription = chartContentDescription(points)
-                },
+                .horizontalScroll(rememberScrollState()),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             points.forEach { point ->
@@ -240,10 +246,7 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
             modifier =
             Modifier
                 .weight(1f)
-                .horizontalScroll(rememberScrollState())
-                .semantics {
-                    contentDescription = chartContentDescription(points)
-                },
+                .horizontalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Canvas(
@@ -252,23 +255,26 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
                     .width(chartWidth)
                     .height(180.dp)
             ) {
-                val top = 1f
-                val baseline = size.height - 1f
+                val plotInset = 10.dp.toPx()
+                val left = plotInset
+                val right = size.width - plotInset
+                val top = plotInset
+                val baseline = size.height - plotInset
                 val usableHeight = baseline - top
                 val stepX = if (points.size <=
                     1
                 ) {
-                    size.width / 2f
+                    (left + right) / 2f
                 } else {
-                    size.width / (points.size - 1)
+                    (right - left) / (points.size - 1)
                 }
 
                 for (index in 0..2) {
                     val y = top + (usableHeight / 2f) * index
                     drawLine(
                         color = outlineColor,
-                        start = Offset(0f, y),
-                        end = Offset(size.width, y),
+                        start = Offset(left, y),
+                        end = Offset(right, y),
                         strokeWidth = 2f
                     )
                 }
@@ -286,7 +292,7 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
                                 ).toFloat()
                             }
                         Offset(
-                            x = if (points.size <= 1) size.width / 2f else index * stepX,
+                            x = if (points.size <= 1) (left + right) / 2f else left + index * stepX,
                             y = baseline - (usableHeight * ratio)
                         )
                     }
@@ -333,6 +339,48 @@ private fun CumulativeLineChart(points: List<ChartPoint>) {
 }
 
 @Composable
+private fun ChartValueStrip(points: List<ChartPoint>) {
+    Row(
+        modifier =
+        Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        points.forEach { point ->
+            val formattedValue = formatAmount(point.value, CHART_CURRENCY)
+            val pointDescription =
+                stringResource(
+                    R.string.charts_point_accessibility,
+                    point.label,
+                    formattedValue
+                )
+            Column(
+                modifier =
+                Modifier
+                    .width(112.dp)
+                    .semantics(mergeDescendants = true) {
+                        contentDescription = pointDescription
+                    },
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                Text(
+                    text = point.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1
+                )
+                Text(
+                    text = formattedValue,
+                    style = MaterialTheme.typography.bodyMedium,
+                    maxLines = 1
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun ChartScaleLabels(maxValue: java.math.BigDecimal, chartHeight: androidx.compose.ui.unit.Dp) {
     Column(
         modifier = Modifier.height(chartHeight),
@@ -351,10 +399,6 @@ private fun ChartScaleLabels(maxValue: java.math.BigDecimal, chartHeight: androi
             style = MaterialTheme.typography.labelSmall
         )
     }
-}
-
-private fun chartContentDescription(points: List<ChartPoint>): String = points.joinToString(separator = ". ") { point ->
-    "${point.label}: ${formatAmount(point.value, CHART_CURRENCY)}"
 }
 
 private const val CHART_CURRENCY = "GEL"

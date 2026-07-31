@@ -1,18 +1,26 @@
 package com.queukat.sbsgeorgia.ui
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
+import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.DashboardSummary
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
@@ -128,6 +136,33 @@ class MonthsFlowTest {
             openMonth.fetchSemanticsNode().boundsInRoot.height,
             completeMonth.fetchSemanticsNode().boundsInRoot.height,
             1f
+        )
+    }
+
+    @Test
+    fun filingStatusMatchesOpenMonthHeightOnNarrowScreen() {
+        assertMonthActionHeightMatchesOpenMonth(
+            item =
+            MonthsMonthItemUiState(
+                snapshot = sampleSnapshot(unresolvedFxCount = 0),
+                canQuickSettleMonth = false,
+                monthAlreadySettled = false,
+                filingOpensOn = LocalDate.of(2026, 12, 15)
+            ),
+            trailingActionTag = "months-filing-status-2026-03"
+        )
+    }
+
+    @Test
+    fun closedStatusMatchesOpenMonthHeightOnNarrowScreen() {
+        assertMonthActionHeightMatchesOpenMonth(
+            item =
+            MonthsMonthItemUiState(
+                snapshot = sampleSnapshot(unresolvedFxCount = 0),
+                canQuickSettleMonth = false,
+                monthAlreadySettled = true
+            ),
+            trailingActionTag = "months-closed-status-2026-03"
         )
     }
 
@@ -510,6 +545,107 @@ class MonthsFlowTest {
     }
 
     @Test
+    fun filedZeroTaxMonthDoesNotOfferPaymentHelper() {
+        val month = YearMonth.of(2026, 3)
+        val snapshot =
+            sampleSnapshot(
+                workflowStatus = MonthlyWorkflowStatus.FILED,
+                unresolvedFxCount = 0,
+                estimatedTaxAmountGel = BigDecimal.ZERO,
+                record =
+                MonthlyDeclarationRecord(
+                    yearMonth = month,
+                    workflowStatus = MonthlyWorkflowStatus.FILED,
+                    zeroDeclarationPrepared = true,
+                    declarationFiledDate = LocalDate.of(2026, 4, 10)
+                )
+            )
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthDetailScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthDetailUiState(
+                        yearMonth = month,
+                        snapshot = snapshot,
+                        entries = emptyList(),
+                        isFilingWindowOpen = true
+                    ),
+                    snackbarHostState = androidx.compose.material3.SnackbarHostState(),
+                    onBack = {},
+                    onAddIncome = {},
+                    onEditEntry = {},
+                    onOpenFxOverride = {},
+                    onOpenWorkflowStatus = {},
+                    onOpenPaymentHelper = {},
+                    onDeleteEntry = {},
+                    onResolveOfficialRates = {},
+                    onToggleZeroPrepared = {}
+                )
+            }
+        }
+
+        composeRule
+            .onAllNodesWithTag("month-detail-next-prepare-payment-button")
+            .assertCountEquals(0)
+    }
+
+    @Test
+    fun overdueZeroMonthOffersFilingCompletionWithoutPaymentLanguage() {
+        val snapshot =
+            sampleSnapshot(
+                workflowStatus = MonthlyWorkflowStatus.OVERDUE,
+                unresolvedFxCount = 0,
+                estimatedTaxAmountGel = BigDecimal.ZERO
+            ).copy(zeroDeclarationSuggested = true)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                MonthsScreen(
+                    innerPadding = PaddingValues(),
+                    uiState =
+                    MonthsUiState(
+                        sections =
+                        listOf(
+                            MonthsYearSection(
+                                year = 2026,
+                                items =
+                                listOf(
+                                    MonthsMonthItemUiState(
+                                        snapshot = snapshot,
+                                        canQuickSettleMonth = true,
+                                        monthAlreadySettled = false,
+                                        paymentRequired = false
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    onMonthClick = {},
+                    onSettleMonth = {},
+                    onAddIncome = {},
+                    onImportStatement = {},
+                    onOpenCharts = {}
+                )
+            }
+        }
+
+        composeRule
+            .onNodeWithText(context.getString(R.string.months_mark_zero_declaration_filed))
+            .performScrollTo()
+            .assertIsDisplayed()
+            .performClick()
+        composeRule
+            .onNodeWithText(context.getString(R.string.months_zero_complete_confirm_body))
+            .assertIsDisplayed()
+        composeRule
+            .onAllNodesWithText(context.getString(R.string.months_complete_confirm_body))
+            .assertCountEquals(0)
+    }
+
+    @Test
     fun workflowStatusTitleUsesLocalizedMonthName() {
         composeRule.setContent {
             SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
@@ -600,6 +736,7 @@ class MonthsFlowTest {
     private fun sampleSnapshot(
         workflowStatus: MonthlyWorkflowStatus = MonthlyWorkflowStatus.DRAFT,
         unresolvedFxCount: Int = 1,
+        estimatedTaxAmountGel: BigDecimal = BigDecimal("3.50"),
         record: MonthlyDeclarationRecord? = null
     ): MonthlyDeclarationSnapshot {
         val month = YearMonth.of(2026, 3)
@@ -620,13 +757,55 @@ class MonthsFlowTest {
             graph20TotalGel = BigDecimal("350.00"),
             graph15CumulativeGel = BigDecimal("350.00"),
             originalCurrencyTotals = listOf(MonthlyCurrencyTotal("USD", BigDecimal("125.50"))),
-            estimatedTaxAmountGel = BigDecimal("3.50"),
+            estimatedTaxAmountGel = estimatedTaxAmountGel,
             unresolvedFxCount = unresolvedFxCount,
             zeroDeclarationSuggested = false,
             zeroDeclarationPrepared = false,
             reviewNeeded = false,
             setupRequired = false,
             record = record
+        )
+    }
+
+    private fun assertMonthActionHeightMatchesOpenMonth(item: MonthsMonthItemUiState, trailingActionTag: String) {
+        composeRule.setContent {
+            SbsGeorgiaTheme(themeMode = ThemeMode.SYSTEM) {
+                Box(
+                    modifier =
+                    Modifier
+                        .width(320.dp)
+                        .fillMaxHeight()
+                ) {
+                    MonthsScreen(
+                        innerPadding = PaddingValues(),
+                        uiState =
+                        MonthsUiState(
+                            sections =
+                            listOf(
+                                MonthsYearSection(
+                                    year = 2026,
+                                    items = listOf(item)
+                                )
+                            )
+                        ),
+                        onMonthClick = {},
+                        onSettleMonth = {},
+                        onAddIncome = {},
+                        onImportStatement = {},
+                        onOpenCharts = {}
+                    )
+                }
+            }
+        }
+
+        val openMonth = composeRule.onNodeWithTag("months-open-month-button-2026-03")
+        val trailingAction = composeRule.onNodeWithTag(trailingActionTag)
+        trailingAction.performScrollTo()
+
+        assertEquals(
+            openMonth.fetchSemanticsNode().boundsInRoot.height,
+            trailingAction.fetchSemanticsNode().boundsInRoot.height,
+            1f
         )
     }
 

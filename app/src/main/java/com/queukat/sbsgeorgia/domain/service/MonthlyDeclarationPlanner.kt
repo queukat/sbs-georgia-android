@@ -117,7 +117,9 @@ constructor(
                 deriveWorkflowStatus(
                     baseStatus = record?.workflowStatus ?: MonthlyWorkflowStatus.DRAFT,
                     period = period,
-                    referenceDate = now
+                    referenceDate = now,
+                    estimatedTaxAmountGel = estimatedTax,
+                    declarationFiledDate = record?.declarationFiledDate
                 )
 
             snapshots +=
@@ -157,11 +159,28 @@ constructor(
     ): DashboardSummary {
         val now = LocalDate.now(clock)
         val dueIncomeMonth = YearMonth.from(now.minusMonths(1))
+        val dueSnapshot = snapshots.firstOrNull {
+            it.period.incomeMonth == dueIncomeMonth
+        }
         val reminderDays =
-            reminders
-                ?.takeIf { it.declarationRemindersEnabled }
-                ?.declarationReminderDays
-                ?.sorted()
+            if (reminders == null || dueSnapshot == null) {
+                emptyList()
+            } else {
+                buildList {
+                    if (
+                        reminders.declarationRemindersEnabled &&
+                        ReminderEligibilityPolicy.shouldRemindDeclaration(dueSnapshot)
+                    ) {
+                        addAll(reminders.declarationReminderDays)
+                    }
+                    if (
+                        reminders.paymentRemindersEnabled &&
+                        ReminderEligibilityPolicy.shouldRemindPayment(dueSnapshot)
+                    ) {
+                        addAll(reminders.paymentReminderDays)
+                    }
+                }.distinct().sorted()
+            }
         val nextReminderDay =
             reminderDays?.firstOrNull { it >= now.dayOfMonth }
                 ?: reminderDays?.firstOrNull()
@@ -181,7 +200,7 @@ constructor(
             unsettledMonthsCount = snapshots.count {
                 !it.period.outOfScope &&
                     !now.isBefore(it.period.filingWindow.start) &&
-                    !WorkflowStatusPolicy.isPaymentTerminal(it.workflowStatus) &&
+                    !MonthlyCompletionPolicy.isComplete(it) &&
                     (
                         it.graph20TotalGel > BigDecimal.ZERO ||
                             it.zeroDeclarationSuggested ||
@@ -190,9 +209,7 @@ constructor(
             },
             paidTaxAmountGel = paidTaxAmountGel.setScale(2, RoundingMode.HALF_UP),
             paymentMismatchMonthsCount = snapshots.count { it.taxPaymentMismatch },
-            currentDuePeriod = snapshots.firstOrNull {
-                it.period.incomeMonth == dueIncomeMonth
-            },
+            currentDuePeriod = dueSnapshot,
             nextReminderDay = nextReminderDay
         )
     }
@@ -219,10 +236,21 @@ constructor(
     fun deriveWorkflowStatus(
         baseStatus: MonthlyWorkflowStatus,
         period: MonthlyDeclarationPeriod,
-        referenceDate: LocalDate = LocalDate.now(clock)
+        referenceDate: LocalDate = LocalDate.now(clock),
+        estimatedTaxAmountGel: BigDecimal? = null,
+        declarationFiledDate: LocalDate? = null
     ): MonthlyWorkflowStatus {
         if (baseStatus == MonthlyWorkflowStatus.SETTLED ||
             baseStatus == MonthlyWorkflowStatus.PAYMENT_CREDITED
+        ) {
+            return baseStatus
+        }
+        if (
+            MonthlyCompletionPolicy.isFiledWithoutPaymentComplete(
+                baseStatus = baseStatus,
+                declarationFiledDate = declarationFiledDate,
+                estimatedTaxAmountGel = estimatedTaxAmountGel
+            )
         ) {
             return baseStatus
         }

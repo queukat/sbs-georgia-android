@@ -46,6 +46,22 @@ interface ReminderNotificationStrings {
     ): String
 }
 
+internal object ReminderEligibilityPolicy {
+    fun shouldRemindDeclaration(snapshot: MonthlyDeclarationSnapshot): Boolean =
+        !snapshot.period.outOfScope && snapshot.workflowStatus in declarationStatuses
+
+    fun shouldRemindPayment(snapshot: MonthlyDeclarationSnapshot): Boolean = !snapshot.period.outOfScope &&
+        snapshot.estimatedTaxAmountGel?.signum() == 1 &&
+        !WorkflowStatusPolicy.isPaymentTerminal(snapshot.workflowStatus)
+
+    private val declarationStatuses =
+        setOf(
+            MonthlyWorkflowStatus.DRAFT,
+            MonthlyWorkflowStatus.READY_TO_FILE,
+            MonthlyWorkflowStatus.OVERDUE
+        )
+}
+
 @Singleton
 class ReminderPlanner
 @Inject
@@ -64,7 +80,7 @@ constructor(private val strings: ReminderNotificationStrings) {
         val shouldRemindDeclaration =
             reminderConfig.declarationRemindersEnabled &&
                 today.dayOfMonth in reminderConfig.declarationReminderDays &&
-                snapshot.workflowStatus in declarationStatuses
+                ReminderEligibilityPolicy.shouldRemindDeclaration(snapshot)
 
         if (shouldRemindDeclaration) {
             notifications += buildDeclarationNotification(snapshot)
@@ -73,9 +89,7 @@ constructor(private val strings: ReminderNotificationStrings) {
         val shouldRemindPayment =
             reminderConfig.paymentRemindersEnabled &&
                 today.dayOfMonth in reminderConfig.paymentReminderDays &&
-                snapshot.estimatedTaxAmountGel != null &&
-                snapshot.estimatedTaxAmountGel.signum() > 0 &&
-                !WorkflowStatusPolicy.isPaymentTerminal(snapshot.workflowStatus)
+                ReminderEligibilityPolicy.shouldRemindPayment(snapshot)
 
         if (shouldRemindPayment) {
             notifications += buildPaymentNotification(snapshot)
@@ -153,12 +167,6 @@ constructor(private val strings: ReminderNotificationStrings) {
     }
 
     private companion object {
-        val declarationStatuses =
-            setOf(
-                MonthlyWorkflowStatus.DRAFT,
-                MonthlyWorkflowStatus.READY_TO_FILE,
-                MonthlyWorkflowStatus.OVERDUE
-            )
         val paymentPendingStatuses =
             setOf(
                 MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,

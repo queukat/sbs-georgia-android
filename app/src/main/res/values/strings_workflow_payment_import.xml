@@ -74,6 +74,7 @@
     <string name="import_statement_row_status_excluded">Excluded</string>
     <string name="import_statement_row_status_blocked">Blocked</string>
     <string name="import_statement_import_operations">Import %1$d TBC operations</string>
+    <string name="import_statement_save_statement">Save TBC statement</string>
     <string name="import_statement_success_title">Import complete</string>
     <string name="import_statement_success_imported">Imported %1$d operations.</string>
     <string name="import_statement_success_open_month">Open month</string>

@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
@@ -204,7 +204,10 @@ fun ImportStatementScreen(
                             )
                         }
                     } else {
-                        items(filteredRows, key = { it.transactionFingerprint }) { row ->
+                        itemsIndexed(
+                            items = filteredRows,
+                            key = { index, row -> "${row.transactionFingerprint}:$index" }
+                        ) { _, row ->
                             ImportStatementRowCard(
                                 row = row,
                                 onIncludeAsTaxableChanged = onIncludeAsTaxableChanged,
@@ -568,10 +571,14 @@ private fun ImportStatementBottomBar(uiState: ImportStatementUiState, onImportAp
                 if (uiState.isImporting) {
                     stringResource(R.string.import_statement_importing)
                 } else {
-                    stringResource(
-                        R.string.import_statement_import_operations,
-                        uiState.selectedIncomeCount
-                    )
+                    if (uiState.selectedIncomeCount > 0) {
+                        stringResource(
+                            R.string.import_statement_import_operations,
+                            uiState.selectedIncomeCount
+                        )
+                    } else {
+                        stringResource(R.string.import_statement_save_statement)
+                    }
                 }
             )
         }

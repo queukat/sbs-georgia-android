@@ -113,12 +113,7 @@ constructor(
                             it.paidOut?.amount?.signum() == 1
                         },
                         invalidIncludedCount = invalidIncludedCount,
-                        canImport =
-                        rows.any {
-                            it.finalInclusion == DeclarationInclusion.INCLUDED &&
-                                !it.duplicate
-                        } &&
-                            invalidIncludedCount == 0,
+                        canImport = rows.canConfirmImport(),
                         infoMessage =
                         listOfNotNull(
                             result.existingImport?.let(::formatExistingImportMessage),
@@ -346,11 +341,7 @@ constructor(
             selectedIncomeCount = updatedRows.willImportCount(),
             detectedTaxPaymentCount = updatedRows.taxPaymentCandidateCount(),
             invalidIncludedCount = updatedRows.invalidIncludedCount(),
-            canImport =
-            updatedRows.any {
-                it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate
-            } &&
-                updatedRows.invalidIncludedCount() == 0,
+            canImport = updatedRows.canConfirmImport(),
             errorMessage = null
         )
 
