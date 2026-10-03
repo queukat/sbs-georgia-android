@@ -51,6 +51,7 @@ import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyActions
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
+import com.queukat.sbsgeorgia.ui.common.DeclarationCoverageConfirmation
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SimpleChip
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
@@ -58,6 +59,7 @@ import com.queukat.sbsgeorgia.ui.common.copyPlainTextToClipboard
 import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
+import com.queukat.sbsgeorgia.ui.common.rememberDeclarationCoverage
 import com.queukat.sbsgeorgia.ui.common.sharePlainTextToTelegramOrChooser
 import java.time.YearMonth
 import kotlinx.coroutines.launch
@@ -106,6 +108,7 @@ fun HomeScreen(
     val copiedTemplate = stringResource(R.string.common_copied_template, "%1\$s")
     val shareTitle = stringResource(R.string.home_share_declaration_values_title)
     var showQuickSettleConfirmation by rememberSaveable { mutableStateOf(false) }
+    var showStatistics by rememberSaveable { mutableStateOf(false) }
 
     fun copy(label: String, value: String) {
         if (value.isBlank()) return
@@ -209,6 +212,13 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            Button(
+                onClick = onImportStatement,
+                modifier = Modifier.fillMaxWidth().testTag("home-import-statement-button")
+            ) {
+                Text(stringResource(R.string.home_import_pdf))
+            }
+
             if (summary != null) {
                 AppSection(title = stringResource(R.string.home_section_due_period)) {
                     val duePeriod = summary.currentDuePeriod
@@ -228,40 +238,49 @@ fun HomeScreen(
                     }
                 }
 
-                AppSection(title = stringResource(R.string.home_section_dashboard)) {
-                    KeyValueRow(
-                        stringResource(R.string.home_setup_complete),
+                TextButton(onClick = { showStatistics = !showStatistics }) {
+                    Text(
                         stringResource(
-                            if (summary.setupComplete) R.string.common_yes else R.string.common_no
+                            if (showStatistics) R.string.home_hide_statistics else R.string.home_show_statistics
                         )
                     )
-                    KeyValueRow(
-                        stringResource(R.string.home_ytd_income),
-                        formatAmount(summary.ytdIncomeGel, "GEL")
-                    )
-                    KeyValueRow(
-                        stringResource(R.string.home_unresolved_fx_entries),
-                        summary.unresolvedFxCount.toString()
-                    )
-                    KeyValueRow(
-                        stringResource(R.string.home_unsettled_months),
-                        summary.unsettledMonthsCount.toString()
-                    )
-                    KeyValueRow(
-                        stringResource(R.string.home_paid_taxes),
-                        formatAmount(summary.paidTaxAmountGel, "GEL")
-                    )
-                    if (summary.paymentMismatchMonthsCount > 0) {
+                }
+                if (showStatistics) {
+                    AppSection(title = stringResource(R.string.home_section_dashboard)) {
                         KeyValueRow(
-                            stringResource(R.string.home_tax_mismatch_months),
-                            summary.paymentMismatchMonthsCount.toString()
+                            stringResource(R.string.home_setup_complete),
+                            stringResource(
+                                if (summary.setupComplete) R.string.common_yes else R.string.common_no
+                            )
                         )
-                    }
-                    summary.nextReminderDay?.let {
                         KeyValueRow(
-                            stringResource(R.string.home_next_reminder),
-                            stringResource(R.string.home_next_reminder_day, it)
+                            stringResource(R.string.home_ytd_income),
+                            formatAmount(summary.ytdIncomeGel, "GEL")
                         )
+                        KeyValueRow(
+                            stringResource(R.string.home_unresolved_fx_entries),
+                            summary.unresolvedFxCount.toString()
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.home_unsettled_months),
+                            summary.unsettledMonthsCount.toString()
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.home_paid_taxes),
+                            formatAmount(summary.paidTaxAmountGel, "GEL")
+                        )
+                        if (summary.paymentMismatchMonthsCount > 0) {
+                            KeyValueRow(
+                                stringResource(R.string.home_tax_mismatch_months),
+                                summary.paymentMismatchMonthsCount.toString()
+                            )
+                        }
+                        summary.nextReminderDay?.let {
+                            KeyValueRow(
+                                stringResource(R.string.home_next_reminder),
+                                stringResource(R.string.home_next_reminder_day, it)
+                            )
+                        }
                     }
                 }
 
@@ -283,7 +302,7 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    Button(
+                    OutlinedButton(
                         onClick = onAddIncome,
                         modifier = Modifier.testTag("add-income-button")
                     ) {
@@ -294,9 +313,6 @@ fun HomeScreen(
                         modifier = Modifier.testTag("open-months-button")
                     ) {
                         Text(stringResource(R.string.home_open_months))
-                    }
-                    OutlinedButton(onClick = onImportStatement) {
-                        Text(stringResource(R.string.home_import_pdf))
                     }
                     OutlinedButton(onClick = onOpenSettings) {
                         Text(stringResource(R.string.home_open_settings_short))
@@ -325,6 +341,7 @@ private fun DuePeriodQuickAccess(
     if (quickAccess == null) return
 
     val snapshot = quickAccess.snapshot
+    var coverageConfirmed by rememberDeclarationCoverage(snapshot)
     val copyBundle = quickAccess.copyBundle
     val paymentTextLabel = stringResource(R.string.month_detail_copy_payment_text)
     val fullTextLabel = stringResource(R.string.month_detail_copy_all_text)
@@ -341,7 +358,7 @@ private fun DuePeriodQuickAccess(
 
     if (copyBundle != null && !snapshot.period.outOfScope) {
         val canCopyPaymentText =
-            quickAccess.canCopyPaymentText
+            quickAccess.canCopyPaymentText && coverageConfirmed
         when {
             quickAccess.filingOpensOn != null -> {
                 Text(
@@ -359,14 +376,15 @@ private fun DuePeriodQuickAccess(
             }
         }
 
+        DeclarationCoverageConfirmation(coverageConfirmed) { coverageConfirmed = it }
         DeclarationCopyValues(
             values = copyBundle.declarationValues,
-            enabled = quickAccess.canCopyDeclarationValues,
+            enabled = quickAccess.canCopyDeclarationValues && coverageConfirmed,
             testTagPrefix = "home",
             onCopy = onCopy
         )
         DeclarationCopyActions(
-            canCopyAll = quickAccess.canCopyDeclarationValues,
+            canCopyAll = quickAccess.canCopyDeclarationValues && coverageConfirmed,
             canCopyBankText = canCopyPaymentText,
             testTagPrefix = "home",
             onCopyAll = { onCopy(fullTextLabel, copyBundle.fullText) },
@@ -393,6 +411,7 @@ private fun DuePeriodQuickAccess(
             quickAccess.canQuickSettleMonth -> {
                 OutlinedButton(
                     onClick = onSettleCurrentDuePeriod,
+                    enabled = coverageConfirmed,
                     modifier = Modifier.testTag("home-close-due-month-button")
                 ) {
                     Text(

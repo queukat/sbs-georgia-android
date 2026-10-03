@@ -45,6 +45,7 @@ import com.queukat.sbsgeorgia.domain.model.ParsedDateField
 import com.queukat.sbsgeorgia.domain.model.ParsedTextField
 import com.queukat.sbsgeorgia.domain.model.StatementMoney
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ChartPoint
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
 import com.queukat.sbsgeorgia.ui.charts.ChartsScreen
@@ -67,6 +68,7 @@ import com.queukat.sbsgeorgia.ui.onboarding.OnboardingScreen
 import com.queukat.sbsgeorgia.ui.onboarding.OnboardingUiState
 import com.queukat.sbsgeorgia.ui.theme.SbsGeorgiaTheme
 import java.math.BigDecimal
+import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.Locale
@@ -316,6 +318,11 @@ private fun MonthDetailScenario() {
                 registrationId = "123456789",
                 yearMonth = snapshot.period.incomeMonth
             ),
+            actionState = MonthlyDeclarationActionPlanner(Clock.systemUTC()).plan(
+                snapshot,
+                "123456789",
+                LocalDate.of(2026, 4, 10)
+            ),
             isFilingWindowOpen = true
         ),
         snackbarHostState = SnackbarHostState(),
@@ -418,6 +425,8 @@ private fun ChartsScenario() {
             ),
             ytdIncomeGel = BigDecimal("24700.00"),
             peakMonthLabel = YearMonth.of(2026, 3).formatMonthYear(),
+            peakMonthIncomeGel = BigDecimal("8450.00"),
+            incomeMonthsCount = 4,
             unresolvedMonthsCount = 0
         ),
         onYearSelected = {},

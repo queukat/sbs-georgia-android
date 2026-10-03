@@ -16,6 +16,8 @@ data class ImportStatementUiState(
     val recognizedOutgoingCount: Int = 0,
     val invalidIncludedCount: Int = 0,
     val canImport: Boolean = false,
+    val skippedLineCount: Int = 0,
+    val skippedLinesAcknowledged: Boolean = false,
     val isLoading: Boolean = false,
     val isImporting: Boolean = false,
     val importSuccess: ImportStatementImportSuccessUiState? = null,
@@ -29,7 +31,8 @@ data class ImportStatementImportSuccessUiState(
     val skippedDuplicateCount: Int,
     val excludedCount: Int,
     val targetMonth: YearMonth?,
-    val detailMessage: String?
+    val detailMessage: String?,
+    val canOpenAutomatically: Boolean = false
 )
 
 data class ImportStatementRowUiState(
@@ -82,7 +85,7 @@ internal fun List<ImportStatementRowUiState>.willImportCount(): Int =
     count { it.finalInclusion == DeclarationInclusion.INCLUDED && !it.duplicate }
 
 internal fun List<ImportStatementRowUiState>.canConfirmImport(): Boolean =
-    any { !it.duplicate } && invalidIncludedCount() == 0
+    any { !it.duplicate } && invalidIncludedCount() == 0 && pendingReviewDecisionCount() == 0
 
 internal fun List<ImportStatementRowUiState>.needsReviewCount(): Int = count(
     ImportStatementRowUiState::needsReview

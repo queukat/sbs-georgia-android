@@ -100,6 +100,11 @@ interface IncomeEntryDao {
     )
     suspend fun existsBySourceTransactionFingerprint(transactionFingerprint: String): Boolean
 
+    @Query(
+        "SELECT sourceTransactionFingerprint FROM income_entry WHERE sourceTransactionFingerprint IN (:fingerprints)"
+    )
+    suspend fun existingSourceFingerprints(fingerprints: List<String>): List<String>
+
     @Upsert
     suspend fun upsert(entity: IncomeEntryEntity): Long
 
@@ -212,6 +217,9 @@ interface ImportedTransactionDao {
         """
     )
     suspend fun existsByFingerprint(transactionFingerprint: String): Boolean
+
+    @Query("SELECT transactionFingerprint FROM imported_transaction WHERE transactionFingerprint IN (:fingerprints)")
+    suspend fun existingFingerprints(fingerprints: List<String>): List<String>
 
     @Query(
         """

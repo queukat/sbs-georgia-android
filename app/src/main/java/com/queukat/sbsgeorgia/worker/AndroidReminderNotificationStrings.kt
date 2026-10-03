@@ -111,6 +111,8 @@ constructor(@param:ApplicationContext private val context: Context) :
                     monthReference,
                     dueDateLabel
                 )
+            ReminderNotificationMessage.PAYMENT_SENT_CHECK_CREDIT ->
+                context.getString(R.string.notification_payment_check_credit_body, monthReference)
             ReminderNotificationMessage.PAYMENT_DEFAULT ->
                 context.getString(
                     R.string.notification_payment_default_body,

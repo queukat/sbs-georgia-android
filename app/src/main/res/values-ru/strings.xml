@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Georgia Small Biz Tracker</string>
+    <string name="home_show_statistics">Показать статистику</string>
+    <string name="home_hide_statistics">Скрыть статистику</string>
+    <string name="declaration_open_rs">Открыть RS.ge для подачи</string>
+    <string name="declaration_browser_unavailable">Браузер недоступен. Откройте eservices.rs.ge на другом устройстве.</string>
+    <string name="import_statement_decisions_required">Сначала разберите спорные операции и подтвердите проверку пропущенных строк.</string>
+    <string name="import_statement_skipped_acknowledgement">Часть строк не распознана. Я сверил(а) PDF с результатом; недостающий доход нужно добавить вручную до подачи декларации.</string>
+    <string name="month_previous_data_incomplete">В предыдущих месяцах есть непроверенный доход или неизвестный курс. Сначала исправьте их: от этого зависят накопленный доход и ставка.</string>
+    <string name="month_effective_rate">Ставка за этот месяц</string>
+    <string name="declaration_confirm_coverage">У меня обычный SBS, без НДС и специальных режимов. Все доходы для расчёта за этот год учтены, включая другие счета и наличные. Переводы и комиссии проверены.</string>
 </resources>

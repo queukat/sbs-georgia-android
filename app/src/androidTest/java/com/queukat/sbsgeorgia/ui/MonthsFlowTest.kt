@@ -378,6 +378,8 @@ class MonthsFlowTest {
             }
         }
 
+        composeRule.onNodeWithTag("declaration-confirm-coverage").performScrollTo().performClick()
+
         composeRule
             .onNodeWithTag("home-close-due-month-button")
             .performScrollTo()

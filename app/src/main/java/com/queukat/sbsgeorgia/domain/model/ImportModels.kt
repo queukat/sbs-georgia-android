@@ -40,7 +40,8 @@ data class ApprovedImportedStatementRow(
     val amount: BigDecimal,
     val currency: String,
     val sourceCategory: String,
-    val duplicate: Boolean
+    val duplicate: Boolean,
+    val reviewDecisionMade: Boolean = suggestedInclusion != DeclarationInclusion.REVIEW_REQUIRED
 )
 
 data class ImportedStatementImportInfo(

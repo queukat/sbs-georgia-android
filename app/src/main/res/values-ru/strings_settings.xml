@@ -104,4 +104,5 @@
     <string name="settings_data_operation_in_progress">Идёт работа с локальной резервной копией и экспортом…</string>
     <string name="settings_save">Сохранить настройки</string>
     <string name="settings_saving">Сохранение…</string>
+    <string name="notification_payment_check_credit_body">Платёж за %1$s отмечен как отправленный. Проверьте зачисление в RS.ge; это напоминание не означает, что нужно платить повторно.</string>
 </resources>

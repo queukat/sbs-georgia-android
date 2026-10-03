@@ -4,6 +4,7 @@ object SourceCategoryPresets {
     const val SOFTWARE_SERVICES = "Software services"
     const val CONSULTING = "Consulting"
     const val MARKETPLACE_PAYOUT = "Marketplace payout"
+    const val CARD_ACQUIRING_PAYOUT = "Card acquiring payout"
     const val OTHER = "Other"
     const val BANK_FEE = "Bank fee"
     const val OWN_ACCOUNT_TRANSFER = "Own account transfer"
@@ -17,6 +18,7 @@ object SourceCategoryPresets {
             SOFTWARE_SERVICES,
             CONSULTING,
             MARKETPLACE_PAYOUT,
+            CARD_ACQUIRING_PAYOUT,
             OTHER
         )
 }

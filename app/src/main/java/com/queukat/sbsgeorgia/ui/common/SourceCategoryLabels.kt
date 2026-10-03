@@ -25,6 +25,10 @@ private val knownSourceCategories =
             R.string.source_category_marketplace_payout
         ),
         SourceCategoryMapping(SourceCategoryPresets.OTHER, R.string.source_category_other),
+        SourceCategoryMapping(
+            SourceCategoryPresets.CARD_ACQUIRING_PAYOUT,
+            R.string.source_category_card_acquiring_payout
+        ),
         SourceCategoryMapping(SourceCategoryPresets.BANK_FEE, R.string.source_category_bank_fee),
         SourceCategoryMapping(
             SourceCategoryPresets.OWN_ACCOUNT_TRANSFER,

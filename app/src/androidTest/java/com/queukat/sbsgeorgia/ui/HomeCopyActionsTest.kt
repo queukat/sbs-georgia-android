@@ -4,8 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.width
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -63,6 +66,10 @@ class HomeCopyActionsTest {
                 }
             }
         }
+
+        composeRule.onNodeWithTag("home-copy-all-text-button").assertIsNotEnabled()
+        composeRule.onNodeWithTag("declaration-confirm-coverage").performScrollTo().performClick()
+        composeRule.onNodeWithTag("home-copy-all-text-button").assertIsEnabled()
 
         val copyAll = composeRule.onNodeWithTag("home-copy-all-text-button")
         val copyBankText = composeRule.onNodeWithTag("home-copy-payment-text-button")

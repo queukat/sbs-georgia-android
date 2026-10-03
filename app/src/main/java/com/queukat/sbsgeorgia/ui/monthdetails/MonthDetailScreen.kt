@@ -43,6 +43,7 @@ import com.queukat.sbsgeorgia.ui.common.ActionFlowRow
 import com.queukat.sbsgeorgia.ui.common.AppSection
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyActions
 import com.queukat.sbsgeorgia.ui.common.DeclarationCopyValues
+import com.queukat.sbsgeorgia.ui.common.DeclarationCoverageConfirmation
 import com.queukat.sbsgeorgia.ui.common.KeyValueRow
 import com.queukat.sbsgeorgia.ui.common.SbsScreenScaffold
 import com.queukat.sbsgeorgia.ui.common.SnapshotSummary
@@ -51,6 +52,7 @@ import com.queukat.sbsgeorgia.ui.common.formatAmount
 import com.queukat.sbsgeorgia.ui.common.formatIsoDate
 import com.queukat.sbsgeorgia.ui.common.formatMonthYear
 import com.queukat.sbsgeorgia.ui.common.fxRateSourceLabel
+import com.queukat.sbsgeorgia.ui.common.rememberDeclarationCoverage
 import com.queukat.sbsgeorgia.ui.common.sourceCategoryLabel
 import java.time.YearMonth
 import kotlinx.coroutines.launch
@@ -113,6 +115,7 @@ fun MonthDetailScreen(
     onToggleZeroPrepared: () -> Unit
 ) {
     val snapshot = uiState.snapshot
+    var coverageConfirmed by rememberDeclarationCoverage(snapshot)
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val copyBundle = uiState.copyBundle
@@ -125,7 +128,7 @@ fun MonthDetailScreen(
     val copyActionsAvailable =
         snapshot != null && copyBundle != null && uiState.actionState?.canCopyDeclarationValues == true
     val hasDeclarationValues = copyBundle?.declarationValues?.isNotEmpty() == true
-    val canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues
+    val canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues && coverageConfirmed
     val activeMonth = uiState.yearMonth ?: snapshot?.period?.incomeMonth
     val canPreparePayment =
         uiState.actionState?.canPreparePayment
@@ -218,7 +221,7 @@ fun MonthDetailScreen(
                         snapshot = snapshot,
                         isFilingWindowOpen = uiState.isFilingWindowOpen,
                         isResolvingFx = uiState.isResolvingFx,
-                        canCopyDeclarationValues = canCopyDeclarationValues,
+                        canCopyDeclarationValues = copyActionsAvailable && hasDeclarationValues,
                         canPreparePayment = canPreparePayment,
                         month = activeMonth,
                         onResolveOfficialRates = onResolveOfficialRates,
@@ -246,6 +249,65 @@ fun MonthDetailScreen(
                                 )
                             }
                         }
+                    }
+                }
+            }
+            item {
+                if (snapshot != null && copyBundle != null && copyActionsAvailable) {
+                    val canCopyPaymentText = uiState.actionState?.canCopyPaymentText == true && coverageConfirmed
+
+                    AppSection(
+                        title =
+                        stringResource(
+                            if (hasDeclarationValues) {
+                                R.string.month_detail_section_copy_tools
+                            } else {
+                                R.string.month_detail_section_payment_tools
+                            }
+                        ),
+                        modifier = Modifier.bringIntoViewRequester(copyToolsRequester)
+                    ) {
+                        DeclarationCoverageConfirmation(coverageConfirmed) { coverageConfirmed = it }
+                        DeclarationCopyValues(
+                            values = copyBundle.declarationValues,
+                            enabled = canCopyDeclarationValues,
+                            testTagPrefix = "month-detail",
+                            onCopy = { label, value -> copy(label = label, value = value) }
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.snapshot_estimated_tax),
+                            copyBundle.taxAmount
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.payment_helper_treasury_code),
+                            copyBundle.treasuryCode
+                        )
+                        KeyValueRow(
+                            stringResource(R.string.payment_helper_comment),
+                            if (copyBundle.paymentComment.isBlank()) {
+                                stringResource(R.string.payment_helper_complete_settings_first)
+                            } else {
+                                copyBundle.paymentComment
+                            }
+                        )
+
+                        DeclarationCopyActions(
+                            canCopyAll = canCopyDeclarationValues,
+                            canCopyBankText = canCopyPaymentText,
+                            testTagPrefix = "month-detail",
+                            onCopyAll = {
+                                copy(
+                                    label = fullTextLabel,
+                                    value = copyBundle.fullText
+                                )
+                            },
+                            onCopyBankText = {
+                                copy(
+                                    label = paymentTextLabel,
+                                    value = copyBundle.paymentText
+                                )
+                            }
+                        )
                     }
                 }
             }
@@ -330,64 +392,6 @@ fun MonthDetailScreen(
                                 Text(stringResource(R.string.month_detail_edit_status))
                             }
                         }
-                    }
-                }
-            }
-            item {
-                if (snapshot != null && copyBundle != null && copyActionsAvailable) {
-                    val canCopyPaymentText = uiState.actionState?.canCopyPaymentText == true
-
-                    AppSection(
-                        title =
-                        stringResource(
-                            if (hasDeclarationValues) {
-                                R.string.month_detail_section_copy_tools
-                            } else {
-                                R.string.month_detail_section_payment_tools
-                            }
-                        ),
-                        modifier = Modifier.bringIntoViewRequester(copyToolsRequester)
-                    ) {
-                        DeclarationCopyValues(
-                            values = copyBundle.declarationValues,
-                            enabled = canCopyDeclarationValues,
-                            testTagPrefix = "month-detail",
-                            onCopy = { label, value -> copy(label = label, value = value) }
-                        )
-                        KeyValueRow(
-                            stringResource(R.string.snapshot_estimated_tax),
-                            copyBundle.taxAmount
-                        )
-                        KeyValueRow(
-                            stringResource(R.string.payment_helper_treasury_code),
-                            copyBundle.treasuryCode
-                        )
-                        KeyValueRow(
-                            stringResource(R.string.payment_helper_comment),
-                            if (copyBundle.paymentComment.isBlank()) {
-                                stringResource(R.string.payment_helper_complete_settings_first)
-                            } else {
-                                copyBundle.paymentComment
-                            }
-                        )
-
-                        DeclarationCopyActions(
-                            canCopyAll = canCopyDeclarationValues,
-                            canCopyBankText = canCopyPaymentText,
-                            testTagPrefix = "month-detail",
-                            onCopyAll = {
-                                copy(
-                                    label = fullTextLabel,
-                                    value = copyBundle.fullText
-                                )
-                            },
-                            onCopyBankText = {
-                                copy(
-                                    label = paymentTextLabel,
-                                    value = copyBundle.paymentText
-                                )
-                            }
-                        )
                     }
                 }
             }

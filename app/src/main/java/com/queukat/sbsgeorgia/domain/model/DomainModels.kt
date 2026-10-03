@@ -213,7 +213,9 @@ data class MonthlyDeclarationSnapshot(
     val zeroDeclarationPrepared: Boolean,
     val reviewNeeded: Boolean,
     val setupRequired: Boolean,
-    val record: MonthlyDeclarationRecord?
+    val record: MonthlyDeclarationRecord?,
+    val priorPeriodDataIncomplete: Boolean = false,
+    val effectiveTaxRatePercent: BigDecimal? = null
 ) {
     val paidTaxAmountGel: BigDecimal?
         get() = record?.paymentAmountGel

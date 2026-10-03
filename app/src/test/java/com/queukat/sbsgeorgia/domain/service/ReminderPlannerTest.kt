@@ -188,11 +188,10 @@ class ReminderPlannerTest {
                 snapshot = snapshot
             )
 
-        assertEquals(2, notifications.size)
+        assertEquals(1, notifications.size)
         assertEquals(
             listOf(
-                ReminderNotificationMessage.DECLARATION_REVIEW_AND_FX,
-                ReminderNotificationMessage.PAYMENT_REVIEW_AND_FX
+                ReminderNotificationMessage.DECLARATION_REVIEW_AND_FX
             ),
             strings.bodyRequests.map(RecordingReminderNotificationStrings.BodyRequest::message)
         )
@@ -341,6 +340,8 @@ private object EnglishReminderNotificationStrings : ReminderNotificationStrings 
                 "Declaration for $monthReference is filed. Tax payment should be sent by $dueDate."
             ReminderNotificationMessage.PAYMENT_PENDING ->
                 "Tax payment for $monthReference still needs to be sent by $dueDate."
+            ReminderNotificationMessage.PAYMENT_SENT_CHECK_CREDIT ->
+                "Payment for $incomeMonth was sent; check crediting."
             ReminderNotificationMessage.PAYMENT_DEFAULT ->
                 "Estimated tax for $monthReference is ready. After filing, send the payment by $dueDate."
         }

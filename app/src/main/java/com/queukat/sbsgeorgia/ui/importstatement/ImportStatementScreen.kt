@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -69,6 +70,24 @@ fun ImportStatementRoute(
             }
         }
 
+    var pickerOpened by rememberSaveable { mutableStateOf(false) }
+    var successOpened by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        if (!pickerOpened && uiState.sourceFingerprint == null && uiState.importSuccess == null) {
+            pickerOpened = true
+            pickerLauncher.launch(arrayOf("application/pdf"))
+        }
+    }
+    LaunchedEffect(uiState.importSuccess) {
+        val success = uiState.importSuccess
+        val target = success?.targetMonth
+        if (!successOpened && success?.canOpenAutomatically == true && target != null) {
+            successOpened = true
+            onBack() // Retire the import destination before switching the top-level stack.
+            onOpenMonth(target)
+        }
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             if (effect is ImportStatementEffect.Message) {
@@ -91,7 +110,8 @@ fun ImportStatementRoute(
         onExcludePendingReviewRows = viewModel::excludePendingReviewRows,
         onImportApproved = viewModel::importApprovedRows,
         onOpenMonth = onOpenMonth,
-        onOpenMonths = onOpenMonths
+        onOpenMonths = onOpenMonths,
+        onSkippedLinesAcknowledged = viewModel::acknowledgeSkippedLines
     )
 }
 
@@ -110,7 +130,8 @@ fun ImportStatementScreen(
     onExcludePendingReviewRows: () -> Unit,
     onImportApproved: () -> Unit,
     onOpenMonth: (YearMonth) -> Unit,
-    onOpenMonths: () -> Unit
+    onOpenMonths: () -> Unit,
+    onSkippedLinesAcknowledged: (Boolean) -> Unit = {}
 ) {
     var selectedFilter by rememberSaveable(uiState.sourceFingerprint, uiState.rows.size) {
         mutableStateOf(
@@ -129,7 +150,7 @@ fun ImportStatementScreen(
         title = stringResource(R.string.import_statement_title),
         onBack = onBack,
         topActions = {
-            TextButton(onClick = onPickPdf, enabled = !uiState.isLoading) {
+            TextButton(onClick = onPickPdf, enabled = !uiState.isLoading && !uiState.isImporting) {
                 Text(
                     stringResource(
                         if (uiState.isLoading) {
@@ -169,6 +190,19 @@ fun ImportStatementScreen(
             } else {
                 item {
                     ImportStatementFlowSummary(uiState = uiState)
+                }
+                if (uiState.skippedLineCount > 0) {
+                    item {
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            Checkbox(
+                                checked = uiState.skippedLinesAcknowledged,
+                                onCheckedChange = onSkippedLinesAcknowledged,
+                                enabled = !uiState.isLoading && !uiState.isImporting,
+                                modifier = Modifier.testTag("import-acknowledge-skipped-lines")
+                            )
+                            Text(stringResource(R.string.import_statement_skipped_acknowledgement))
+                        }
+                    }
                 }
                 if (uiState.rows.isNotEmpty()) {
                     item {
@@ -555,6 +589,10 @@ private fun ImportStatementBottomBar(uiState: ImportStatementUiState, onImportAp
                 R.string.import_statement_invalid_rows_blocking_import,
                 uiState.invalidIncludedCount
             )
+        } else if (uiState.rows.pendingReviewDecisionCount() > 0 ||
+            (uiState.skippedLineCount > 0 && !uiState.skippedLinesAcknowledged)
+        ) {
+            stringResource(R.string.import_statement_decisions_required)
         } else {
             null
         }

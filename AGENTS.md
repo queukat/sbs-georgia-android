@@ -160,12 +160,22 @@ SBS Georgia Android - offline-first Android-приложение для инди
   unresolved until official/manual FX is available.
 - Statement import is two-step: load preview, let the user edit rows, then confirm.
   Confirm stores statement metadata, transactions and included income entries.
+- TBC business GEL card settlements are recognized by the Georgian payout description
+  plus `Batch:...;Card;mid:...` on an incoming movement. They use the credited net
+  amount and bank posting date, with category `Card acquiring payout`; commission
+  text inside a settlement must not exclude the whole credit. Fee debits and
+  automatic fee-funding transfers remain excluded. Amount/date stay editable.
 - Duplicate protection exists both at statement level (`sourceFingerprint`) and
   transaction level (`transactionFingerprint`), with duplicate rows flagged in preview.
 - TBC parsing is pure domain code. Android file access and PDF text extraction stay
   in `data/importer`; do not put `Uri` into use-case APIs.
-- FX resolution checks local cache first, then official NBG JSON. Do not silently
-  substitute nearest dates or guessed rates unless product requirements change.
+- FX resolution checks the requested-date local cache first, then one official NBG
+  daily JSON request. All returned currencies are validated and cached in one batch.
+  NBG may return the prior effective business-day rate for a weekend/holiday query;
+  accept the official response when valid on the requested day, while caching under
+  that requested day. Do not query neighbouring dates or guess missing rates.
+  Invalid/future effective dates and invalid units/rates remain unresolved. Manual
+  overrides keep priority; cancellation disconnects the active HTTP request.
 - Declaration planning lives in `MonthlyDeclarationPlanner`; Georgian non-business
   day adjustment lives in `GeorgiaTaxBusinessCalendar`.
 - Home and Month Detail build copy rows from the persisted `DeclarationFormConfig`.
@@ -240,11 +250,17 @@ and reserve the phone for `installPhone`, launch, UI-tree and screenshot checks.
 Play screenshots:
 
 ```powershell
-.\scripts\run-play-screenshots.ps1
+.\scripts\run-play-screenshots.ps1 -Serial emulator-5554
 ```
 
-Release/publishing notes live in `docs/play_console_setup.md`, but `docs/` is
-ignored in this repo, so confirm local availability before relying on it.
+Release/publishing notes live in `docs/play_console_setup.md` and
+`docs/play-release-checklist.md`. The tracked runbooks and screenshot/inspection
+scripts are intentional exceptions to ignored `docs/` and `scripts/` paths.
+Screenshots require a disposable emulator, never a physical phone.
+Inspect all uploaded Play version codes with `scripts/inspect-play-release.py`.
+Use application ID `com.queukat.sbsgeorgia`, regardless of a different global
+`PLAY_PACKAGE_NAME`. Publishing defaults to internal; production requires
+`--track production`. Verify both EN/RU listing and release-note metadata.
 
 GitHub auth and CI:
 
@@ -329,3 +345,8 @@ GitHub auth and CI:
 - `docs/connected-android-tests-troubleshooting.md` - troubleshooting guide для
   connected Android tests: ADB serial, wake/unlock, locale, animation scales and
   phone-like device assumptions.
+
+## Lightweight workflow contract
+
+See `docs/lightweight-workflow.md` for the statement-first flow, ordinary-SBS scope,
+incomplete-data blockers, reminder semantics, and standalone core regression checks.

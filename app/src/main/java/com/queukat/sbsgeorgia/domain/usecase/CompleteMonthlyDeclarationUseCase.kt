@@ -5,6 +5,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyCompletionPolicy
+import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
@@ -18,6 +19,9 @@ constructor(
 ) {
     suspend operator fun invoke(snapshot: MonthlyDeclarationSnapshot) {
         val today = LocalDate.now(clock)
+        require(MonthlyDeclarationActionPlanner(clock).plan(snapshot).canQuickSettleMonth) {
+            "The month cannot be completed before its filing window or with incomplete data."
+        }
         val current = snapshot.record
         val paymentRequired = MonthlyCompletionPolicy.paymentRequired(snapshot.estimatedTaxAmountGel)
 

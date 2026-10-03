@@ -94,6 +94,9 @@ interface StatementImportRepository {
 
     suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean
 
+    suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> =
+        fingerprints.filter { hasTransactionFingerprint(it) }.toSet()
+
     suspend fun confirmImport(
         sourceFileName: String,
         sourceFingerprint: String,

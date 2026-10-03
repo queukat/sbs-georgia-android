@@ -102,4 +102,5 @@
     <string name="settings_data_operation_in_progress">Working with local backup/export data…</string>
     <string name="settings_save">Save settings</string>
     <string name="settings_saving">Saving…</string>
+    <string name="notification_payment_check_credit_body">Payment for %1$s was marked sent. Check its crediting in RS.ge; do not send it again just because this reminder appeared.</string>
 </resources>

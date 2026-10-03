@@ -20,7 +20,6 @@ import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationActionPlanner
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
-import com.queukat.sbsgeorgia.domain.usecase.ObserveCurrentYearSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.testing.MainDispatcherRule
 import com.queukat.sbsgeorgia.ui.home.HomeViewModel
@@ -214,8 +213,8 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         CompleteMonthlyDeclarationUseCase(monthlyDeclarationRepository, clock)
 
     fun homeViewModel(): HomeViewModel {
-        val observeCurrentYearSnapshotsUseCase =
-            ObserveCurrentYearSnapshotsUseCase(
+        val observeAllSnapshotsUseCase =
+            ObserveAllSnapshotsUseCase(
                 settingsRepository = settingsRepository,
                 incomeRepository = incomeRepository,
                 monthlyDeclarationRepository = monthlyDeclarationRepository,
@@ -227,7 +226,7 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
             ObserveDashboardSummaryUseCase(
                 settingsRepository = settingsRepository,
                 monthlyDeclarationRepository = monthlyDeclarationRepository,
-                observeCurrentYearSnapshotsUseCase = observeCurrentYearSnapshotsUseCase,
+                observeAllSnapshotsUseCase = observeAllSnapshotsUseCase,
                 planner = planner
             ),
             declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,

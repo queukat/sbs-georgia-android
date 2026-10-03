@@ -17,7 +17,11 @@ import com.queukat.sbsgeorgia.domain.service.tbc.TbcStatementParser
 import java.time.Clock
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 
 class LoadStatementImportPreviewUseCase
 @Inject
@@ -34,7 +38,7 @@ constructor(
         )
 
         var firstParsingFailure: Throwable? = null
-        val preview =
+        val preview = withContext(Dispatchers.Default) {
             statementTextExtractor
                 .extractTextCandidates(document.bytes)
                 .mapNotNull { extractedText ->
@@ -45,6 +49,7 @@ constructor(
                             extractedText = extractedText
                         )
                     }.getOrElse { error ->
+                        if (error is CancellationException) throw error
                         if (firstParsingFailure == null) {
                             firstParsingFailure = error
                         }
@@ -55,6 +60,10 @@ constructor(
                     firstParsingFailure
                         ?: IllegalStateException("Unable to parse the selected TBC statement PDF.")
                     )
+        }
+        val existingFingerprints = statementImportRepository.existingTransactionFingerprints(
+            preview.rows.mapTo(mutableSetOf(), ImportedStatementPreviewRow::transactionFingerprint)
+        )
         val previewDuplicateFingerprints =
             preview.rows
                 .groupingBy(ImportedStatementPreviewRow::transactionFingerprint)
@@ -64,9 +73,7 @@ constructor(
         val seenFingerprints = mutableSetOf<String>()
         val duplicateAwareRows =
             preview.rows.map { row ->
-                val alreadyImported = statementImportRepository.hasTransactionFingerprint(
-                    row.transactionFingerprint
-                )
+                val alreadyImported = row.transactionFingerprint in existingFingerprints
                 val duplicateInsidePreview =
                     row.transactionFingerprint in previewDuplicateFingerprints &&
                         !seenFingerprints.add(row.transactionFingerprint)
@@ -135,6 +142,16 @@ constructor(
         sourceFingerprint: String,
         rows: List<ApprovedImportedStatementRow>
     ): ConfirmStatementImportWorkflowResult {
+        require(rows.any { !it.duplicate }) { "There are no new transactions to import." }
+        require(
+            rows.none {
+                !it.duplicate &&
+                    (
+                        it.finalInclusion == DeclarationInclusion.REVIEW_REQUIRED ||
+                            (it.suggestedInclusion == DeclarationInclusion.REVIEW_REQUIRED && !it.reviewDecisionMade)
+                        )
+            }
+        ) { "Decide whether to include or exclude every review-required transaction first." }
         val sanitizedRows =
             rows.map { row ->
                 val normalizedCurrency = normalizeCurrencyCode(row.currency)
@@ -226,18 +243,23 @@ constructor(
             )
         }
 
-        var resolvedCount = 0
-        var unresolvedCount = 0
-        yearMonths.sorted().forEach { yearMonth ->
-            val result =
-                resolveMonthFxUseCase(incomeRepository.observeByMonth(yearMonth).first())
-            resolvedCount += result.resolvedEntryCount
-            unresolvedCount += result.unresolvedEntryCount
+        val entries = yearMonths.sorted().flatMap { incomeRepository.observeByMonth(it).first() }
+            .filter { it.declarationInclusion == DeclarationInclusion.INCLUDED }
+        val pendingIds = entries.filter {
+            !it.originalCurrency.equals("GEL", ignoreCase = true) && it.gelEquivalent == null
+        }.mapTo(mutableSetOf()) { it.id }
+        try {
+            withTimeoutOrNull(8_000L) { resolveMonthFxUseCase(entries) }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (_: Exception) {
+            // Income is already durable. Leave missing rates visible for an explicit retry.
         }
-
+        val remaining = yearMonths.flatMap { incomeRepository.observeByMonth(it).first() }
+            .count { it.id in pendingIds && it.gelEquivalent == null }
         return BulkMonthFxResolutionResult(
-            resolvedEntryCount = resolvedCount,
-            unresolvedEntryCount = unresolvedCount
+            resolvedEntryCount = pendingIds.size - remaining,
+            unresolvedEntryCount = remaining
         )
     }
 }

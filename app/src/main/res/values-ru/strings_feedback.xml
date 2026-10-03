@@ -64,6 +64,7 @@
     <string name="source_category_software_services">Услуги разработки ПО</string>
     <string name="source_category_consulting">Консалтинг</string>
     <string name="source_category_marketplace_payout">Выплата маркетплейса</string>
+    <string name="source_category_card_acquiring_payout">Карточные выплаты</string>
     <string name="source_category_other">Другое</string>
     <string name="source_category_bank_fee">Банковская комиссия</string>
     <string name="source_category_own_account_transfer">Перевод между своими счетами</string>

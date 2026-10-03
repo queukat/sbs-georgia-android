@@ -118,7 +118,7 @@ class ObserveDashboardSummaryUseCase
 constructor(
     private val settingsRepository: SettingsRepository,
     private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val observeCurrentYearSnapshotsUseCase: ObserveCurrentYearSnapshotsUseCase,
+    private val observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
     private val planner: MonthlyDeclarationPlanner
 ) {
     operator fun invoke(): Flow<DashboardSummary> = combine(
@@ -126,7 +126,7 @@ constructor(
         settingsRepository.observeStatusConfig(),
         settingsRepository.observeReminderConfig(),
         monthlyDeclarationRepository.observeAll(),
-        observeCurrentYearSnapshotsUseCase()
+        observeAllSnapshotsUseCase()
     ) {
             profile: TaxpayerProfile?,
             config: SmallBusinessStatusConfig?,
@@ -182,8 +182,16 @@ internal fun collectRelevantSnapshotYears(
     entries: List<IncomeEntry>,
     records: List<MonthlyDeclarationRecord>
 ): List<Int> = buildSet {
-    add(YearMonth.now(clock).year)
-    config?.effectiveDate?.year?.let(::add)
+    val currentYear = YearMonth.now(clock).year
+    val earliestYear = listOfNotNull(
+        config?.effectiveDate?.year,
+        entries.minOfOrNull { it.incomeDate.year },
+        records.minOfOrNull { it.yearMonth.year },
+        currentYear
+    ).min()
+    addAll(earliestYear..currentYear)
+    // The previous due year must exist even when no December income has been imported.
+    add(YearMonth.now(clock).minusMonths(1).year)
     entries.mapTo(this) { it.incomeDate.year }
     records.mapTo(this) { it.yearMonth.year }
 }.sortedDescending()

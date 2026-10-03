@@ -71,7 +71,9 @@ class MonthlyDeclarationActionPlanner @Inject constructor(private val clock: Clo
                     add(MonthlyActionBlocker.FILING_WINDOW_CLOSED)
                 }
                 if (snapshot.unresolvedFxCount > 0) add(MonthlyActionBlocker.UNRESOLVED_FX)
-                if (snapshot.reviewNeeded && snapshot.unresolvedFxCount == 0) {
+                if ((snapshot.reviewNeeded || snapshot.estimatedTaxAmountGel == null) &&
+                    snapshot.unresolvedFxCount == 0
+                ) {
                     add(MonthlyActionBlocker.REVIEW_REQUIRED)
                 }
                 if (positiveTaxDue && registrationId.isNullOrBlank()) {
@@ -134,12 +136,12 @@ class MonthlyDeclarationActionPlanner @Inject constructor(private val clock: Clo
     ): MonthUserJourneyState = when {
         MonthlyActionBlocker.SETUP_REQUIRED in blockers -> MonthUserJourneyState.SETUP_REQUIRED
         MonthlyActionBlocker.OUT_OF_SCOPE in blockers -> MonthUserJourneyState.OUT_OF_SCOPE
+        MonthlyActionBlocker.UNRESOLVED_FX in blockers -> MonthUserJourneyState.RESOLVE_FX
+        MonthlyActionBlocker.REVIEW_REQUIRED in blockers -> MonthUserJourneyState.REVIEW_IMPORTED_ROWS
         snapshot.graph20TotalGel.signum() == 0 &&
             !snapshot.zeroDeclarationSuggested &&
             !snapshot.zeroDeclarationPrepared ->
             MonthUserJourneyState.ADD_OR_IMPORT_INCOME
-        MonthlyActionBlocker.UNRESOLVED_FX in blockers -> MonthUserJourneyState.RESOLVE_FX
-        MonthlyActionBlocker.REVIEW_REQUIRED in blockers -> MonthUserJourneyState.REVIEW_IMPORTED_ROWS
         MonthlyActionBlocker.FILING_WINDOW_CLOSED in blockers -> MonthUserJourneyState.WAIT_FOR_FILING_WINDOW
         WorkflowStatusPolicy.isFullySettled(baseStatus) -> MonthUserJourneyState.SETTLED
         baseStatus == MonthlyWorkflowStatus.PAYMENT_SENT -> MonthUserJourneyState.CONFIRM_PAYMENT_CREDITED

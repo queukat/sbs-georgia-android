@@ -31,6 +31,15 @@ fun SnapshotSummary(snapshot: MonthlyDeclarationSnapshot) {
         stringResource(R.string.snapshot_status),
         workflowStatusLabel(snapshot.workflowStatus)
     )
+    if (snapshot.priorPeriodDataIncomplete) {
+        Text(
+            stringResource(R.string.month_previous_data_incomplete),
+            color = MaterialTheme.colorScheme.error
+        )
+    }
+    snapshot.effectiveTaxRatePercent?.let {
+        KeyValueRow(stringResource(R.string.month_effective_rate), "${it.stripTrailingZeros().toPlainString()}%")
+    }
     snapshot.estimatedTaxAmountGel?.let {
         KeyValueRow(stringResource(R.string.snapshot_estimated_tax), formatAmount(it, "GEL"))
     }

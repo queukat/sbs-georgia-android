@@ -15,12 +15,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,6 +39,10 @@ fun DeclarationCopyActions(
     onCopyBankText: () -> Unit,
     onShareAll: (() -> Unit)? = null
 ) {
+    val uriHandler = LocalUriHandler.current
+    var browserUnavailable by androidx.compose.runtime.remember {
+        androidx.compose.runtime.mutableStateOf(false)
+    }
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -49,6 +57,19 @@ fun DeclarationCopyActions(
                 .fillMaxWidth()
                 .testTag("$testTagPrefix-copy-all-text-button")
         )
+        TextButton(
+            onClick = {
+                browserUnavailable = runCatching {
+                    uriHandler.openUri("https://eservices.rs.ge/Login.aspx")
+                }.isFailure
+            },
+            modifier = Modifier.fillMaxWidth().testTag("$testTagPrefix-open-rs-button")
+        ) {
+            Text(stringResource(R.string.declaration_open_rs))
+        }
+        if (browserUnavailable) {
+            Text(stringResource(R.string.declaration_browser_unavailable))
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)

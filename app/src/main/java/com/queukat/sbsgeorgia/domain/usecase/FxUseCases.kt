@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
@@ -21,7 +22,9 @@ constructor(
     private val clock: Clock
 ) {
     suspend operator fun invoke(entries: List<IncomeEntry>): MonthFxResolutionResult {
-        val unresolvedEntries = entries.filter(IncomeEntry::requiresFxResolution)
+        val unresolvedEntries = entries.filter {
+            it.declarationInclusion == DeclarationInclusion.INCLUDED && it.requiresFxResolution()
+        }
         if (unresolvedEntries.isEmpty()) {
             return MonthFxResolutionResult(
                 resolvedEntryCount = 0,

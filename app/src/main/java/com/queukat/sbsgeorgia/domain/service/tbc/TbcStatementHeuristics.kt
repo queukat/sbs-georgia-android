@@ -24,6 +24,9 @@ internal fun buildPreviewRow(
             .lowercase()
     val normalizedOutgoing = paidOut?.takeIf { it.amount > BigDecimal.ZERO }
     val normalizedIncoming = paidIn?.takeIf { it.amount > BigDecimal.ZERO }
+    val isCardAcquiringPayout = normalizedIncoming != null &&
+        cardPayoutDescription.containsMatchIn(suggestionText) &&
+        cardPayoutBatch.containsMatchIn(suggestionText)
     val hasNonTaxableHint = nonTaxableHints.any { it in suggestionText }
     val hasTaxableHint = taxableHints.any { it in suggestionText }
     val hasBankFeeHint = bankFeeHints.any { it in suggestionText }
@@ -35,13 +38,18 @@ internal fun buildPreviewRow(
             paidOut = normalizedOutgoing,
             paidIn = normalizedIncoming
         )
-    val suggestedInclusion = suggestInclusion(
-        hasIncoming = normalizedIncoming != null,
-        hasOutgoing = normalizedOutgoing != null,
-        hasFallbackAmount = fallbackAmount != null,
-        hasNonTaxableHint = hasNonTaxableHint,
-        hasTaxableHint = hasTaxableHint
-    )
+    // The fee in a card settlement describes the withheld commission, not the incoming movement.
+    val suggestedInclusion = if (isCardAcquiringPayout) {
+        DeclarationInclusion.INCLUDED
+    } else {
+        suggestInclusion(
+            hasIncoming = normalizedIncoming != null,
+            hasOutgoing = normalizedOutgoing != null,
+            hasFallbackAmount = fallbackAmount != null,
+            hasNonTaxableHint = hasNonTaxableHint,
+            hasTaxableHint = hasTaxableHint
+        )
+    }
     val suggestedAmount =
         when {
             normalizedIncoming != null -> normalizedIncoming.amount
@@ -49,15 +57,19 @@ internal fun buildPreviewRow(
             fallbackAmount != null -> fallbackAmount
             else -> BigDecimal.ZERO
         }
-    val suggestedSourceCategory = suggestSourceCategory(
-        hasIncoming = normalizedIncoming != null,
-        hasOutgoing = normalizedOutgoing != null,
-        hasNonTaxableHint = hasNonTaxableHint,
-        hasTaxableHint = hasTaxableHint,
-        hasBankFeeHint = hasBankFeeHint,
-        isCurrencyConversion = isCurrencyConversion,
-        isTaxPayment = isTaxPayment
-    )
+    val suggestedSourceCategory = if (isCardAcquiringPayout) {
+        SourceCategoryPresets.CARD_ACQUIRING_PAYOUT
+    } else {
+        suggestSourceCategory(
+            hasIncoming = normalizedIncoming != null,
+            hasOutgoing = normalizedOutgoing != null,
+            hasNonTaxableHint = hasNonTaxableHint,
+            hasTaxableHint = hasTaxableHint,
+            hasBankFeeHint = hasBankFeeHint,
+            isCurrencyConversion = isCurrencyConversion,
+            isTaxPayment = isTaxPayment
+        )
+    }
 
     return ImportedStatementPreviewRow(
         transactionFingerprint =
@@ -82,6 +94,9 @@ internal fun buildPreviewRow(
         paidIn?.currency ?: paidOut?.currency ?: balance?.currency ?: fallbackCurrency
     )
 }
+
+private val cardPayoutDescription = Regex("მიღებული\\s+თანხის\\s+გაცემა")
+private val cardPayoutBatch = Regex("\\bbatch\\s*:\\s*\\d+\\s*;\\s*card\\s*;\\s*mid\\s*:\\s*\\d+\\b")
 
 private fun suggestInclusion(
     hasIncoming: Boolean,

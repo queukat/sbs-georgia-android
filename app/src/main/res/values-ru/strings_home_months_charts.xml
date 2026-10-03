@@ -1,6 +1,6 @@
 <resources>
     <string name="home_title">Georgia Small Biz Tracker</string>
-    <string name="home_subtitle">Офлайн-учёт, подготовка ежемесячной декларации и контроль налогового процесса для малого статуса в Грузии.</string>
+    <string name="home_subtitle">Выписка → расчёт → цифры для RS.ge. Только обычный статус малого бизнеса.</string>
     <string name="home_section_dashboard">Текущая сводка</string>
     <string name="home_section_due_period">Текущий отчётный период</string>
     <string name="home_section_setup_required">Нужно заполнить данные</string>

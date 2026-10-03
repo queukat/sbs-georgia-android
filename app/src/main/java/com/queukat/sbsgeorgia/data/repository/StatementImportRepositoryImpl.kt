@@ -44,6 +44,14 @@ constructor(
         importedTransactionDao.existsByFingerprint(transactionFingerprint) ||
             incomeEntryDao.existsBySourceTransactionFingerprint(transactionFingerprint)
 
+    override suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> = buildSet {
+        // Stay safely below the SQLite bind-parameter limit on old Android versions.
+        fingerprints.toList().chunked(400).forEach { batch ->
+            addAll(importedTransactionDao.existingFingerprints(batch))
+            addAll(incomeEntryDao.existingSourceFingerprints(batch))
+        }
+    }
+
     override suspend fun confirmImport(
         sourceFileName: String,
         sourceFingerprint: String,

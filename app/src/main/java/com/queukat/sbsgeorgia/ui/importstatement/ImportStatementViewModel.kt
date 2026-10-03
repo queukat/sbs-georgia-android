@@ -22,6 +22,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -43,14 +44,10 @@ constructor(
     val effects = _effects.asSharedFlow()
 
     fun loadDocument(uri: Uri) {
+        if (_uiState.value.isLoading || _uiState.value.isImporting) return
+        // Set the lock synchronously: two taps must not launch two imports.
+        _uiState.value = ImportStatementUiState(isLoading = true)
         viewModelScope.launch {
-            _uiState.value =
-                _uiState.value.copy(
-                    isLoading = true,
-                    importSuccess = null,
-                    errorMessage = null,
-                    infoMessage = null
-                )
             runCatching {
                 loadStatementImportPreviewUseCase(uri.toString())
             }.onSuccess { result ->
@@ -113,7 +110,8 @@ constructor(
                             it.paidOut?.amount?.signum() == 1
                         },
                         invalidIncludedCount = invalidIncludedCount,
-                        canImport = rows.canConfirmImport(),
+                        skippedLineCount = preview.skippedLineCount,
+                        canImport = rows.canConfirmImport() && preview.skippedLineCount == 0,
                         infoMessage =
                         listOfNotNull(
                             result.existingImport?.let(::formatExistingImportMessage),
@@ -128,6 +126,7 @@ constructor(
                         ).joinToString("\n").ifBlank { null }
                     )
             }.onFailure { error ->
+                if (error is CancellationException) throw error
                 _uiState.value =
                     ImportStatementUiState(
                         errorMessage =
@@ -164,8 +163,15 @@ constructor(
         }
     }
 
+    fun acknowledgeSkippedLines(acknowledged: Boolean) {
+        val current = _uiState.value
+        if (current.isLoading || current.isImporting) return
+        _uiState.value = current.copy(skippedLinesAcknowledged = acknowledged).withRows(current.rows)
+    }
+
     fun excludePendingReviewRows() {
         val current = _uiState.value
+        if (current.isLoading || current.isImporting) return
         val updatedRows =
             current.rows.map { row ->
                 if (row.isPendingManualReviewDecision()) {
@@ -200,6 +206,7 @@ constructor(
 
     fun importApprovedRows() {
         val current = _uiState.value
+        if (current.isLoading || current.isImporting) return
         val sourceFileName = current.sourceFileName
         val sourceFingerprint = current.sourceFingerprint
         if (sourceFileName.isNullOrBlank() || sourceFingerprint.isNullOrBlank()) {
@@ -223,8 +230,17 @@ constructor(
             return
         }
 
+        if (!current.canImport ||
+            !rows.canConfirmImport() ||
+            (current.skippedLineCount > 0 && !current.skippedLinesAcknowledged)
+        ) {
+            _uiState.value = current.copy(
+                errorMessage = appContext.getString(R.string.import_statement_decisions_required)
+            )
+            return
+        }
+        _uiState.value = current.copy(isImporting = true, errorMessage = null)
         viewModelScope.launch {
-            _uiState.value = current.copy(isImporting = true, errorMessage = null)
             runCatching {
                 confirmStatementImportUseCase(
                     sourceFileName = sourceFileName,
@@ -279,12 +295,11 @@ constructor(
                 val targetMonth =
                     rows
                         .asSequence()
-                        .filter {
-                            it.finalInclusion == DeclarationInclusion.INCLUDED &&
-                                !it.duplicate
-                        }.mapNotNull { it.incomeDate?.let(YearMonth::from) }
-                        .sorted()
-                        .firstOrNull()
+                        .filter { !it.duplicate }
+                        .mapNotNull { it.incomeDate?.let(YearMonth::from) }
+                        .distinct()
+                        .toList()
+                        .singleOrNull()
                 _uiState.value =
                     ImportStatementUiState(
                         importSuccess =
@@ -294,7 +309,10 @@ constructor(
                             skippedDuplicateCount = result.importResult.skippedDuplicateCount,
                             excludedCount = result.importResult.excludedCount,
                             targetMonth = targetMonth,
-                            detailMessage = detailMessage
+                            detailMessage = detailMessage,
+                            canOpenAutomatically = targetMonth != null &&
+                                current.skippedLineCount == 0 &&
+                                result.reviewRequiredTaxPaymentCount == 0
                         )
                     )
                 _effects.emit(
@@ -306,7 +324,8 @@ constructor(
                         )
                     )
                 )
-            }.onFailure {
+            }.onFailure { error ->
+                if (error is CancellationException) throw error
                 _uiState.value =
                     current.copy(
                         isImporting = false,
@@ -323,6 +342,7 @@ constructor(
         transactionFingerprint: String,
         transform: (ImportStatementRowUiState) -> ImportStatementRowUiState
     ) {
+        if (_uiState.value.isLoading || _uiState.value.isImporting) return
         val updatedRows =
             _uiState.value.rows.map { row ->
                 if (row.transactionFingerprint == transactionFingerprint && !row.duplicate) {
@@ -341,7 +361,8 @@ constructor(
             selectedIncomeCount = updatedRows.willImportCount(),
             detectedTaxPaymentCount = updatedRows.taxPaymentCandidateCount(),
             invalidIncludedCount = updatedRows.invalidIncludedCount(),
-            canImport = updatedRows.canConfirmImport(),
+            canImport = updatedRows.canConfirmImport() &&
+                (skippedLineCount == 0 || skippedLinesAcknowledged),
             errorMessage = null
         )
 
@@ -358,7 +379,8 @@ constructor(
         amount = amount.toBigDecimalOrNull() ?: BigDecimal.ZERO,
         currency = normalizeCurrencyCode(currency),
         sourceCategory = canonicalSourceCategory(appContext, sourceCategory),
-        duplicate = duplicate
+        duplicate = duplicate,
+        reviewDecisionMade = reviewDecisionMade
     )
 
     private fun formatExistingImportMessage(

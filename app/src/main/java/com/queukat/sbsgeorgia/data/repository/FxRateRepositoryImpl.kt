@@ -34,8 +34,8 @@ constructor(
 
         return when (val result = remoteDataSource.fetchDailyRates(rateDate)) {
             is OfficialFxRemoteResult.Success -> {
-                result.rates.forEach { remoteRate ->
-                    fxRateDao.upsert(
+                fxRateDao.insertAll(
+                    result.rates.map { remoteRate ->
                         FxRateEntity(
                             rateDate = rateDate,
                             currencyCode = remoteRate.currencyCode,
@@ -44,8 +44,8 @@ constructor(
                             source = FxRateSource.OFFICIAL_NBG_JSON,
                             manualOverride = false
                         )
-                    )
-                }
+                    }
+                )
                 val matchedRate = fxRateDao.getRate(
                     rateDate,
                     normalizedCode,

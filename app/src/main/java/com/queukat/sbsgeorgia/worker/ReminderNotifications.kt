@@ -88,7 +88,7 @@ object ReminderNotifications {
                 .setContentIntent(openAppPendingIntent)
                 .setAutoCancel(true)
                 .setCategory(NotificationCompat.CATEGORY_REMINDER)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
                 .setOnlyAlertOnce(true)
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build()

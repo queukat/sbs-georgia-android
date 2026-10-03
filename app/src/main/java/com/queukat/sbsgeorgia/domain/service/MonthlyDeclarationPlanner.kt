@@ -52,6 +52,7 @@ constructor(
                 .groupBy { YearMonth.from(it.incomeDate) }
 
         var cumulative = BigDecimal.ZERO
+        var priorPeriodDataIncomplete = false
         val snapshots = mutableListOf<MonthlyDeclarationSnapshot>()
 
         for (monthNumber in 1..lastMonth) {
@@ -77,7 +78,8 @@ constructor(
             val hasBeforeEffectiveDateEntries =
                 config != null &&
                     rawMonthEntries.any {
-                        it.incomeDate.isBefore(config.effectiveDate) &&
+                        it.declarationInclusion != DeclarationInclusion.EXCLUDED &&
+                            it.incomeDate.isBefore(config.effectiveDate) &&
                             YearMonth.from(it.incomeDate) == yearMonth
                     }
 
@@ -108,10 +110,14 @@ constructor(
             cumulative += graph20
 
             val record = recordMap[yearMonth]
-            val estimatedTax =
-                config?.defaultTaxRatePercent?.let { taxRate ->
-                    graph20.multiply(taxRate).divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP)
-                }
+            val currentReviewNeeded = hasBeforeEffectiveDateEntries || reviewEntries.isNotEmpty()
+            val calculationIncomplete = priorPeriodDataIncomplete || currentReviewNeeded || unresolvedFxCount > 0
+            val effectiveRate = config?.defaultTaxRatePercent?.let {
+                SmallBusinessTaxPolicy.rateFor(cumulative, it)
+            }
+            val estimatedTax = effectiveRate
+                ?.takeUnless { calculationIncomplete || period.outOfScope || profile == null }
+                ?.let { graph20.multiply(it).divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP) }
 
             val effectiveStatus =
                 deriveWorkflowStatus(
@@ -133,18 +139,24 @@ constructor(
                     unresolvedFxCount = unresolvedFxCount,
                     zeroDeclarationSuggested =
                     !period.outOfScope &&
+                        !calculationIncomplete &&
                         inScopeIncludedEntries.isEmpty() &&
                         reviewEntries.isEmpty(),
                     zeroDeclarationPrepared = record?.zeroDeclarationPrepared ?: false,
                     reviewNeeded =
                     profile == null ||
                         config == null ||
-                        hasBeforeEffectiveDateEntries ||
-                        reviewEntries.isNotEmpty() ||
+                        currentReviewNeeded ||
+                        priorPeriodDataIncomplete ||
                         period.outOfScope,
                     setupRequired = profile == null || config == null,
-                    record = record
+                    record = record,
+                    priorPeriodDataIncomplete = priorPeriodDataIncomplete,
+                    effectiveTaxRatePercent = effectiveRate?.takeUnless { calculationIncomplete }
                 )
+            if (!period.outOfScope) {
+                priorPeriodDataIncomplete = calculationIncomplete
+            }
         }
 
         return snapshots
@@ -181,9 +193,7 @@ constructor(
                     }
                 }.distinct().sorted()
             }
-        val nextReminderDay =
-            reminderDays?.firstOrNull { it >= now.dayOfMonth }
-                ?: reminderDays?.firstOrNull()
+        val nextReminderDay = reminderDays.firstOrNull { it >= now.dayOfMonth }
         val paidTaxAmountGel =
             records
                 .asSequence()
@@ -195,7 +205,10 @@ constructor(
             taxpayerName = profile?.displayName,
             registrationId = profile?.registrationId,
             setupComplete = profile != null && config != null,
-            ytdIncomeGel = snapshots.lastOrNull()?.graph15CumulativeGel ?: BigDecimal.ZERO,
+            ytdIncomeGel = snapshots
+                .filter { it.period.incomeMonth.year == now.year }
+                .maxByOrNull { it.period.incomeMonth }
+                ?.graph15CumulativeGel ?: BigDecimal.ZERO,
             unresolvedFxCount = snapshots.sumOf { it.unresolvedFxCount },
             unsettledMonthsCount = snapshots.count {
                 !it.period.outOfScope &&

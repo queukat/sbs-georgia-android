@@ -32,7 +32,8 @@ enum class ReminderNotificationMessage {
     PAYMENT_REVIEW,
     PAYMENT_FILED,
     PAYMENT_PENDING,
-    PAYMENT_DEFAULT
+    PAYMENT_DEFAULT,
+    PAYMENT_SENT_CHECK_CREDIT
 }
 
 interface ReminderNotificationStrings {
@@ -47,19 +48,22 @@ interface ReminderNotificationStrings {
 }
 
 internal object ReminderEligibilityPolicy {
-    fun shouldRemindDeclaration(snapshot: MonthlyDeclarationSnapshot): Boolean =
-        !snapshot.period.outOfScope && snapshot.workflowStatus in declarationStatuses
+    fun shouldRemindDeclaration(snapshot: MonthlyDeclarationSnapshot): Boolean {
+        val baseStatus = snapshot.record?.workflowStatus ?: snapshot.workflowStatus
+        return !snapshot.period.outOfScope &&
+            snapshot.record?.declarationFiledDate == null &&
+            baseStatus in declarationStatuses
+    }
 
     fun shouldRemindPayment(snapshot: MonthlyDeclarationSnapshot): Boolean = !snapshot.period.outOfScope &&
         snapshot.estimatedTaxAmountGel?.signum() == 1 &&
-        !WorkflowStatusPolicy.isPaymentTerminal(snapshot.workflowStatus)
+        !WorkflowStatusPolicy.isPaymentTerminal(snapshot.record?.workflowStatus ?: snapshot.workflowStatus)
 
-    private val declarationStatuses =
-        setOf(
-            MonthlyWorkflowStatus.DRAFT,
-            MonthlyWorkflowStatus.READY_TO_FILE,
-            MonthlyWorkflowStatus.OVERDUE
-        )
+    private val declarationStatuses = setOf(
+        MonthlyWorkflowStatus.DRAFT,
+        MonthlyWorkflowStatus.READY_TO_FILE,
+        MonthlyWorkflowStatus.OVERDUE
+    )
 }
 
 @Singleton
@@ -71,7 +75,11 @@ constructor(private val strings: ReminderNotificationStrings) {
         reminderConfig: ReminderConfig?,
         snapshot: MonthlyDeclarationSnapshot?
     ): List<ReminderNotification> {
-        if (reminderConfig == null || snapshot == null || snapshot.period.outOfScope) {
+        if (reminderConfig == null ||
+            snapshot == null ||
+            snapshot.period.outOfScope ||
+            today.isBefore(snapshot.period.filingWindow.start)
+        ) {
             return emptyList()
         }
 
@@ -91,11 +99,37 @@ constructor(private val strings: ReminderNotificationStrings) {
                 today.dayOfMonth in reminderConfig.paymentReminderDays &&
                 ReminderEligibilityPolicy.shouldRemindPayment(snapshot)
 
-        if (shouldRemindPayment) {
+        // One actionable notification per run. Filing comes before payment.
+        if (shouldRemindPayment && notifications.isEmpty()) {
             notifications += buildPaymentNotification(snapshot)
         }
 
         return notifications
+    }
+
+    fun buildNotificationsForSnapshots(
+        today: LocalDate,
+        reminderConfig: ReminderConfig?,
+        snapshots: List<MonthlyDeclarationSnapshot>
+    ): List<ReminderNotification> {
+        val dueMonth = YearMonth.from(today).minusMonths(1)
+        return snapshots.asSequence()
+            .filter { snapshot ->
+                // A missing history is not evidence of years of unfiled zero declarations.
+                snapshot.period.incomeMonth == dueMonth ||
+                    snapshot.record != null ||
+                    snapshot.originalCurrencyTotals.isNotEmpty() ||
+                    snapshot.graph20TotalGel.signum() != 0 ||
+                    (snapshot.reviewNeeded && !snapshot.setupRequired && !snapshot.priorPeriodDataIncomplete)
+            }
+            .sortedWith(
+                compareBy<MonthlyDeclarationSnapshot> {
+                    if (it.period.incomeMonth == dueMonth) 0 else 1
+                }.thenBy { it.period.incomeMonth }
+            )
+            .map { buildNotifications(today, reminderConfig, it) }
+            .firstOrNull { it.isNotEmpty() }
+            .orEmpty()
     }
 
     fun buildPreviewNotification(type: ReminderType, snapshot: MonthlyDeclarationSnapshot?): ReminderNotification? {
@@ -138,9 +172,12 @@ constructor(private val strings: ReminderNotificationStrings) {
     }
 
     private fun buildPaymentNotification(snapshot: MonthlyDeclarationSnapshot): ReminderNotification {
+        val paymentWasSent = snapshot.record?.paymentSentDate != null ||
+            (snapshot.record?.workflowStatus ?: snapshot.workflowStatus) == MonthlyWorkflowStatus.PAYMENT_SENT
         val dueDate = snapshot.period.filingWindow.dueDate
         val message =
             when {
+                paymentWasSent -> ReminderNotificationMessage.PAYMENT_SENT_CHECK_CREDIT
                 snapshot.reviewNeeded && snapshot.unresolvedFxCount > 0 ->
                     ReminderNotificationMessage.PAYMENT_REVIEW_AND_FX
                 snapshot.unresolvedFxCount > 0 ->

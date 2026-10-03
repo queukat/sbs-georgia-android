@@ -137,7 +137,7 @@ class MonthlyDeclarationPlannerTest {
 
         assertEquals(1, snapshots[0].unresolvedFxCount)
         assertEquals(BigDecimal("50.00"), snapshots[0].graph20TotalGel)
-        assertEquals(BigDecimal("0.50"), snapshots[0].estimatedTaxAmountGel)
+        assertNull(snapshots[0].estimatedTaxAmountGel)
     }
 
     @Test
@@ -465,7 +465,7 @@ class MonthlyDeclarationPlannerTest {
             )
 
         assertEquals(25, upcomingSummary.nextReminderDay)
-        assertEquals(5, wrappedSummary.nextReminderDay)
+        assertNull(wrappedSummary.nextReminderDay)
     }
 
     @Test
@@ -485,7 +485,7 @@ class MonthlyDeclarationPlannerTest {
                 records = emptyList()
             )
 
-        assertEquals(5, summary.nextReminderDay)
+        assertNull(summary.nextReminderDay)
     }
 
     @Test
@@ -506,7 +506,7 @@ class MonthlyDeclarationPlannerTest {
                 records = emptyList()
             )
 
-        assertEquals(5, summary.nextReminderDay)
+        assertNull(summary.nextReminderDay)
     }
 
     @Test

@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">Georgia Small Biz Tracker</string>
+    <string name="home_show_statistics">Show statistics</string>
+    <string name="home_hide_statistics">Hide statistics</string>
+    <string name="declaration_open_rs">Open RS.ge to file</string>
+    <string name="declaration_browser_unavailable">No browser is available. Open eservices.rs.ge on another device.</string>
+    <string name="import_statement_decisions_required">Decide on the flagged transactions and confirm any missing rows first.</string>
+    <string name="import_statement_skipped_acknowledgement">Some lines were not recognised. I compared the PDF with this preview; any missing income must be added manually before filing.</string>
+    <string name="month_previous_data_incomplete">An earlier month has unresolved income or FX. Resolve it first: the cumulative total and tax rate may change.</string>
+    <string name="month_effective_rate">Rate for this month</string>
+    <string name="declaration_confirm_coverage">I use ordinary SBS (not VAT or a special regime). All income relevant to this year’s calculation is accounted for, including other accounts and cash. Transfers and fees are checked.</string>
 </resources>

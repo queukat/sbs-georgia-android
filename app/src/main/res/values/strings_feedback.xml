@@ -64,6 +64,7 @@
     <string name="source_category_software_services">Software services</string>
     <string name="source_category_consulting">Consulting</string>
     <string name="source_category_marketplace_payout">Marketplace payout</string>
+    <string name="source_category_card_acquiring_payout">Card payouts</string>
     <string name="source_category_other">Other</string>
     <string name="source_category_bank_fee">Bank fee</string>
     <string name="source_category_own_account_transfer">Own account transfer</string>
