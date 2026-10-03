@@ -42,7 +42,7 @@ Notifications use WorkManager and are best-effort, not exact alarms: https://dev
 
 ## Tests
 
-`bash scripts/run-core-regressions.sh` compiles production pure-Kotlin rules, importer orchestration, parser and UI contracts, then runs 44 deterministic checks. Requires Kotlin 1.9+ with a JVM coroutines jar, Python 3 and JDK 17+. The script generates only DI annotation and resource-ID stubs; it does not stub business logic. It is not an Android build and does not exercise Room, PDFBox, Compose or WorkManager runtime.
+`bash scripts/run-core-regressions.sh` compiles production pure-Kotlin rules, importer orchestration, parser and UI contracts, then runs deterministic checks (the total includes every TBC statement fixture). Requires Kotlin 1.9+ with a JVM coroutines jar, Python 3 and JDK 17+. The script generates only DI annotation and resource-ID stubs; it does not stub business logic. It is not an Android build and does not exercise Room, PDFBox, Compose or WorkManager runtime.
 
 The same checks are wrapped by `LightweightWorkflowRegressionTest` in the normal JUnit source set. Also run the existing unit suite and Android instrumentation suite with the project’s configured toolchain. Do not ship solely on the standalone checks.
 

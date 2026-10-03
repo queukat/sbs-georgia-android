@@ -59,6 +59,11 @@ After the checks and visual review in the checklist:
 python scripts/inspect-play-release.py --output artifacts/play-after.json
 ```
 
+To upload the exact bundle already verified, add
+`--artifact-dir <absolute-directory-containing-the-verified-aab>` to
+`:app:publishReleaseBundle`. Keep a single intended AAB in that directory and
+compare its SHA-256 with the uploaded bundle metadata.
+
 `publishReleaseListing` uploads text and graphics. Bundle publication supplies the
 track-specific localized release notes. Gradle Play Publisher commits the edit at
 the end of the build; do not start a second publisher or API edit concurrently.
