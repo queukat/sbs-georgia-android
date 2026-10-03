@@ -37,12 +37,7 @@ constructor(
     ): List<MonthlyDeclarationSnapshot> {
         val now = LocalDate.now(clock)
         val currentYearMonth = YearMonth.now(clock)
-        val lastMonth =
-            when {
-                year < currentYearMonth.year -> 12
-                year == currentYearMonth.year -> currentYearMonth.monthValue
-                else -> 0
-            }
+        val lastMonth = lastReportableMonth(year, currentYearMonth)
         if (lastMonth == 0) return emptyList()
 
         val recordMap = records.associateBy { it.yearMonth }
@@ -67,21 +62,8 @@ constructor(
                 it.declarationInclusion ==
                     DeclarationInclusion.REVIEW_REQUIRED
             }
-            val inScopeIncludedEntries =
-                when {
-                    period.outOfScope -> emptyList()
-                    config == null -> includedEntries
-                    else -> includedEntries.filter {
-                        !it.incomeDate.isBefore(config.effectiveDate)
-                    }
-                }
-            val hasBeforeEffectiveDateEntries =
-                config != null &&
-                    rawMonthEntries.any {
-                        it.declarationInclusion != DeclarationInclusion.EXCLUDED &&
-                            it.incomeDate.isBefore(config.effectiveDate) &&
-                            YearMonth.from(it.incomeDate) == yearMonth
-                    }
+            val inScopeIncludedEntries = includedEntriesForPeriod(includedEntries, period, config)
+            val hasBeforeEffectiveDateEntries = hasEntriesBeforeStatus(rawMonthEntries, config, yearMonth)
 
             val originalTotals =
                 inScopeIncludedEntries
@@ -161,6 +143,33 @@ constructor(
 
         return snapshots
     }
+
+    private fun lastReportableMonth(year: Int, currentYearMonth: YearMonth): Int = when {
+        year < currentYearMonth.year -> 12
+        year == currentYearMonth.year -> currentYearMonth.monthValue
+        else -> 0
+    }
+
+    private fun includedEntriesForPeriod(
+        includedEntries: List<IncomeEntry>,
+        period: MonthlyDeclarationPeriod,
+        config: SmallBusinessStatusConfig?
+    ): List<IncomeEntry> = when {
+        period.outOfScope -> emptyList()
+        config == null -> includedEntries
+        else -> includedEntries.filter { !it.incomeDate.isBefore(config.effectiveDate) }
+    }
+
+    private fun hasEntriesBeforeStatus(
+        monthEntries: List<IncomeEntry>,
+        config: SmallBusinessStatusConfig?,
+        yearMonth: YearMonth
+    ): Boolean = config != null &&
+        monthEntries.any {
+            it.declarationInclusion != DeclarationInclusion.EXCLUDED &&
+                it.incomeDate.isBefore(config.effectiveDate) &&
+                YearMonth.from(it.incomeDate) == yearMonth
+        }
 
     fun buildDashboardSummary(
         profile: TaxpayerProfile?,

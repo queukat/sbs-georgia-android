@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
+import com.queukat.sbsgeorgia.domain.model.ConfirmStatementImportWorkflowResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.SourceCategoryPresets
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
@@ -248,50 +249,7 @@ constructor(
                     rows = rows.map { it.toApprovedRow() }
                 )
             }.onSuccess { result ->
-                val summaryMessage =
-                    appContext.getString(
-                        R.string.import_statement_message_import_summary,
-                        result.importResult.importedIncomeCount,
-                        result.importResult.storedTransactionCount,
-                        result.importResult.skippedDuplicateCount,
-                        result.importResult.excludedCount
-                    )
-                val fxMessage =
-                    when {
-                        result.autoResolvedFxEntryCount > 0 &&
-                            result.remainingUnresolvedFxEntryCount == 0 ->
-                            appContext.getString(
-                                R.string.import_statement_message_fx_auto_resolved_all,
-                                result.autoResolvedFxEntryCount
-                            )
-                        result.autoResolvedFxEntryCount > 0 ->
-                            appContext.getString(
-                                R.string.import_statement_message_fx_auto_resolved_partial,
-                                result.autoResolvedFxEntryCount,
-                                result.remainingUnresolvedFxEntryCount
-                            )
-                        result.remainingUnresolvedFxEntryCount > 0 ->
-                            appContext.getString(
-                                R.string.import_statement_message_fx_manual_review_needed,
-                                result.remainingUnresolvedFxEntryCount
-                            )
-                        else -> null
-                    }
-                val taxPaymentMessage =
-                    when {
-                        result.reviewRequiredTaxPaymentCount > 0 ->
-                            appContext.getString(
-                                R.string.import_statement_message_tax_payments_review_required,
-                                result.reviewRequiredTaxPaymentCount
-                            )
-                        else -> null
-                    }
-                val detailMessage =
-                    listOfNotNull(
-                        summaryMessage,
-                        fxMessage,
-                        taxPaymentMessage
-                    ).joinToString("\n")
+                val detailMessage = importDetailMessage(result)
                 val targetMonth =
                     rows
                         .asSequence()
@@ -336,6 +294,52 @@ constructor(
                 return@launch
             }
         }
+    }
+
+    private fun importDetailMessage(result: ConfirmStatementImportWorkflowResult): String {
+        val summaryMessage =
+            appContext.getString(
+                R.string.import_statement_message_import_summary,
+                result.importResult.importedIncomeCount,
+                result.importResult.storedTransactionCount,
+                result.importResult.skippedDuplicateCount,
+                result.importResult.excludedCount
+            )
+        val fxMessage =
+            when {
+                result.autoResolvedFxEntryCount > 0 &&
+                    result.remainingUnresolvedFxEntryCount == 0 ->
+                    appContext.getString(
+                        R.string.import_statement_message_fx_auto_resolved_all,
+                        result.autoResolvedFxEntryCount
+                    )
+                result.autoResolvedFxEntryCount > 0 ->
+                    appContext.getString(
+                        R.string.import_statement_message_fx_auto_resolved_partial,
+                        result.autoResolvedFxEntryCount,
+                        result.remainingUnresolvedFxEntryCount
+                    )
+                result.remainingUnresolvedFxEntryCount > 0 ->
+                    appContext.getString(
+                        R.string.import_statement_message_fx_manual_review_needed,
+                        result.remainingUnresolvedFxEntryCount
+                    )
+                else -> null
+            }
+        val taxPaymentMessage =
+            when {
+                result.reviewRequiredTaxPaymentCount > 0 ->
+                    appContext.getString(
+                        R.string.import_statement_message_tax_payments_review_required,
+                        result.reviewRequiredTaxPaymentCount
+                    )
+                else -> null
+            }
+        return listOfNotNull(
+            summaryMessage,
+            fxMessage,
+            taxPaymentMessage
+        ).joinToString("\n")
     }
 
     private fun updateRow(

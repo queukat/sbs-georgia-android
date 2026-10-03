@@ -211,18 +211,36 @@ private suspend fun rejects(block: suspend () -> Unit) {
     check(rejected)
 }
 
-/** JVM regression checks against production classes. No Android framework or actual PDF renderer is exercised. */
-fun main(args: Array<String>) = runBlocking {
+private class CoreCheckRunner {
     var count = 0
+        private set
+
     suspend fun test(name: String, block: suspend () -> Unit) {
         try {
             block()
             count++
             println("PASS $name")
-        } catch (t: Throwable) {
-            throw AssertionError("FAIL $name", t)
+        } catch (error: Throwable) {
+            throw AssertionError("FAIL $name", error)
         }
     }
+}
+
+/** JVM regression checks against production classes. No Android framework or actual PDF renderer is exercised. */
+fun main(args: Array<String>) = runBlocking {
+    val runner = CoreCheckRunner()
+    runner.checkTaxAndPlanning()
+    runner.checkImportAndFx()
+    runner.checkReminders()
+    runner.checkCompletion()
+    runner.checkFixtures(File(args.firstOrNull() ?: "app/src/test/resources/fixtures"))
+    println(
+        "SUCCESS: ${runner.count} core regression checks. " +
+            "Android UI, Room queries, PDFBox and WorkManager runtime NOT exercised."
+    )
+}
+
+private suspend fun CoreCheckRunner.checkTaxAndPlanning() {
     test("threshold is strict, 500000 still 1%") {
         check(
             SmallBusinessTaxPolicy.rateFor(bd("500000"), bd("1.0")).compareTo(bd("1")) == 0
@@ -316,6 +334,9 @@ fun main(args: Array<String>) = runBlocking {
             ).filingWindow.dueDate == LocalDate.parse("2026-02-16")
         )
     }
+}
+
+private suspend fun CoreCheckRunner.checkImportAndFx() {
     test("review rows cannot be silently imported as excluded") { check(!listOf(row(true)).canConfirmImport()) }
     test("explicit exclusion completes the review decision") {
         check(listOf(row(true).copy(reviewDecisionMade = true)).canConfirmImport())
@@ -393,6 +414,9 @@ fun main(args: Array<String>) = runBlocking {
             rates.fetches == 0
         )
     }
+}
+
+private suspend fun CoreCheckRunner.checkReminders() {
     test("one notification, declaration takes priority") {
         val n = reminderPlanner.buildNotifications(LocalDate.parse("2026-04-10"), reminders, march())
         check(
@@ -469,6 +493,9 @@ fun main(args: Array<String>) = runBlocking {
             planner.buildDashboardSummary(profile, config, reminders, snapshots(), emptyList()).nextReminderDay == null
         )
     }
+}
+
+private suspend fun CoreCheckRunner.checkCompletion() {
     test("January dashboard includes previous December, YTD stays current") {
         val c = Clock.fixed(Instant.parse("2027-01-10T00:00:00Z"), ZoneId.of("Asia/Tbilisi"))
         val p = MonthlyDeclarationPlanner(c, GeorgiaTaxBusinessCalendar())
@@ -506,7 +533,9 @@ fun main(args: Array<String>) = runBlocking {
             record.paymentSentDate == null
         )
     }
-    val fixtures = File(args.firstOrNull() ?: "app/src/test/resources/fixtures")
+}
+
+private suspend fun CoreCheckRunner.checkFixtures(fixtures: File) {
     fixtures.listFiles()!!.filter {
         it.name.startsWith("tbc_statement") && it.extension == "txt"
     }.sortedBy { it.name }.forEach { f ->
@@ -532,7 +561,4 @@ fun main(args: Array<String>) = runBlocking {
         check(r.batchReads == 1)
         check(r.singleReads == 0)
     }
-    println(
-        "SUCCESS: $count core regression checks. Android UI, Room queries, PDFBox and WorkManager runtime NOT exercised."
-    )
 }
