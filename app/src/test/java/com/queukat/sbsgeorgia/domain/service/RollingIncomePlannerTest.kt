@@ -17,7 +17,7 @@ class RollingIncomePlannerTest {
     private val today = LocalDate.of(2026, 10, 15)
 
     @Test
-    fun spansYearsAndSeparatesElevenCompletedMonthsFromCurrentMonth() {
+    fun spansTwelveCalendarMonthsAcrossYearsThroughToday() {
         val summary = buildRollingIncomeSummary(
             listOf(
                 entry("2025-10-31", "999"),
@@ -32,7 +32,6 @@ class RollingIncomePlannerTest {
         assertEquals(12, summary.months.size)
         assertEquals(YearMonth.of(2025, 11), summary.months.first().month)
         assertEquals(BigDecimal("350"), summary.knownTotalGel)
-        assertEquals(BigDecimal("300"), summary.completedElevenGel)
         assertEquals(BigDecimal("100"), summary.leavingNextMonthGel)
         assertEquals(BigDecimal("750"), summary.projectNextMonth(BigDecimal("500")))
     }

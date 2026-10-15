@@ -178,7 +178,7 @@ SBS Georgia Android - offline-first Android-приложение для инди
   overrides keep priority; cancellation disconnects the active HTTP request.
 - Declaration planning lives in `MonthlyDeclarationPlanner`; Georgian non-business
   day adjustment lives in `GeorgiaTaxBusinessCalendar`.
-- Home shows an advisory rolling-income card from raw included entries across calendar years: current month to date plus 11 prior months, and a separate 11-completed-month subtotal. It is not a VAT-taxable-turnover determination. Missing FX/review rows make totals partial and disable forecasts. A six-completed-month median is offered only with income entries in every sample month; users can enter a scenario amount. The next-month scenario drops the outgoing month and assumes no further current-month income. No Room schema or VAT registration workflow is added.
+- Home shows an advisory rolling-income card from raw included entries across calendar years: current month to date plus 11 prior months, with distance to the threshold and a next-month scenario. It is not a VAT-taxable-turnover determination. Missing FX/review rows make totals partial and disable forecasts. A six-completed-month median is offered only with income entries in every sample month; users can enter a scenario amount. The next-month scenario drops the outgoing month and assumes no further current-month income. No Room schema or VAT registration workflow is added.
 - Home and Month Detail build copy rows from the persisted `DeclarationFormConfig`.
   Field 15 is cumulative; the whole monthly total goes to exactly one selected
   field 18/19/20/21. Mixed per-account/per-payment-method allocation is not modeled.

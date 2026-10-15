@@ -69,14 +69,6 @@ fun RollingIncomeCard(summary: RollingIncomeSummary) {
             Text(stringResource(if (expanded) R.string.rolling_hide else R.string.rolling_details))
         }
         if (expanded) {
-            Text(
-                stringResource(
-                    R.string.rolling_eleven,
-                    firstMonth.atDay(1).formatIsoDate(),
-                    currentMonth.atDay(1).minusDays(1).formatIsoDate(),
-                    formatAmount(summary.completedElevenGel, "GEL")
-                )
-            )
             summary.months.forEach { month ->
                 KeyValueRow(
                     month.month.formatMonthYear(),

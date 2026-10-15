@@ -20,8 +20,7 @@
     <string name="rolling_next_month">Scenario: %1$s</string>
     <string name="rolling_scope">Based only on recorded included income, not confirmed VAT-taxable turnover. Missing income and foreign-client services need separate review.</string>
     <string name="rolling_hide">Hide details</string>
-    <string name="rolling_details">11 months, breakdown and forecast</string>
-    <string name="rolling_eleven">11 completed months · %1$s – %2$s: %3$s</string>
+    <string name="rolling_details">Breakdown and forecast</string>
     <string name="rolling_no_entries">No income entries</string>
     <string name="rolling_leaving">Next month, %1$s leaves the window: %2$s.</string>
     <string name="rolling_expected">Expected income next month, GEL</string>

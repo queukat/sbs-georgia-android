@@ -18,7 +18,6 @@ data class RollingIncomeSummary(
     val monthlyMedianGel: BigDecimal?
 ) {
     val knownTotalGel: BigDecimal = months.fold(BigDecimal.ZERO) { sum, month -> sum + month.knownIncomeGel }
-    val completedElevenGel: BigDecimal = knownTotalGel - months.last().knownIncomeGel
     val unresolvedCount: Int = months.sumOf { it.unresolvedCount }
     val leavingNextMonthGel: BigDecimal = months.first().knownIncomeGel
     val nextMonthScenarioGel: BigDecimal? = monthlyMedianGel?.let(::projectNextMonth)

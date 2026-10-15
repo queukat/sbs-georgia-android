@@ -20,8 +20,7 @@
     <string name="rolling_next_month">Сценарий: %1$s</string>
     <string name="rolling_scope">Только внесённые и включённые доходы, а не подтверждённый оборот для НДС. Проверьте полноту данных и услуги иностранным заказчикам.</string>
     <string name="rolling_hide">Скрыть подробности</string>
-    <string name="rolling_details">11 месяцев, разбивка и прогноз</string>
-    <string name="rolling_eleven">11 завершённых месяцев · %1$s — %2$s: %3$s</string>
+    <string name="rolling_details">Разбивка и прогноз</string>
     <string name="rolling_no_entries">Нет записей о доходах</string>
     <string name="rolling_leaving">В следующем месяце из окна выйдет %1$s: %2$s.</string>
     <string name="rolling_expected">Ожидаемый доход в следующем месяце, GEL</string>

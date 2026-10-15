@@ -50,7 +50,7 @@ No Room schema migration, new runtime dependency, backend, bank integration or a
 
 ## Rolling income awareness
 
-Home separately shows recorded included income over the current calendar month to date and the previous 11 months, without resetting at January or the SBS effective date. Details include the preceding 11 completed months, explicit date boundaries and monthly totals. Empty months are shown as no entries, not verified zero income.
+Home separately shows recorded included income over the current calendar month to date and the previous 11 months, without resetting at January or the SBS effective date. Details include explicit date boundaries, monthly totals and a next-month scenario. There is no separate 11-month subtotal. Empty months are shown as no entries, not verified zero income.
 
 This is an advisory income monitor, not a VAT turnover calculation. Under Article 165, the general mandatory-registration trigger is qualifying turnover **exceeding** GEL 100,000 in any consecutive 12 calendar months, with application within two business days. GEL 90,000 is an early-review warning. Services to foreign customers and exemptions require separate assessment; SBS inclusion does not determine VAT treatment. Official source: https://matsne.gov.ge/en/document/view/1043717 (Articles 165 and 1621; checked 2026-10-15).
 
