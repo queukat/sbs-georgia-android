@@ -302,10 +302,9 @@ GitHub auth and CI:
   sandboxed command reports an invalid token or `SEC_E_NO_CREDENTIALS`, do not start
   a browser login first: retry `gh auth status` and the required command with
   elevated/unsandboxed execution.
-- This repository allows direct delivery to `main`; a pull request is optional.
-  For substantial changes, a temporary branch may still be used as a remote CI
-  sandbox, but after the full GitHub matrix is green, fast-forward `main` and push
-  it directly unless the user asks to retain a PR review step.
+- All changes must be made and delivered directly on `main`. Do not create
+  temporary, feature, or CI branches and do not create pull requests.
+  Run GitHub CI on `main` and fix any failures directly on `main`.
 - Run the full shared verification matrix on GitHub CI, not concurrently on the
   workstation: unit tests, debug assembly, Android-test compilation, Android lint,
   detekt and ktlint. Local Gradle runs should be narrow checks needed to investigate
@@ -327,7 +326,7 @@ GitHub auth and CI:
   by independent contracts (for example navigation, import, declaration workflow,
   FX, backup and reminders). Agents inspect and add scoped tests; the root agent
   reviews and integrates every production change. Do not let swarm agents launch
-  overlapping full Gradle suites locally. Push the consolidated branch and let
+  overlapping full Gradle suites locally. Push the consolidated changes to `main` and let
   GitHub CI run the full matrix once.
 
 ## Project traps
