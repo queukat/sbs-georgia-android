@@ -40,6 +40,8 @@ fun RollingIncomeCard(summary: RollingIncomeSummary) {
         Text(stringResource(R.string.rolling_period, firstMonth.atDay(1).formatIsoDate(), summary.asOf.formatIsoDate()))
         val warning = when {
             summary.thresholdExceeded -> R.string.rolling_exceeded
+            projection != null && projection > RollingIncomeSummary.REGISTRATION_THRESHOLD ->
+                R.string.rolling_forecast_exceeded
             summary.warningNeeded -> R.string.rolling_near
             projection != null && projection >= RollingIncomeSummary.WARNING_LEVEL -> R.string.rolling_forecast_near
             else -> null
@@ -61,9 +63,6 @@ fun RollingIncomeCard(summary: RollingIncomeSummary) {
                 stringResource(R.string.rolling_next_month, currentMonth.plusMonths(1).formatMonthYear()),
                 formatAmount(it, "GEL")
             )
-            if (it > RollingIncomeSummary.REGISTRATION_THRESHOLD) {
-                Text(stringResource(R.string.rolling_forecast_exceeded), color = MaterialTheme.colorScheme.error)
-            }
         }
         Text(stringResource(R.string.rolling_scope), style = MaterialTheme.typography.bodySmall)
         TextButton(onClick = { expanded = !expanded }, modifier = Modifier.testTag("rolling-income-details")) {
@@ -104,7 +103,11 @@ fun RollingIncomeCard(summary: RollingIncomeSummary) {
             if (estimate.isNotBlank() && expectedIncome == null) {
                 Text(stringResource(R.string.rolling_invalid_estimate), color = MaterialTheme.colorScheme.error)
             }
-            Text(stringResource(if (defaultEstimate.isEmpty()) R.string.rolling_no_forecast else R.string.rolling_median))
+            Text(
+                stringResource(
+                    if (defaultEstimate.isEmpty()) R.string.rolling_no_forecast else R.string.rolling_median
+                )
+            )
             Text(stringResource(R.string.rolling_scenario))
             Text(stringResource(R.string.rolling_rule))
             TextButton(onClick = { uriHandler.openUri("https://matsne.gov.ge/en/document/view/1043717") }) {

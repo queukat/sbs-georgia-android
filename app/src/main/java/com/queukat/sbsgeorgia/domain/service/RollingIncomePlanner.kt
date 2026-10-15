@@ -14,7 +14,8 @@ fun buildRollingIncomeSummary(entries: List<IncomeEntry>, asOf: LocalDate): Roll
     val currentMonth = YearMonth.from(asOf)
     val firstMonth = currentMonth.minusMonths(11)
     val relevantEntries = entries.filter {
-        !it.incomeDate.isBefore(firstMonth.atDay(1)) && !it.incomeDate.isAfter(asOf) &&
+        !it.incomeDate.isBefore(firstMonth.atDay(1)) &&
+            !it.incomeDate.isAfter(asOf) &&
             it.declarationInclusion != DeclarationInclusion.EXCLUDED
     }
     val entriesByMonth = relevantEntries.groupBy { YearMonth.from(it.incomeDate) }
