@@ -12,6 +12,33 @@ class TbcBusinessStatementParserTest {
     private val parser = TbcStatementParser()
 
     @Test
+    fun parsesOctoberBusinessStatementWithFractionalPayoutsAndServiceFeeFunding() {
+        val text = requireNotNull(
+            javaClass.getResource("/fixtures/tbc_statement_business_gel_october_extracted.txt")
+        ).readText()
+        val preview = parser.parse("october.pdf", "october-fixture", text)
+
+        assertEquals(7, preview.rows.size)
+        assertEquals(0, preview.skippedLineCount)
+        assertEquals(7, preview.rows.map { it.transactionFingerprint }.distinct().size)
+        assertTrue(preview.rows.all { it.suggestedCurrency == "GEL" })
+        val income = preview.rows.filter { it.suggestedInclusion == DeclarationInclusion.INCLUDED }
+        assertEquals(listOf("2026-09-20", "2026-10-01"), income.map { it.incomeDate.toString() })
+        assertEquals(listOf(BigDecimal("18.62"), BigDecimal("18.62")), income.map { it.suggestedAmount })
+        assertTrue(income.all { it.suggestedSourceCategory == SourceCategoryPresets.CARD_ACQUIRING_PAYOUT })
+        assertEquals(5, preview.rows.count { it.suggestedInclusion == DeclarationInclusion.EXCLUDED })
+        assertEquals(
+            BigDecimal("41.24"),
+            preview.rows.mapNotNull { it.paidIn?.amount }.fold(BigDecimal.ZERO, BigDecimal::add)
+        )
+        assertEquals(
+            BigDecimal("6.00"),
+            preview.rows.mapNotNull { it.paidOut?.amount }.fold(BigDecimal.ZERO, BigDecimal::add)
+        )
+        assertEquals(BigDecimal("35.24"), preview.rows.last().balance?.amount)
+    }
+
+    @Test
     fun parsesBusinessGelStatementAndIncludesOnlyNetCardPayouts() {
         val preview = parser.parse("business.pdf", "business-fixture", fixture())
 

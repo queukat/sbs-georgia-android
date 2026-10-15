@@ -21,6 +21,7 @@ import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
+import com.queukat.sbsgeorgia.domain.usecase.ObserveRollingIncomeUseCase
 import com.queukat.sbsgeorgia.testing.MainDispatcherRule
 import com.queukat.sbsgeorgia.ui.home.HomeViewModel
 import com.queukat.sbsgeorgia.ui.months.MonthsUiState
@@ -222,6 +223,8 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
                 clock = clock
             )
         return HomeViewModel(
+            observeRollingIncomeUseCase = ObserveRollingIncomeUseCase(incomeRepository),
+            clock = clock,
             observeDashboardSummaryUseCase =
             ObserveDashboardSummaryUseCase(
                 settingsRepository = settingsRepository,

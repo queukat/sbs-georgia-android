@@ -9,4 +9,26 @@
     <string name="month_previous_data_incomplete">An earlier month has unresolved income or FX. Resolve it first: the cumulative total and tax rate may change.</string>
     <string name="month_effective_rate">Rate for this month</string>
     <string name="declaration_confirm_coverage">I use ordinary SBS (not VAT or a special regime). All income relevant to this year’s calculation is accounted for, including other accounts and cash. Transfers and fees are checked.</string>
+    <string name="rolling_title">Income over 12 calendar months</string>
+    <string name="rolling_period">%1$s – %2$s · current month so far</string>
+    <string name="rolling_exceeded">Recorded income exceeds GEL 100,000. Check VAT registration requirements now.</string>
+    <string name="rolling_near">Recorded income is approaching GEL 100,000. Check which services count towards the VAT threshold before your next payment.</string>
+    <string name="rolling_forecast_near">Your next-month scenario approaches GEL 100,000. Check VAT applicability in advance.</string>
+    <string name="rolling_forecast_exceeded">This scenario exceeds GEL 100,000 next month.</string>
+    <string name="rolling_incomplete">Partial total: %1$d entries need review or an exchange rate. Forecast and remaining amount are unavailable.</string>
+    <string name="rolling_distance">Difference to GEL 100,000</string>
+    <string name="rolling_next_month">Scenario: %1$s</string>
+    <string name="rolling_scope">Based only on recorded included income, not confirmed VAT-taxable turnover. Missing income and foreign-client services need separate review.</string>
+    <string name="rolling_hide">Hide details</string>
+    <string name="rolling_details">11 months, breakdown and forecast</string>
+    <string name="rolling_eleven">11 completed months · %1$s – %2$s: %3$s</string>
+    <string name="rolling_no_entries">No income entries</string>
+    <string name="rolling_leaving">Next month, %1$s leaves the window: %2$s.</string>
+    <string name="rolling_expected">Expected income next month, GEL</string>
+    <string name="rolling_invalid_estimate">Enter a non-negative amount.</string>
+    <string name="rolling_no_forecast">Automatic forecast unavailable: six completed months with income entries and resolved data are required. You can enter your own estimate.</string>
+    <string name="rolling_median">The initial estimate is the median of the last six completed monthly totals. You can change it.</string>
+    <string name="rolling_scenario">Scenario = known 12-month total − outgoing month + expected income. Assumes no further income this month. This is not a guaranteed forecast or an assessment of past VAT obligations.</string>
+    <string name="rolling_rule">Article 165: the general registration threshold is more than GEL 100,000 of qualifying turnover in any consecutive 12 calendar months; apply within 2 business days of crossing it. GEL 90,000 is an early warning, not a registration threshold.</string>
+    <string name="rolling_source">Tax Code · Article 165</string>
 </resources>

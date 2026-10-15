@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.ui.common.AppSection
@@ -77,6 +78,10 @@ fun HomeRoute(
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LifecycleResumeEffect(viewModel) {
+        viewModel.refreshDate()
+        onPauseOrDispose { }
+    }
     HomeScreen(
         innerPadding = innerPadding,
         uiState = uiState,
@@ -218,6 +223,8 @@ fun HomeScreen(
             ) {
                 Text(stringResource(R.string.home_import_pdf))
             }
+
+            uiState.rollingIncome?.let { RollingIncomeCard(it) }
 
             if (summary != null) {
                 AppSection(title = stringResource(R.string.home_section_due_period)) {

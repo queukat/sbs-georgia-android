@@ -9,4 +9,26 @@
     <string name="month_previous_data_incomplete">В предыдущих месяцах есть непроверенный доход или неизвестный курс. Сначала исправьте их: от этого зависят накопленный доход и ставка.</string>
     <string name="month_effective_rate">Ставка за этот месяц</string>
     <string name="declaration_confirm_coverage">У меня обычный SBS, без НДС и специальных режимов. Все доходы для расчёта за этот год учтены, включая другие счета и наличные. Переводы и комиссии проверены.</string>
+    <string name="rolling_title">Доход за 12 календарных месяцев</string>
+    <string name="rolling_period">%1$s — %2$s · текущий месяц не завершён</string>
+    <string name="rolling_exceeded">Учтённый доход превысил 100 000 GEL. Проверьте необходимость регистрации НДС сейчас.</string>
+    <string name="rolling_near">Учтённый доход приближается к 100 000 GEL. До следующего поступления проверьте, какие услуги входят в оборот для НДС.</string>
+    <string name="rolling_forecast_near">По сценарию на следующий месяц сумма приблизится к 100 000 GEL. Заранее проверьте применимость НДС.</string>
+    <string name="rolling_forecast_exceeded">В этом сценарии сумма в следующем месяце превышает 100 000 GEL.</string>
+    <string name="rolling_incomplete">Неполный итог: %1$d записей требуют проверки или курса. Прогноз и остаток до порога недоступны.</string>
+    <string name="rolling_distance">Разница до 100 000 GEL</string>
+    <string name="rolling_next_month">Сценарий: %1$s</string>
+    <string name="rolling_scope">Только внесённые и включённые доходы, а не подтверждённый оборот для НДС. Проверьте полноту данных и услуги иностранным заказчикам.</string>
+    <string name="rolling_hide">Скрыть подробности</string>
+    <string name="rolling_details">11 месяцев, разбивка и прогноз</string>
+    <string name="rolling_eleven">11 завершённых месяцев · %1$s — %2$s: %3$s</string>
+    <string name="rolling_no_entries">Нет записей о доходах</string>
+    <string name="rolling_leaving">В следующем месяце из окна выйдет %1$s: %2$s.</string>
+    <string name="rolling_expected">Ожидаемый доход в следующем месяце, GEL</string>
+    <string name="rolling_invalid_estimate">Введите сумму не меньше нуля.</string>
+    <string name="rolling_no_forecast">Автопрогноз недоступен: нужны шесть завершённых месяцев с записями о доходах и разрешённые данные. Можно ввести своё ожидание.</string>
+    <string name="rolling_median">Начальное ожидание — медиана итогов шести последних завершённых месяцев. Её можно изменить.</string>
+    <string name="rolling_scenario">Сценарий = известный итог 12 месяцев − выбывающий месяц + ожидаемый доход. Предполагает отсутствие новых поступлений до конца текущего месяца. Это не точный прогноз и не проверка прошлых обязательств по НДС.</string>
+    <string name="rolling_rule">Статья 165: общий порог регистрации — свыше 100 000 GEL учитываемого оборота за любые непрерывные 12 календарных месяцев; обратиться нужно в течение 2 рабочих дней после превышения. 90 000 GEL — раннее предупреждение, а не порог регистрации.</string>
+    <string name="rolling_source">Налоговый кодекс · статья 165</string>
 </resources>

@@ -6,7 +6,7 @@ The primary job is statement → review exceptions → copy declaration values. 
 
 Ordinary Georgia small-business status: with the standard configured rate of 1%, annual tracked SBS income above GEL 500,000 switches the entire crossing month and following months to 3%. Equality alone does not cross the threshold. Annual totals reset in January. Explicit pre-existing non-1% manual settings remain manual settings; they are not interpreted as automatic ordinary-SBS rules.
 
-VAT, special tourism/agrotourism thresholds, loss of SBS eligibility, non-SBS income, and classification of cross-border income are outside this implementation. The user must verify eligibility and complete the annual income history. Importing one bank account for one month cannot establish the complete tax base.
+VAT calculation/registration, special tourism/agrotourism thresholds, loss of SBS eligibility, non-SBS income, and classification of cross-border income are outside this implementation. The user must verify eligibility and complete the annual income history. Importing one bank account for one month cannot establish the complete tax base.
 
 Unknown FX or unresolved review in an earlier month makes the later cumulative calculation incomplete. Never turn unknown tax into zero for copying or quick completion. Excluded pre-status transactions do not block an otherwise valid month.
 
@@ -47,3 +47,11 @@ Notifications use WorkManager and are best-effort, not exact alarms: https://dev
 The same checks are wrapped by `LightweightWorkflowRegressionTest` in the normal JUnit source set. Also run the existing unit suite and Android instrumentation suite with the project’s configured toolchain. Do not ship solely on the standalone checks.
 
 No Room schema migration, new runtime dependency, backend, bank integration or automatic tax filing is introduced by this patch.
+
+## Rolling income awareness
+
+Home separately shows recorded included income over the current calendar month to date and the previous 11 months, without resetting at January or the SBS effective date. Details include the preceding 11 completed months, explicit date boundaries and monthly totals. Empty months are shown as no entries, not verified zero income.
+
+This is an advisory income monitor, not a VAT turnover calculation. Under Article 165, the general mandatory-registration trigger is qualifying turnover **exceeding** GEL 100,000 in any consecutive 12 calendar months, with application within two business days. GEL 90,000 is an early-review warning. Services to foreign customers and exemptions require separate assessment; SBS inclusion does not determine VAT treatment. Official source: https://matsne.gov.ge/en/document/view/1043717 (Articles 165 and 1621; checked 2026-10-15).
+
+The next-month scenario subtracts the oldest month and adds an expected monthly amount, assuming no further current-month receipts. The default is the median of the last six completed monthly totals, offered only when each sample month has income entries and the window has no unresolved FX/review rows. Users can enter their own estimate; it is not saved as income. Missing FX/review rows label the total partial and disable the scenario and distance display. Warnings appear on Home; this does not add background push notifications or assess past threshold crossings. The date refreshes when Home resumes.
