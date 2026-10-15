@@ -13,4 +13,4 @@ data class MonthsMonthItemUiState(
 
 data class MonthsYearSection(val year: Int, val items: List<MonthsMonthItemUiState>)
 
-data class MonthsUiState(val sections: List<MonthsYearSection> = emptyList())
+data class MonthsUiState(val sections: List<MonthsYearSection> = emptyList(), val completionFailed: Boolean = false)

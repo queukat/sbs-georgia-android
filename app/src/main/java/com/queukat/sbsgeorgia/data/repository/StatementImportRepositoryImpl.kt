@@ -68,7 +68,9 @@ constructor(
                     )
                 )
 
-        val nonPreviewDuplicates = rows.filterNot { it.duplicate }
+        // Preview can be stale by the time confirmation owns the transaction.
+        val existing = existingTransactionFingerprints(rows.map { it.transactionFingerprint }.toSet())
+        val nonPreviewDuplicates = rows.filterNot { it.duplicate || it.transactionFingerprint in existing }
         val insertResults =
             importedTransactionDao.insertAll(
                 nonPreviewDuplicates.map { row ->
@@ -89,7 +91,8 @@ constructor(
 
         var storedTransactionCount = 0
         var importedIncomeCount = 0
-        var skippedDuplicateCount = rows.count { it.duplicate }
+        var skippedDuplicateCount = rows.size - nonPreviewDuplicates.size
+        var excludedCount = 0
 
         nonPreviewDuplicates.zip(insertResults).forEach { (row, insertId) ->
             if (insertId == -1L) {
@@ -112,7 +115,7 @@ constructor(
                         sourceCategory = row.sourceCategory.trim(),
                         note = buildNote(row.description, row.additionalInformation),
                         declarationInclusion = DeclarationInclusion.INCLUDED,
-                        gelEquivalent = null,
+                        gelEquivalent = row.amount.takeIf { normalizeCurrencyCode(row.currency) == "GEL" },
                         rateSource = FxRateSource.NONE,
                         manualFxOverride = false,
                         sourceStatementId = statementId,
@@ -122,6 +125,8 @@ constructor(
                     )
                 )
                 importedIncomeCount += 1
+            } else {
+                excludedCount += 1
             }
         }
 
@@ -129,9 +134,7 @@ constructor(
             importedIncomeCount = importedIncomeCount,
             storedTransactionCount = storedTransactionCount,
             skippedDuplicateCount = skippedDuplicateCount,
-            excludedCount = rows.count {
-                !it.duplicate && it.finalInclusion != DeclarationInclusion.INCLUDED
-            }
+            excludedCount = excludedCount
         )
     }
 

@@ -11,6 +11,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.math.RoundingMode
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -82,6 +83,7 @@ constructor(
 
     fun save() {
         val current = _uiState.value
+        if (current.isSaving) return
         val entryId = current.entryId
         val units = current.units.toIntOrNull()
         val rateToGel = runCatching { BigDecimal(current.rateToGel) }.getOrNull()
@@ -105,9 +107,18 @@ constructor(
             else -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
-                    applyManualFxOverrideUseCase(entryId, units, rateToGel)
-                    _uiState.value = _uiState.value.copy(isSaving = false)
-                    _effects.emit(FxOverrideEffect.Saved)
+                    try {
+                        applyManualFxOverrideUseCase(entryId, units, rateToGel)
+                        _effects.emit(FxOverrideEffect.Saved)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = appContext.getString(R.string.operation_failed)
+                        )
+                    } finally {
+                        _uiState.value = _uiState.value.copy(isSaving = false)
+                    }
                 }
             }
         }

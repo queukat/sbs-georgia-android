@@ -72,4 +72,8 @@
     <string name="source_category_tax_payment">Tax payment</string>
     <string name="source_category_imported_statement_income">Imported statement income</string>
     <string name="source_category_imported_statement_review">Imported statement review</string>
+    <string name="operation_failed">The operation failed. Your changes were not confirmed. Please try again.</string>
+    <string name="manual_entry_not_found">This income entry no longer exists. Return to the month and reopen it.</string>
+    <string name="fx_resolve_entries_changed">Some entries changed during FX resolution and were left untouched. Review the current entries before retrying.</string>
+    <string name="month_completion_failed">The month could not be completed. Its data may have changed; review the current values and try again.</string>
 </resources>

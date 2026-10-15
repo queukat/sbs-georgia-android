@@ -4,6 +4,7 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
@@ -265,6 +266,17 @@ private class FakeIncomeRepository(initialEntries: List<IncomeEntry> = emptyList
     override suspend fun deleteById(id: Long) {
         entries.remove(id)
         state.value = entries.values.sortedBy { it.id }
+    }
+
+    override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+        var applied = 0
+        updates.forEach { update ->
+            if (getById(update.expected.id) == update.expected) {
+                upsert(update.applyTo(update.expected))
+                applied += 1
+            }
+        }
+        return applied
     }
 }
 

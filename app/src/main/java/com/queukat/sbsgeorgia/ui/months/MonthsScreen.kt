@@ -166,6 +166,14 @@ fun MonthsScreen(
             ),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            if (uiState.completionFailed) {
+                item(key = "completion-error") {
+                    Text(
+                        stringResource(R.string.month_completion_failed),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            }
             item(key = "months-charts-action") {
                 SbsSecondaryButton(
                     label = stringResource(R.string.months_open_charts),

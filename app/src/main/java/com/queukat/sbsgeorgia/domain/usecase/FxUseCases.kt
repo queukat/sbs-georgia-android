@@ -1,8 +1,11 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
@@ -12,7 +15,12 @@ import java.math.RoundingMode
 import java.time.Clock
 import javax.inject.Inject
 
-data class MonthFxResolutionResult(val resolvedEntryCount: Int, val unresolvedEntryCount: Int, val message: String)
+data class MonthFxResolutionResult(
+    val resolvedEntryCount: Int,
+    val unresolvedEntryCount: Int,
+    val message: String,
+    val skippedChangedEntryCount: Int = 0
+)
 
 class ResolveMonthFxUseCase
 @Inject
@@ -35,10 +43,11 @@ constructor(
 
         val groups = unresolvedEntries.groupBy {
             it.incomeDate to
-                it.originalCurrency.uppercase()
+                normalizeCurrencyCode(it.originalCurrency)
         }
         var resolvedCount = 0
         var unresolvedCount = 0
+        var skippedChangedCount = 0
         val errors = mutableListOf<String>()
 
         groups.forEach { (_, groupedEntries) ->
@@ -66,18 +75,18 @@ constructor(
             if (resolvedRate == null) {
                 unresolvedCount += groupedEntries.size
             } else {
-                groupedEntries.forEach { entry ->
-                    incomeRepository.upsert(
-                        entry.applyFxRate(
-                            resolvedRate.units,
-                            resolvedRate.rateToGel,
-                            resolvedRate.source,
-                            resolvedRate.manualOverride,
-                            clock
-                        )
+                val updates = groupedEntries.map { entry ->
+                    entry.fxUpdate(
+                        resolvedRate.units,
+                        resolvedRate.rateToGel,
+                        resolvedRate.source,
+                        resolvedRate.manualOverride,
+                        clock
                     )
-                    resolvedCount += 1
                 }
+                val applied = incomeRepository.applyFxUpdates(updates)
+                resolvedCount += applied
+                skippedChangedCount += updates.size - applied
             }
         }
 
@@ -92,7 +101,8 @@ constructor(
         return MonthFxResolutionResult(
             resolvedEntryCount = resolvedCount,
             unresolvedEntryCount = unresolvedCount,
-            message = message
+            message = message,
+            skippedChangedEntryCount = skippedChangedCount
         )
     }
 }
@@ -118,36 +128,45 @@ constructor(
                 units = units,
                 rateToGel = rateToGel
             )
-        val updatedEntry =
-            entry.applyFxRate(
-                units = fxRate.units,
-                rateToGel = fxRate.rateToGel,
-                rateSource = FxRateSource.MANUAL_OVERRIDE,
-                manualOverride = true,
-                clock = clock
-            )
-        incomeRepository.upsert(updatedEntry)
-        return updatedEntry
+        val update = entry.fxUpdate(
+            units = fxRate.units,
+            rateToGel = fxRate.rateToGel,
+            rateSource = FxRateSource.MANUAL_OVERRIDE,
+            manualOverride = true,
+            clock = clock
+        )
+        check(incomeRepository.applyFxUpdates(listOf(update)) == 1) {
+            "The income entry changed or was deleted. Reopen it before applying a rate."
+        }
+        return update.applyTo(entry)
     }
 }
 
-private fun IncomeEntry.applyFxRate(
+private fun IncomeEntry.fxUpdate(
     units: Int,
     rateToGel: BigDecimal,
     rateSource: FxRateSource,
     manualOverride: Boolean,
     clock: Clock
-): IncomeEntry {
-    val divisor = BigDecimal(units.coerceAtLeast(1))
-    val gelAmount =
-        originalAmount
-            .multiply(rateToGel)
-            .divide(divisor, 2, RoundingMode.HALF_UP)
+): IncomeFxUpdate {
+    require(units > 0 && rateToGel.signum() > 0) { "FX rate and units must be positive." }
+    val gelAmount = originalAmount.multiply(rateToGel).divide(BigDecimal(units), 2, RoundingMode.HALF_UP)
+    return IncomeFxUpdate(this, gelAmount, rateSource, manualOverride, clock.millis())
+}
 
-    return copy(
-        gelEquivalent = gelAmount,
-        rateSource = rateSource,
-        manualFxOverride = manualOverride,
-        updatedAtEpochMillis = clock.millis()
-    )
+/** A cache rate is only displayable when it reproduces the stored GEL amount. */
+suspend fun loadMatchingFxRateDetails(entries: List<IncomeEntry>, repository: FxRateRepository): Map<Long, FxRate> {
+    val result = mutableMapOf<Long, FxRate>()
+    entries.filter { it.gelEquivalent != null && normalizeCurrencyCode(it.originalCurrency) != "GEL" }
+        .groupBy { Triple(it.incomeDate, normalizeCurrencyCode(it.originalCurrency), it.manualFxOverride) }
+        .forEach { (key, grouped) ->
+            val rate = repository.getRate(key.first, key.second, key.third) ?: return@forEach
+            if (rate.units <= 0 || rate.rateToGel.signum() <= 0) return@forEach
+            grouped.forEach { entry ->
+                val converted = entry.originalAmount.multiply(rate.rateToGel)
+                    .divide(BigDecimal(rate.units), 2, RoundingMode.HALF_UP)
+                if (converted.compareTo(entry.gelEquivalent) == 0) result[entry.id] = rate
+            }
+        }
+    return result
 }

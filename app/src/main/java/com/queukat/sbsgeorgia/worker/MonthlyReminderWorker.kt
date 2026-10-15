@@ -28,7 +28,7 @@ constructor(
         val today = LocalDate.now(clock)
         val reminderConfig =
             settingsRepository.observeReminderConfig().first() ?: return Result.success()
-        val snapshots = observeAllSnapshotsUseCase().first()
+        val snapshots = observeAllSnapshotsUseCase.current()
         val notifications = reminderPlanner.buildNotificationsForSnapshots(today, reminderConfig, snapshots)
         notifications.forEach { notification ->
             ReminderNotifications.show(applicationContext, notification)

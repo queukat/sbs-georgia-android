@@ -12,6 +12,7 @@ data class ManualEntryUiState(
     val note: String = "",
     val declarationIncluded: Boolean = true,
     val isSaving: Boolean = false,
+    val isLoading: Boolean = false,
     val errorMessage: String? = null
 )
 

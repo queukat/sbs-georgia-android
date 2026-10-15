@@ -25,32 +25,33 @@ constructor(
         val current = snapshot.record
         val paymentRequired = MonthlyCompletionPolicy.paymentRequired(snapshot.estimatedTaxAmountGel)
 
-        repository.upsert(
-            MonthlyDeclarationRecord(
-                yearMonth = snapshot.period.incomeMonth,
-                workflowStatus =
-                if (paymentRequired) {
-                    MonthlyWorkflowStatus.SETTLED
-                } else {
-                    MonthlyWorkflowStatus.FILED
-                },
-                zeroDeclarationPrepared =
-                snapshot.zeroDeclarationPrepared || snapshot.zeroDeclarationSuggested,
-                declarationFiledDate = current?.declarationFiledDate ?: today,
-                paymentSentDate =
-                if (paymentRequired) current?.paymentSentDate ?: today else null,
-                paymentCreditedDate =
-                if (paymentRequired) current?.paymentCreditedDate ?: today else null,
-                paymentAmountGel =
-                if (paymentRequired) {
-                    current?.paymentAmountGel
-                        ?: snapshot.estimatedTaxAmountGel
-                        ?: BigDecimal.ZERO.setScale(2)
-                } else {
-                    null
-                },
-                notes = current?.notes.orEmpty()
-            )
+        val completed = MonthlyDeclarationRecord(
+            yearMonth = snapshot.period.incomeMonth,
+            workflowStatus =
+            if (paymentRequired) {
+                MonthlyWorkflowStatus.SETTLED
+            } else {
+                MonthlyWorkflowStatus.FILED
+            },
+            zeroDeclarationPrepared =
+            snapshot.zeroDeclarationPrepared || snapshot.zeroDeclarationSuggested,
+            declarationFiledDate = current?.declarationFiledDate ?: today,
+            paymentSentDate =
+            if (paymentRequired) current?.paymentSentDate ?: today else null,
+            paymentCreditedDate =
+            if (paymentRequired) current?.paymentCreditedDate ?: today else null,
+            paymentAmountGel =
+            if (paymentRequired) {
+                current?.paymentAmountGel
+                    ?: snapshot.estimatedTaxAmountGel
+                    ?: BigDecimal.ZERO.setScale(2)
+            } else {
+                null
+            },
+            notes = current?.notes.orEmpty()
         )
+        check(repository.completeIfUnchanged(snapshot, completed)) {
+            "The month changed. Review its current values before completing it."
+        }
     }
 }

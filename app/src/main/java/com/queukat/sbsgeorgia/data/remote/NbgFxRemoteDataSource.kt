@@ -1,8 +1,9 @@
 package com.queukat.sbsgeorgia.data.remote
 
+import com.queukat.sbsgeorgia.data.io.InputLimits
+import com.queukat.sbsgeorgia.data.io.readBytesLimited
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import java.io.IOException
-import java.math.BigDecimal
 import java.net.HttpURLConnection
 import java.net.URL
 import java.time.LocalDate
@@ -13,20 +14,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-
-data class RemoteFxRate(val currencyCode: String, val units: Int, val rateToGel: BigDecimal)
-
-sealed interface OfficialFxRemoteResult {
-    data class Success(val rates: List<RemoteFxRate>) : OfficialFxRemoteResult
-
-    data object NotFound : OfficialFxRemoteResult
-
-    data class Error(val message: String) : OfficialFxRemoteResult
-}
-
-interface OfficialFxRemoteDataSource {
-    suspend fun fetchDailyRates(date: LocalDate): OfficialFxRemoteResult
-}
 
 @Singleton
 class NbgFxRemoteDataSource internal constructor(
@@ -51,7 +38,9 @@ class NbgFxRemoteDataSource internal constructor(
             try {
                 val result = when (val statusCode = connection.responseCode) {
                     HttpURLConnection.HTTP_OK -> {
-                        val body = connection.inputStream.bufferedReader().use { it.readText() }
+                        val body = connection.inputStream.use {
+                            it.readBytesLimited(InputLimits.FX_RESPONSE_BYTES).toString(Charsets.UTF_8)
+                        }
                         parseNbgDailyRates(json, body, date)
                     }
                     HttpURLConnection.HTTP_NOT_FOUND -> OfficialFxRemoteResult.NotFound
@@ -59,6 +48,8 @@ class NbgFxRemoteDataSource internal constructor(
                 }
                 continuation.resume(result)
             } catch (exception: IOException) {
+                continuation.resume(endpointError(exception))
+            } catch (exception: IllegalArgumentException) {
                 continuation.resume(endpointError(exception))
             } finally {
                 connection.disconnect()

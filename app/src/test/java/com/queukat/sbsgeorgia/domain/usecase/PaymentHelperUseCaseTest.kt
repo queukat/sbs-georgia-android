@@ -5,8 +5,10 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -16,6 +18,7 @@ import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.GeorgiaTaxBusinessCalendar
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.testing.declarationStateForTest
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
@@ -43,10 +46,13 @@ class PaymentHelperUseCaseTest {
             )
         val observeMonthDetail =
             ObserveMonthDetailUseCase(
-                settingsRepository = settingsRepository,
-                incomeRepository = incomeRepository,
-                monthlyDeclarationRepository = monthlyRepository,
-                planner = planner
+                declarationStateForTest(
+                    settingsRepository = settingsRepository,
+                    incomeRepository = incomeRepository,
+                    monthlyDeclarationRepository = monthlyRepository,
+                    planner = planner,
+                    clock = fixedClock
+                )
             )
         val useCase =
             ObservePaymentHelperUseCase(
@@ -95,6 +101,16 @@ private class PaymentTestSettingsRepository : SettingsRepository {
     override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) = Unit
 
     override suspend fun upsertReminderConfig(config: ReminderConfig) = Unit
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig
+    ) {
+        upsertTaxpayerProfile(profile)
+        upsertStatusConfig(config)
+        upsertReminderConfig(reminders)
+    }
 }
 
 private class PaymentTestDeclarationFormConfigRepository(private val config: DeclarationFormConfig) :
@@ -132,6 +148,17 @@ private class PaymentTestIncomeRepository(month: YearMonth) : IncomeRepository {
     override suspend fun upsert(entry: IncomeEntry): Long = entry.id
 
     override suspend fun deleteById(id: Long) = Unit
+
+    override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+        var applied = 0
+        updates.forEach { update ->
+            if (getById(update.expected.id) == update.expected) {
+                upsert(update.applyTo(update.expected))
+                applied += 1
+            }
+        }
+        return applied
+    }
 }
 
 private class PaymentTestMonthlyRepository : MonthlyDeclarationRepository {
@@ -140,4 +167,13 @@ private class PaymentTestMonthlyRepository : MonthlyDeclarationRepository {
     override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> = flowOf(null)
 
     override suspend fun upsert(record: MonthlyDeclarationRecord) = Unit
+
+    override suspend fun completeIfUnchanged(
+        expected: MonthlyDeclarationSnapshot,
+        completed: MonthlyDeclarationRecord
+    ): Boolean {
+        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
+        upsert(completed)
+        return true
+    }
 }

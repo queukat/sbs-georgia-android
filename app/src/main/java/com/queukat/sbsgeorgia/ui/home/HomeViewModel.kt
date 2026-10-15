@@ -13,6 +13,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
@@ -30,6 +31,9 @@ constructor(
     private val actionPlanner: MonthlyDeclarationActionPlanner,
     private val completeMonthlyDeclarationUseCase: CompleteMonthlyDeclarationUseCase
 ) : ViewModel() {
+    private val completionFailed = MutableStateFlow(false)
+    private var isCompleting = false
+
     private val asOf = MutableStateFlow(LocalDate.now(clock))
 
     fun refreshDate() {
@@ -71,15 +75,27 @@ constructor(
                     )
                 }
             )
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
+        }.combine(completionFailed) { state, failed -> state.copy(completionFailed = failed) }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), HomeUiState())
 
     fun settleCurrentDuePeriod() {
+        if (isCompleting) return
         val quickAccess = uiState.value.duePeriodQuickAccess ?: return
         if (!quickAccess.canQuickSettleMonth) return
 
         val snapshot = quickAccess.snapshot
+        isCompleting = true
+        completionFailed.value = false
         viewModelScope.launch {
-            completeMonthlyDeclarationUseCase(snapshot)
+            try {
+                completeMonthlyDeclarationUseCase(snapshot)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                completionFailed.value = true
+            } finally {
+                isCompleting = false
+            }
         }
     }
 }

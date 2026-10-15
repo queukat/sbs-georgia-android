@@ -90,6 +90,38 @@ SBS Georgia Android - offline-first Android-приложение для инди
   module is currently detached from `settings.gradle.kts`; release consumes the
   checked-in `app/src/release/generated/baselineProfiles/startup-prof.txt`.
 
+## Согласованность и фоновые операции
+
+- Входные данные расчётов читаются через `DeclarationDataRepository`: профиль,
+  настройки SBS, напоминания, доходы и workflow records берутся в одной Room
+  transaction. Не собирай итоги и строки одного экрана из независимых наблюдений.
+- `ObserveDeclarationStateUseCase` — общая реализация построения read model;
+  группирует историю по годам и выполняет вычисления на `DefaultDispatcher`.
+  Это cold flow, а не глобальный кеш. Разные подписчики могут считать независимо.
+- `DateSource` обновляет календарную дату при возврате Activity и во время активной
+  подписки. Одноразовые worker/widget/export операции вызывают `current()` и
+  читают свежую транзакцию, не replay последнего состояния UI.
+- Фоновый FX не должен сохранять старую `IncomeEntry` целиком. `IncomeFxUpdate`
+  несёт ожидаемую строку; `applyFxUpdates` внутри транзакции сравнивает её с текущей,
+  изменяет только FX-поля и пропускает изменённые/удалённые записи. Одна пара
+  дата/валюта записывается одним батчем.
+- Ручной FX хранится по natural key (дата, валюта, manual flag). Для замены
+  необходимо сохранять существующий PK, а не upsert строки с `id = 0`.
+- Быстрое закрытие месяца проверяет snapshot повторно внутри транзакции.
+  Устаревший snapshot нельзя превращать в подтверждение актуальных цифр.
+- Экспорт backup читает все таблицы в одной транзакции; JSON сериализуется после
+  освобождения транзакции. Полный restore остаётся транзакционным.
+- Widget invalidation updates объединяются conflated-очередью и сериализуются;
+  один общий dashboard используется для всех установленных видов виджетов.
+- Bootstrap напоминаний использует `KEEP`. Явная смена расписания использует
+  `CANCEL_AND_REENQUEUE`; WorkManager не предоставляет точную доставку по часам.
+- Лимиты чтения: PDF 32 MiB, JSON backup 64 MiB, NBG response 2 MiB. Это лимиты
+  исходного потока, не гарантия размера распакованного PDF или всей памяти процесса.
+- `scripts/run-core-regressions.sh` — ограниченная JVM-проверка, не Android build.
+  `RepositoryConsistencyTest` требует реального Room и устройства/эмулятора.
+  Перед выпуском обязательны штатная сборка, unit/instrumentation tests и проверки
+  качества из `.github/workflows/android-ci.yml`.
+
 ## Доменный глоссарий
 
 - `SBS` / small business status - грузинский статус малого бизнеса для локального

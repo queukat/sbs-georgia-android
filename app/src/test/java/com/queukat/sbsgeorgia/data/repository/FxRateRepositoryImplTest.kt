@@ -66,13 +66,15 @@ class FxRateRepositoryImplTest {
                 it.manualOverride == manualOverride
         }
         override suspend fun upsert(entity: FxRateEntity): Long {
-            rows.removeAll {
-                it.rateDate == entity.rateDate &&
-                    it.currencyCode == entity.currencyCode &&
-                    it.manualOverride == entity.manualOverride
+            val index = rows.indexOfFirst { entity.id != 0L && it.id == entity.id }
+            if (index >= 0) {
+                rows[index] = entity
+                return -1L
             }
-            rows.add(entity)
-            return rows.size.toLong()
+            check(getRate(entity.rateDate, entity.currencyCode, entity.manualOverride) == null)
+            val id = (rows.maxOfOrNull { it.id } ?: 0L) + 1L
+            rows.add(entity.copy(id = id))
+            return id
         }
         override suspend fun insertAll(entities: List<FxRateEntity>) {
             batches += 1

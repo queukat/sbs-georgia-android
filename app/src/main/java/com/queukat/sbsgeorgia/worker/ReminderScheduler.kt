@@ -23,7 +23,15 @@ constructor(
         WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK_NAME)
     }
 
+    fun ensureScheduled(reminderConfig: ReminderConfig) {
+        schedule(reminderConfig, ExistingPeriodicWorkPolicy.KEEP)
+    }
+
     fun reschedule(reminderConfig: ReminderConfig) {
+        schedule(reminderConfig, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
+    }
+
+    private fun schedule(reminderConfig: ReminderConfig, policy: ExistingPeriodicWorkPolicy) {
         val workManager = WorkManager.getInstance(context)
         if (!reminderConfig.declarationRemindersEnabled &&
             !reminderConfig.paymentRemindersEnabled
@@ -55,7 +63,7 @@ constructor(
 
         workManager.enqueueUniquePeriodicWork(
             UNIQUE_WORK_NAME,
-            ExistingPeriodicWorkPolicy.UPDATE,
+            policy,
             request
         )
     }

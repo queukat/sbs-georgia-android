@@ -46,9 +46,9 @@ constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) {
     suspend fun exportJson(): String = withContext(ioDispatcher) {
-        val declarationFormConfig =
-            declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
-        val document =
+        val document = database.withTransaction {
+            val declarationFormConfig =
+                declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
             AppBackupDocument(
                 exportedAtEpochMillis = clock.millis(),
                 taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
@@ -67,6 +67,7 @@ constructor(
                     ImportedTransactionEntity::toPayload
                 )
             )
+        }
         json.encodeToString(document)
     }
 

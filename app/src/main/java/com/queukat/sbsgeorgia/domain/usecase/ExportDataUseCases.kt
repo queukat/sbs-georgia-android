@@ -4,30 +4,25 @@ import com.queukat.sbsgeorgia.data.export.AppBackupManager
 import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyCurrencyTotal
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
-import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
-import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
-import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
-import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
-import java.time.Clock
-import java.time.YearMonth
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import javax.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class ExportIncomeEntriesCsvUseCase
 @Inject
 constructor(private val incomeRepository: IncomeRepository) {
-    suspend operator fun invoke(): String {
+    suspend operator fun invoke(): String = withContext(Dispatchers.Default) {
         val entries =
             incomeRepository
                 .observeAll()
                 .first()
                 .sortedWith(compareBy<IncomeEntry>({ it.incomeDate }, { it.id }))
-        return buildString {
+        buildString {
             appendLine(
                 csvRow(
                     "id",
@@ -74,26 +69,11 @@ constructor(private val incomeRepository: IncomeRepository) {
 
 class ExportMonthlySummariesCsvUseCase
 @Inject
-constructor(
-    private val settingsRepository: SettingsRepository,
-    private val incomeRepository: IncomeRepository,
-    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val planner: MonthlyDeclarationPlanner,
-    private val clock: Clock
-) {
-    suspend operator fun invoke(): String {
-        val profile = settingsRepository.observeTaxpayerProfile().first()
-        val config = settingsRepository.observeStatusConfig().first()
-        val entries = incomeRepository.observeAll().first()
-        val records = monthlyDeclarationRepository.observeAll().first()
-        val snapshots =
-            relevantYears(entries, records, config)
-                .flatMap { year ->
-                    planner.buildYearSnapshots(year, profile, config, entries, records)
-                }
-                .sortedBy { it.period.incomeMonth }
+constructor(private val observeState: ObserveDeclarationStateUseCase) {
+    suspend operator fun invoke(): String = withContext(Dispatchers.Default) {
+        val snapshots = observeState.current().snapshots.sortedBy { it.period.incomeMonth }
 
-        return buildString {
+        buildString {
             appendLine(
                 csvRow(
                     "yearMonth",
@@ -142,21 +122,6 @@ constructor(
                 )
             }
         }
-    }
-
-    private fun relevantYears(
-        entries: List<IncomeEntry>,
-        records: List<MonthlyDeclarationRecord>,
-        config: SmallBusinessStatusConfig?
-    ): List<Int> {
-        val years =
-            buildSet {
-                add(YearMonth.now(clock).year)
-                config?.effectiveDate?.year?.let(::add)
-                entries.mapTo(this) { it.incomeDate.year }
-                records.mapTo(this) { it.yearMonth.year }
-            }
-        return years.sorted()
     }
 }
 

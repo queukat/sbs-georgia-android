@@ -10,8 +10,10 @@ import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
@@ -38,10 +40,10 @@ import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ConfirmStatementImportUseCase
 import com.queukat.sbsgeorgia.domain.usecase.DetectImportedTaxPaymentCandidatesUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadStatementImportPreviewUseCase
-import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ResolveFxForMonthsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ResolveMonthFxUseCase
+import com.queukat.sbsgeorgia.testing.declarationStateForTest
 import com.queukat.sbsgeorgia.ui.importstatement.ImportStatementRowUiState
 import com.queukat.sbsgeorgia.ui.importstatement.canConfirmImport
 import com.queukat.sbsgeorgia.ui.importstatement.excludedCount
@@ -115,6 +117,17 @@ private class IncomeStore(initial: List<IncomeEntry> = emptyList()) : IncomeRepo
     override suspend fun deleteById(id: Long) {
         state.value = state.value.filterNot { it.id == id }
     }
+
+    override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+        var applied = 0
+        updates.forEach { update ->
+            if (getById(update.expected.id) == update.expected) {
+                upsert(update.applyTo(update.expected))
+                applied += 1
+            }
+        }
+        return applied
+    }
 }
 private class RecordStore : MonthlyDeclarationRepository {
     val state = MutableStateFlow<List<MonthlyDeclarationRecord>>(emptyList())
@@ -123,6 +136,15 @@ private class RecordStore : MonthlyDeclarationRepository {
     override suspend fun upsert(record: MonthlyDeclarationRecord) {
         state.value =
             state.value.filterNot { it.yearMonth == record.yearMonth } + record
+    }
+
+    override suspend fun completeIfUnchanged(
+        expected: MonthlyDeclarationSnapshot,
+        completed: MonthlyDeclarationRecord
+    ): Boolean {
+        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
+        upsert(completed)
+        return true
     }
 }
 private class Settings(c: SmallBusinessStatusConfig = config) : SettingsRepository {
@@ -140,6 +162,16 @@ private class Settings(c: SmallBusinessStatusConfig = config) : SettingsReposito
     }
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         r.value = config
+    }
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig
+    ) {
+        upsertTaxpayerProfile(profile)
+        upsertStatusConfig(config)
+        upsertReminderConfig(reminders)
     }
 }
 private class Rates(private val failure: Throwable? = null) : FxRateRepository {
@@ -502,8 +534,7 @@ private suspend fun CoreCheckRunner.checkCompletion() {
         val i = IncomeStore(listOf(entry("2026-12-01", "400"), entry("2027-01-01", "25", id = 2)))
         val r = RecordStore()
         val settings = Settings()
-        val all = ObserveAllSnapshotsUseCase(settings, i, r, p, c)
-        val s = ObserveDashboardSummaryUseCase(settings, r, all, p)().first()
+        val s = ObserveDashboardSummaryUseCase(declarationStateForTest(settings, i, r, p, c), p)().first()
         check(
             s.currentDuePeriod?.period?.incomeMonth == YearMonth.of(2026, 12)
         )

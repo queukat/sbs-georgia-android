@@ -100,7 +100,7 @@ fun ManualEntryScreen(
                     }
                 ),
                 onClick = onSave,
-                enabled = !uiState.isSaving,
+                enabled = !uiState.isSaving && !uiState.isLoading,
                 isLoading = uiState.isSaving,
                 statusMessage = uiState.errorMessage,
                 testTag = "manual-entry-save-button"

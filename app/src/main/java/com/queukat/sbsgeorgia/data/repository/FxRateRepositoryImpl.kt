@@ -6,6 +6,8 @@ import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteResult
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
+import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
+import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.FxRateFetchResult
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import java.math.BigDecimal
@@ -21,13 +23,13 @@ constructor(
     private val remoteDataSource: OfficialFxRemoteDataSource
 ) : FxRateRepository {
     override suspend fun getBestRate(rateDate: LocalDate, currencyCode: String): FxRate? =
-        fxRateDao.getBestRate(rateDate, currencyCode.uppercase())?.toDomain()
+        fxRateDao.getBestRate(rateDate, normalizeCurrencyCode(currencyCode))?.toDomain()
 
     override suspend fun getRate(rateDate: LocalDate, currencyCode: String, manualOverride: Boolean): FxRate? =
-        fxRateDao.getRate(rateDate, currencyCode.uppercase(), manualOverride)?.toDomain()
+        fxRateDao.getRate(rateDate, normalizeCurrencyCode(currencyCode), manualOverride)?.toDomain()
 
     override suspend fun fetchOfficialRate(rateDate: LocalDate, currencyCode: String): FxRateFetchResult {
-        val normalizedCode = currencyCode.uppercase()
+        val normalizedCode = normalizeCurrencyCode(currencyCode)
         fxRateDao.getRate(rateDate, normalizedCode, manualOverride = false)?.let { cached ->
             return FxRateFetchResult.Success(cached.toDomain())
         }
@@ -68,19 +70,18 @@ constructor(
         units: Int,
         rateToGel: BigDecimal
     ): FxRate {
+        require(units > 0 && rateToGel.signum() > 0) { "FX rate and units must be positive." }
+        require(isIsoLikeCurrencyCode(normalizeCurrencyCode(currencyCode))) { "Invalid currency code." }
         val entity =
             FxRateEntity(
                 rateDate = rateDate,
-                currencyCode = currencyCode.uppercase(),
-                units = units.coerceAtLeast(1),
+                currencyCode = normalizeCurrencyCode(currencyCode),
+                units = units,
                 rateToGel = rateToGel,
                 source = FxRateSource.MANUAL_OVERRIDE,
                 manualOverride = true
             )
-        fxRateDao.upsert(entity)
-        return checkNotNull(
-            fxRateDao.getRate(rateDate, entity.currencyCode, manualOverride = true)
-        ).toDomain()
+        return fxRateDao.saveManualOverride(entity).toDomain()
     }
 }
 

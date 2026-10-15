@@ -42,9 +42,9 @@ Notifications use WorkManager and are best-effort, not exact alarms: https://dev
 
 ## Tests
 
-`bash scripts/run-core-regressions.sh` compiles production pure-Kotlin rules, importer orchestration, parser and UI contracts, then runs deterministic checks (the total includes every TBC statement fixture). Requires Kotlin 1.9+ with a JVM coroutines jar, Python 3 and JDK 17+. The script generates only DI annotation and resource-ID stubs; it does not stub business logic. It is not an Android build and does not exercise Room, PDFBox, Compose or WorkManager runtime.
+`bash scripts/run-core-regressions.sh` compiles production pure-Kotlin rules, importer orchestration, parser and UI contracts, then runs deterministic checks (the total includes every TBC statement fixture). Requires Kotlin 1.9+ with a JVM coroutines jar, Python 3 and JDK 17+. The script generates DI/Room annotation and resource-ID placeholders; production use-case bodies and the manual-rate DAO method are compiled unchanged. Test repositories are explicit fakes, not a database engine. It is not an Android build and does not exercise Room, PDFBox, Compose or WorkManager runtime.
 
-The same checks are wrapped by `LightweightWorkflowRegressionTest` in the normal JUnit source set. Also run the existing unit suite and Android instrumentation suite with the project’s configured toolchain. Do not ship solely on the standalone checks.
+The checks are wrapped by `LightweightWorkflowRegressionTest` and `HardeningRegressionTest` in the normal JUnit source set. `RepositoryConsistencyTest` exercises generated Room persistence on Android, including conditional FX writes, coherent settings reads and stale completion rejection. Also run the existing unit suite and Android instrumentation suite with the project’s configured toolchain. Do not ship solely on the standalone checks.
 
 No Room schema migration, new runtime dependency, backend, bank integration or automatic tax filing is introduced by this patch.
 
@@ -55,3 +55,33 @@ Home separately shows recorded included income over the current calendar month t
 This is an advisory income monitor, not a VAT turnover calculation. Under Article 165, the general mandatory-registration trigger is qualifying turnover **exceeding** GEL 100,000 in any consecutive 12 calendar months, with application within two business days. GEL 90,000 is an early-review warning. Services to foreign customers and exemptions require separate assessment; SBS inclusion does not determine VAT treatment. Official source: https://matsne.gov.ge/en/document/view/1043717 (Articles 165 and 1621; checked 2026-10-15).
 
 The next-month scenario subtracts the oldest month and adds an expected monthly amount, assuming no further current-month receipts. The default is the median of the last six completed monthly totals, offered only when each sample month has income entries and the window has no unresolved FX/review rows. Users can enter their own estimate; it is not saved as income. Missing FX/review rows label the total partial and disable the scenario and distance display. Warnings appear on Home; this does not add background push notifications or assess past threshold crossings. The date refreshes when Home resumes.
+
+## Read/write hardening
+
+Calculation inputs now come from `DeclarationDataRepository` as one committed snapshot. The common
+`ObserveDeclarationStateUseCase` partitions income by year and computes off the UI dispatcher. It is a
+cold flow, not an application-wide retained cache: independent subscribers may still recompute.
+Declaration projections respond to calendar-date changes during active collection. One-shot CSV,
+worker and widget reads use a fresh transaction rather than a cached UI value.
+
+FX persistence uses compare-before-write inside a transaction and updates only the FX fields.
+A date/currency group is one write batch. Concurrent edits and deletions are skipped, not overwritten
+or resurrected. Manual-rate replacement preserves its existing primary key. Cached rates are loaded
+once per date/currency/manual group for month details, and are only displayed when they reproduce the
+stored rounded GEL value. This is not a historical per-entry rate ledger.
+
+Quick completion recomputes the month within the write transaction and refuses stale financial or
+workflow snapshots. This strengthens the local assertion; it still does not verify government filing
+or bank payment. Ordinary manual workflow editing is not a full multi-editor conflict-resolution system.
+
+Backup export reads all tables within one transaction. Settings updates and import duplicate rechecks
+are transactional too. Existing backup wire format and Room schema version are unchanged. Invalid
+linked inclusion states and negative resolved GEL amounts are rejected before destructive restore.
+
+Automatic widget refresh uses a conflated queue, serial rendering and one summary per provider batch.
+Reminder bootstrap preserves scheduled work; explicit scheduling changes cancel and re-enqueue it.
+WorkManager remains best-effort and requires on-device permission, timezone and Doze checks.
+
+Input streams reject content beyond 32 MiB for PDF, 64 MiB for backup and 2 MiB for NBG JSON. These are
+input byte limits, not decompressed-memory guarantees. Large-file streaming, PDF extraction profiling,
+per-entry FX provenance and a fully shared read-model cache are not part of this change.

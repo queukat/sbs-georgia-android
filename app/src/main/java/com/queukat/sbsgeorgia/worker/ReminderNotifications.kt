@@ -93,9 +93,13 @@ object ReminderNotifications {
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .build()
 
-        NotificationManagerCompat.from(context).notify(
-            reminderNotification.notificationId ?: notificationId,
-            notification
-        )
+        try {
+            NotificationManagerCompat.from(context).notify(
+                reminderNotification.notificationId ?: notificationId,
+                notification
+            )
+        } catch (_: SecurityException) {
+            // Permission can be revoked between checking it and posting the notification.
+        }
     }
 }

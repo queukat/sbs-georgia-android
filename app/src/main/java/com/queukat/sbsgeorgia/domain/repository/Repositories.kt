@@ -6,7 +6,9 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -36,6 +38,8 @@ interface SettingsRepository {
     suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig)
 
     suspend fun upsertReminderConfig(config: ReminderConfig)
+
+    suspend fun upsertSettings(profile: TaxpayerProfile, config: SmallBusinessStatusConfig, reminders: ReminderConfig)
 }
 
 interface DeclarationFormConfigRepository {
@@ -54,6 +58,9 @@ interface IncomeRepository {
     suspend fun upsert(entry: IncomeEntry): Long
 
     suspend fun deleteById(id: Long)
+
+    /** Atomically compare each complete expected row and change only its FX fields. */
+    suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int
 }
 
 interface MonthlyDeclarationRepository {
@@ -62,6 +69,9 @@ interface MonthlyDeclarationRepository {
     fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?>
 
     suspend fun upsert(record: MonthlyDeclarationRecord)
+
+    /** Validate the financial snapshot and persist completion in one transaction. */
+    suspend fun completeIfUnchanged(expected: MonthlyDeclarationSnapshot, completed: MonthlyDeclarationRecord): Boolean
 }
 
 interface FxRateRepository {

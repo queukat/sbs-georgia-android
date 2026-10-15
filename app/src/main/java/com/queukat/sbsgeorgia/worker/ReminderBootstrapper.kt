@@ -21,7 +21,7 @@ constructor(
     fun scheduleStoredConfigIfPresent() {
         scope.launch {
             settingsRepository.observeReminderConfig().first()?.let(
-                reminderScheduler::reschedule
+                reminderScheduler::ensureScheduled
             )
         }
     }

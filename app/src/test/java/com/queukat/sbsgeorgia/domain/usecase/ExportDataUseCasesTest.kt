@@ -4,6 +4,7 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationPeriod
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
@@ -17,6 +18,7 @@ import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.testing.declarationStateForTest
 import java.math.BigDecimal
 import java.time.Clock
 import java.time.Instant
@@ -133,16 +135,18 @@ class ExportDataUseCasesTest {
 
         val csv =
             ExportMonthlySummariesCsvUseCase(
-                settingsRepository = settingsRepository,
-                incomeRepository = incomeRepository,
-                monthlyDeclarationRepository = recordRepository,
-                planner =
-                MonthlyDeclarationPlanner(
-                    fixedClock,
-                    com.queukat.sbsgeorgia.domain.service
-                        .GeorgiaTaxBusinessCalendar()
-                ),
-                clock = fixedClock
+                declarationStateForTest(
+                    settingsRepository = settingsRepository,
+                    incomeRepository = incomeRepository,
+                    monthlyDeclarationRepository = recordRepository,
+                    planner =
+                    MonthlyDeclarationPlanner(
+                        fixedClock,
+                        com.queukat.sbsgeorgia.domain.service
+                            .GeorgiaTaxBusinessCalendar()
+                    ),
+                    clock = fixedClock
+                )
             ).invoke()
 
         assertTrue(csv.contains("\"workflowStatus\""))
@@ -263,6 +267,16 @@ private class FakeExportSettingsRepository(
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderState.value = config
     }
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig
+    ) {
+        upsertTaxpayerProfile(profile)
+        upsertStatusConfig(config)
+        upsertReminderConfig(reminders)
+    }
 }
 
 private class FakeExportIncomeRepository(entries: List<IncomeEntry>) : IncomeRepository {
@@ -281,6 +295,17 @@ private class FakeExportIncomeRepository(entries: List<IncomeEntry>) : IncomeRep
     override suspend fun deleteById(id: Long) {
         state.value = state.value.filterNot { it.id == id }
     }
+
+    override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+        var applied = 0
+        updates.forEach { update ->
+            if (getById(update.expected.id) == update.expected) {
+                upsert(update.applyTo(update.expected))
+                applied += 1
+            }
+        }
+        return applied
+    }
 }
 
 private class FakeExportMonthlyDeclarationRepository(records: List<MonthlyDeclarationRecord>) :
@@ -295,4 +320,9 @@ private class FakeExportMonthlyDeclarationRepository(records: List<MonthlyDeclar
     override suspend fun upsert(record: MonthlyDeclarationRecord) {
         state.value = state.value.filterNot { it.yearMonth == record.yearMonth } + record
     }
+
+    override suspend fun completeIfUnchanged(
+        expected: MonthlyDeclarationSnapshot,
+        completed: MonthlyDeclarationRecord
+    ): Boolean = error("Export must not complete a declaration")
 }

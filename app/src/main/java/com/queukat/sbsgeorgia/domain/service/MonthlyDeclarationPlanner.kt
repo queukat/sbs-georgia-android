@@ -33,10 +33,11 @@ constructor(
         profile: TaxpayerProfile?,
         config: SmallBusinessStatusConfig?,
         entries: List<IncomeEntry>,
-        records: List<MonthlyDeclarationRecord>
+        records: List<MonthlyDeclarationRecord>,
+        referenceDate: LocalDate = LocalDate.now(clock)
     ): List<MonthlyDeclarationSnapshot> {
-        val now = LocalDate.now(clock)
-        val currentYearMonth = YearMonth.now(clock)
+        val now = referenceDate
+        val currentYearMonth = YearMonth.from(referenceDate)
         val lastMonth = lastReportableMonth(year, currentYearMonth)
         if (lastMonth == 0) return emptyList()
 
@@ -67,7 +68,7 @@ constructor(
 
             val originalTotals =
                 inScopeIncludedEntries
-                    .groupBy { it.originalCurrency.uppercase() }
+                    .groupBy { normalizeCurrencyCode(it.originalCurrency) }
                     .map { (currencyCode, monthEntries) ->
                         MonthlyCurrencyTotal(
                             currencyCode = currencyCode,
@@ -176,9 +177,10 @@ constructor(
         config: SmallBusinessStatusConfig?,
         reminders: ReminderConfig?,
         snapshots: List<MonthlyDeclarationSnapshot>,
-        records: List<MonthlyDeclarationRecord>
+        records: List<MonthlyDeclarationRecord>,
+        referenceDate: LocalDate = LocalDate.now(clock)
     ): DashboardSummary {
-        val now = LocalDate.now(clock)
+        val now = referenceDate
         val dueIncomeMonth = YearMonth.from(now.minusMonths(1))
         val dueSnapshot = snapshots.firstOrNull {
             it.period.incomeMonth == dueIncomeMonth

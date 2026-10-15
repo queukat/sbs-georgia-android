@@ -2,6 +2,8 @@ package com.queukat.sbsgeorgia.data.export
 
 import android.content.Context
 import androidx.core.net.toUri
+import com.queukat.sbsgeorgia.data.io.InputLimits
+import com.queukat.sbsgeorgia.data.io.readBytesLimited
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -32,7 +34,7 @@ constructor(
     override suspend fun readText(uriString: String): String = withContext(ioDispatcher) {
         val uri = uriString.toUri()
         context.contentResolver.openInputStream(uri)?.use { input ->
-            input.bufferedReader(Charsets.UTF_8).use { reader -> reader.readText() }
+            input.readBytesLimited(InputLimits.BACKUP_BYTES).toString(Charsets.UTF_8)
         } ?: error("Unable to open the selected backup file.")
     }
 }

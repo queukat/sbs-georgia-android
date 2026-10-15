@@ -21,6 +21,7 @@ import java.math.BigDecimal
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -69,8 +70,19 @@ constructor(
                 )
             return
         }
+        _uiState.value = _uiState.value.copy(entryId = entryId, isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            incomeRepository.getById(entryId)?.let { entry ->
+            try {
+                val entry = incomeRepository.getById(entryId)
+                if (initializedEntryKey != key) return@launch
+                if (entry == null) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = appContext.getString(R.string.manual_entry_not_found)
+                    )
+                    return@launch
+                }
+
                 _uiState.value =
                     ManualEntryUiState(
                         entryId = entry.id,
@@ -85,38 +97,54 @@ constructor(
                         declarationIncluded =
                         entry.declarationInclusion == DeclarationInclusion.INCLUDED
                     )
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                if (initializedEntryKey == key) {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = appContext.getString(R.string.operation_failed)
+                    )
+                }
             }
         }
     }
 
     fun updateDate(date: LocalDate) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(incomeDate = date, errorMessage = null)
     }
 
     fun updateAmount(amount: String) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(amount = amount, errorMessage = null)
     }
 
     fun updateCurrency(currency: String) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value =
             _uiState.value.copy(currency = normalizeCurrencyCode(currency), errorMessage = null)
     }
 
     fun updateCategory(category: String) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(sourceCategory = category, errorMessage = null)
     }
 
     fun updateNote(note: String) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(note = note, errorMessage = null)
     }
 
     fun updateIncluded(included: Boolean) {
+        if (_uiState.value.isSaving || _uiState.value.isLoading) return
         _uiState.value = _uiState.value.copy(declarationIncluded = included)
     }
 
     fun save() {
         val current = _uiState.value
-        val amount = runCatching { BigDecimal(current.amount) }.getOrNull()
+        if (current.isSaving || current.isLoading) return
+        val amount = runCatching { BigDecimal(current.amount.trim().replace(',', '.')) }.getOrNull()
         if (amount == null || amount <= BigDecimal.ZERO) {
             _uiState.value =
                 current.copy(
@@ -147,43 +175,56 @@ constructor(
 
         _uiState.value = current.copy(isSaving = true, errorMessage = null)
         viewModelScope.launch {
-            val existing = current.entryId?.let { incomeRepository.getById(it) }
-            val fxPersistence =
-                resolveManualEntryFxPersistence(
-                    currency = current.currency,
-                    amount = amount,
-                    incomeDate = current.incomeDate,
-                    existing = existing
+            try {
+                val existing = current.entryId?.let { incomeRepository.getById(it) }
+                if (current.entryId != null && existing == null) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = appContext.getString(R.string.manual_entry_not_found)
+                    )
+                    return@launch
+                }
+                val fxPersistence =
+                    resolveManualEntryFxPersistence(
+                        currency = current.currency,
+                        amount = amount,
+                        incomeDate = current.incomeDate,
+                        existing = existing
+                    )
+                upsertManualIncomeEntryUseCase(
+                    IncomeEntry(
+                        id = current.entryId ?: 0L,
+                        sourceType = resolvedManualEntrySourceType(existing),
+                        incomeDate = current.incomeDate,
+                        originalAmount = amount,
+                        originalCurrency = fxPersistence.normalizedCurrency,
+                        sourceCategory = canonicalSourceCategory(
+                            appContext,
+                            current.sourceCategory
+                        ),
+                        note = current.note.trim(),
+                        declarationInclusion =
+                        if (current.declarationIncluded) {
+                            DeclarationInclusion.INCLUDED
+                        } else {
+                            DeclarationInclusion.EXCLUDED
+                        },
+                        gelEquivalent = fxPersistence.gelEquivalent,
+                        rateSource = fxPersistence.rateSource,
+                        manualFxOverride = fxPersistence.manualFxOverride,
+                        sourceStatementId = existing?.sourceStatementId,
+                        sourceTransactionFingerprint = existing?.sourceTransactionFingerprint,
+                        createdAtEpochMillis = existing?.createdAtEpochMillis ?: clock.millis(),
+                        updatedAtEpochMillis = clock.millis()
+                    )
                 )
-            upsertManualIncomeEntryUseCase(
-                IncomeEntry(
-                    id = current.entryId ?: 0L,
-                    sourceType = resolvedManualEntrySourceType(existing),
-                    incomeDate = current.incomeDate,
-                    originalAmount = amount,
-                    originalCurrency = fxPersistence.normalizedCurrency,
-                    sourceCategory = canonicalSourceCategory(
-                        appContext,
-                        current.sourceCategory
-                    ),
-                    note = current.note.trim(),
-                    declarationInclusion =
-                    if (current.declarationIncluded) {
-                        DeclarationInclusion.INCLUDED
-                    } else {
-                        DeclarationInclusion.EXCLUDED
-                    },
-                    gelEquivalent = fxPersistence.gelEquivalent,
-                    rateSource = fxPersistence.rateSource,
-                    manualFxOverride = fxPersistence.manualFxOverride,
-                    sourceStatementId = existing?.sourceStatementId,
-                    sourceTransactionFingerprint = existing?.sourceTransactionFingerprint,
-                    createdAtEpochMillis = existing?.createdAtEpochMillis ?: clock.millis(),
-                    updatedAtEpochMillis = clock.millis()
-                )
-            )
-            _uiState.value = _uiState.value.copy(isSaving = false)
-            _effects.emit(ManualEntryEffect.Saved)
+                _effects.emit(ManualEntryEffect.Saved)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                _uiState.value = _uiState.value.copy(errorMessage = appContext.getString(R.string.operation_failed))
+            } finally {
+                _uiState.value = _uiState.value.copy(isSaving = false)
+            }
         }
     }
 }

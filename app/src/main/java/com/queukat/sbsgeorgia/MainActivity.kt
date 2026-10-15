@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.domain.service.ClockDateSource
 import com.queukat.sbsgeorgia.startup.StartupTiming
 import com.queukat.sbsgeorgia.ui.SbsGeorgiaApp
 import com.queukat.sbsgeorgia.widget.HomeWidgetRefreshObserver
@@ -16,10 +16,18 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
+    lateinit var dateSource: ClockDateSource
+
+    @Inject
     lateinit var reminderBootstrapper: ReminderBootstrapper
 
     @Inject
     lateinit var homeWidgetRefreshObserver: HomeWidgetRefreshObserver
+
+    override fun onResume() {
+        super.onResume()
+        dateSource.refresh()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         StartupTiming.mark("MainActivity.onCreate.start")

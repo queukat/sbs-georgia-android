@@ -8,7 +8,10 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -21,6 +24,9 @@ constructor(
     private val actionPlanner: MonthlyDeclarationActionPlanner,
     private val completeMonthlyDeclarationUseCase: CompleteMonthlyDeclarationUseCase
 ) : ViewModel() {
+    private val completionFailed = MutableStateFlow(false)
+    private var isCompleting = false
+
     val uiState =
         observeAllSnapshotsUseCase()
             .map { snapshots ->
@@ -49,13 +55,15 @@ constructor(
                             )
                         }
                 )
-            }.stateIn(
+            }.combine(completionFailed) { state, failed -> state.copy(completionFailed = failed) }
+            .stateIn(
                 viewModelScope,
                 SharingStarted.WhileSubscribed(5_000),
                 MonthsUiState()
             )
 
     fun settleMonth(yearMonth: YearMonth) {
+        if (isCompleting) return
         val monthItem =
             uiState.value.sections
                 .flatMap(MonthsYearSection::items)
@@ -64,8 +72,18 @@ constructor(
         if (!monthItem.canQuickSettleMonth) return
         val snapshot = monthItem.snapshot
 
+        isCompleting = true
+        completionFailed.value = false
         viewModelScope.launch {
-            completeMonthlyDeclarationUseCase(snapshot)
+            try {
+                completeMonthlyDeclarationUseCase(snapshot)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                completionFailed.value = true
+            } finally {
+                isCompleting = false
+            }
         }
     }
 }

@@ -4,6 +4,8 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.core.net.toUri
+import com.queukat.sbsgeorgia.data.io.InputLimits
+import com.queukat.sbsgeorgia.data.io.readBytesLimited
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import com.tom_roush.pdfbox.pdmodel.PDDocument
 import com.tom_roush.pdfbox.text.PDFTextStripper
@@ -25,7 +27,7 @@ constructor(
         val uri = uriString.toUri()
         val fileName = resolveDisplayName(uri) ?: "statement.pdf"
         val bytes =
-            context.contentResolver.openInputStream(uri)?.use { input -> input.readBytes() }
+            context.contentResolver.openInputStream(uri)?.use { input -> input.readBytesLimited(InputLimits.PDF_BYTES) }
                 ?: error("Unable to open the selected PDF.")
         ImportedPdfDocument(
             fileName = fileName,

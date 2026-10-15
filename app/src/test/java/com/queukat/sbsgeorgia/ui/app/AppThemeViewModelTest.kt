@@ -93,4 +93,14 @@ private class FakeSettingsRepository : SettingsRepository {
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfig.value = config
     }
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig
+    ) {
+        upsertTaxpayerProfile(profile)
+        upsertStatusConfig(config)
+        upsertReminderConfig(reminders)
+    }
 }

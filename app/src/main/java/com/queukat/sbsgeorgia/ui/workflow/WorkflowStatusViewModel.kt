@@ -14,6 +14,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.math.BigDecimal
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -137,6 +138,7 @@ constructor(
 
     fun save() {
         val current = _uiState.value
+        if (current.isSaving) return
         val yearMonth = current.yearMonth ?: return
         val paymentAmount =
             current.paymentAmount.trim().takeIf { it.isNotBlank() }?.let {
@@ -182,20 +184,29 @@ constructor(
             else -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
-                    upsertMonthlyDeclarationRecordUseCase(
-                        MonthlyDeclarationRecord(
-                            yearMonth = yearMonth,
-                            workflowStatus = current.baseStatus,
-                            zeroDeclarationPrepared = current.zeroDeclarationPrepared,
-                            declarationFiledDate = current.declarationFiledDate,
-                            paymentSentDate = current.paymentSentDate,
-                            paymentCreditedDate = current.paymentCreditedDate,
-                            paymentAmountGel = paymentAmount,
-                            notes = current.notes.trim()
+                    try {
+                        upsertMonthlyDeclarationRecordUseCase(
+                            MonthlyDeclarationRecord(
+                                yearMonth = yearMonth,
+                                workflowStatus = current.baseStatus,
+                                zeroDeclarationPrepared = current.zeroDeclarationPrepared,
+                                declarationFiledDate = current.declarationFiledDate,
+                                paymentSentDate = current.paymentSentDate,
+                                paymentCreditedDate = current.paymentCreditedDate,
+                                paymentAmountGel = paymentAmount,
+                                notes = current.notes.trim()
+                            )
                         )
-                    )
-                    _uiState.value = _uiState.value.copy(isSaving = false)
-                    _effects.emit(WorkflowStatusEffect.Saved)
+                        _effects.emit(WorkflowStatusEffect.Saved)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = appContext.getString(R.string.operation_failed)
+                        )
+                    } finally {
+                        _uiState.value = _uiState.value.copy(isSaving = false)
+                    }
                 }
             }
         }

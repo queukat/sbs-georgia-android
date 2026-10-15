@@ -14,134 +14,65 @@ import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import java.time.Clock
+import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
 
 class ObserveCurrentYearSnapshotsUseCase
 @Inject
-constructor(
-    private val settingsRepository: SettingsRepository,
-    private val incomeRepository: IncomeRepository,
-    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val planner: MonthlyDeclarationPlanner,
-    private val clock: Clock
-) {
-    operator fun invoke(year: Int = YearMonth.now(clock).year): Flow<List<MonthlyDeclarationSnapshot>> = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        settingsRepository.observeStatusConfig(),
-        incomeRepository.observeAll(),
-        monthlyDeclarationRepository.observeAll()
-    ) {
-            profile: TaxpayerProfile?,
-            config: SmallBusinessStatusConfig?,
-            entries: List<IncomeEntry>,
-            records: List<MonthlyDeclarationRecord>
-        ->
-        planner.buildYearSnapshots(year, profile, config, entries, records)
+constructor(private val observeState: ObserveDeclarationStateUseCase) {
+    operator fun invoke(year: Int? = null): Flow<List<MonthlyDeclarationSnapshot>> = observeState.project { state ->
+        state.snapshots.filter { it.period.incomeMonth.year == (year ?: state.date.year) }
     }
 }
 
 class ObserveAllSnapshotsUseCase
 @Inject
-constructor(
-    private val settingsRepository: SettingsRepository,
-    private val incomeRepository: IncomeRepository,
-    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val planner: MonthlyDeclarationPlanner,
-    private val clock: Clock
-) {
-    operator fun invoke(): Flow<List<MonthlyDeclarationSnapshot>> = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        settingsRepository.observeStatusConfig(),
-        incomeRepository.observeAll(),
-        monthlyDeclarationRepository.observeAll()
-    ) {
-            profile: TaxpayerProfile?,
-            config: SmallBusinessStatusConfig?,
-            entries: List<IncomeEntry>,
-            records: List<MonthlyDeclarationRecord>
-        ->
-        collectRelevantSnapshotYears(
-            clock = clock,
-            config = config,
-            entries = entries,
-            records = records
-        ).flatMap { year ->
-            planner.buildYearSnapshots(year, profile, config, entries, records)
-        }
-    }
+constructor(private val observeState: ObserveDeclarationStateUseCase) {
+    operator fun invoke(): Flow<List<MonthlyDeclarationSnapshot>> = observeState.project { it.snapshots }
+
+    suspend fun current(): List<MonthlyDeclarationSnapshot> = observeState.current().snapshots
 }
 
 class ObserveMonthDetailUseCase
 @Inject
-constructor(
-    private val settingsRepository: SettingsRepository,
-    private val incomeRepository: IncomeRepository,
-    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val planner: MonthlyDeclarationPlanner
-) {
-    operator fun invoke(yearMonth: YearMonth): Flow<Pair<MonthlyDeclarationSnapshot?, List<IncomeEntry>>> = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        settingsRepository.observeStatusConfig(),
-        incomeRepository.observeAll(),
-        incomeRepository.observeByMonth(yearMonth),
-        monthlyDeclarationRepository.observeAll()
-    ) {
-            profile: TaxpayerProfile?,
-            config: SmallBusinessStatusConfig?,
-            allEntries: List<IncomeEntry>,
-            monthEntries: List<IncomeEntry>,
-            records: List<MonthlyDeclarationRecord>
-        ->
-        val snapshot =
-            planner
-                .buildYearSnapshots(
-                    year = yearMonth.year,
-                    profile = profile,
-                    config = config,
-                    entries = allEntries,
-                    records = records
-                ).firstOrNull { it.period.incomeMonth == yearMonth }
-        snapshot to
-            monthEntries.sortedWith(
-                compareByDescending<IncomeEntry> {
-                    it.incomeDate
-                }.thenByDescending { it.id }
-            )
-    }
+constructor(private val observeState: ObserveDeclarationStateUseCase) {
+    operator fun invoke(yearMonth: YearMonth): Flow<Pair<MonthlyDeclarationSnapshot?, List<IncomeEntry>>> =
+        observeState.project { state ->
+            val snapshot = state.snapshots.firstOrNull { it.period.incomeMonth == yearMonth }
+            // Total and visible rows must always describe the same database revision.
+            val entries = state.data.entries.filter { YearMonth.from(it.incomeDate) == yearMonth }
+                .sortedWith(compareByDescending<IncomeEntry> { it.incomeDate }.thenByDescending { it.id })
+            snapshot to entries
+        }
 }
 
 class ObserveDashboardSummaryUseCase
 @Inject
 constructor(
-    private val settingsRepository: SettingsRepository,
-    private val monthlyDeclarationRepository: MonthlyDeclarationRepository,
-    private val observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
+    private val observeState: ObserveDeclarationStateUseCase,
     private val planner: MonthlyDeclarationPlanner
 ) {
-    operator fun invoke(): Flow<DashboardSummary> = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        settingsRepository.observeStatusConfig(),
-        settingsRepository.observeReminderConfig(),
-        monthlyDeclarationRepository.observeAll(),
-        observeAllSnapshotsUseCase()
-    ) {
-            profile: TaxpayerProfile?,
-            config: SmallBusinessStatusConfig?,
-            reminders: ReminderConfig?,
-            records: List<MonthlyDeclarationRecord>,
-            snapshots: List<MonthlyDeclarationSnapshot>
-        ->
-        planner.buildDashboardSummary(profile, config, reminders, snapshots, records)
-    }
+    operator fun invoke(): Flow<DashboardSummary> = observeState.project(::buildSummary)
+
+    suspend fun current(): DashboardSummary = buildSummary(observeState.current())
+
+    private fun buildSummary(state: DeclarationState): DashboardSummary = planner.buildDashboardSummary(
+        state.data.profile,
+        state.data.config,
+        state.data.reminders,
+        state.snapshots,
+        state.data.records,
+        state.date
+    )
 }
 
 class UpsertManualIncomeEntryUseCase
 @Inject
 constructor(private val incomeRepository: IncomeRepository) {
     suspend operator fun invoke(entry: IncomeEntry): Long {
+        require(entry.originalAmount.signum() > 0) { "Income amount must be positive." }
         val normalizedCurrency = normalizeCurrencyCode(entry.originalCurrency)
         require(isIsoLikeCurrencyCode(normalizedCurrency)) {
             "Manual income entries must use a valid 3-letter currency code."
@@ -160,9 +91,7 @@ constructor(private val settingsRepository: SettingsRepository) {
         config: SmallBusinessStatusConfig,
         reminders: ReminderConfig
     ) {
-        settingsRepository.upsertTaxpayerProfile(profile)
-        settingsRepository.upsertStatusConfig(config)
-        settingsRepository.upsertReminderConfig(reminders)
+        settingsRepository.upsertSettings(profile, config, reminders)
     }
 }
 
@@ -180,9 +109,10 @@ internal fun collectRelevantSnapshotYears(
     clock: Clock,
     config: SmallBusinessStatusConfig?,
     entries: List<IncomeEntry>,
-    records: List<MonthlyDeclarationRecord>
+    records: List<MonthlyDeclarationRecord>,
+    referenceDate: LocalDate = LocalDate.now(clock)
 ): List<Int> = buildSet {
-    val currentYear = YearMonth.now(clock).year
+    val currentYear = referenceDate.year
     val earliestYear = listOfNotNull(
         config?.effectiveDate?.year,
         entries.minOfOrNull { it.incomeDate.year },
@@ -191,7 +121,7 @@ internal fun collectRelevantSnapshotYears(
     ).min()
     addAll(earliestYear..currentYear)
     // The previous due year must exist even when no December income has been imported.
-    add(YearMonth.now(clock).minusMonths(1).year)
+    add(YearMonth.from(referenceDate).minusMonths(1).year)
     entries.mapTo(this) { it.incomeDate.year }
     records.mapTo(this) { it.yearMonth.year }
 }.sortedDescending()

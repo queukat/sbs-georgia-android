@@ -4,8 +4,11 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Upsert
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.FxRateSource
+import java.math.BigDecimal
 import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 
@@ -111,6 +114,22 @@ interface IncomeEntryDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<IncomeEntryEntity>)
 
+    @Query(
+        """
+        UPDATE income_entry
+        SET gelEquivalent = :gelEquivalent, rateSource = :rateSource,
+            manualFxOverride = :manualOverride, updatedAtEpochMillis = :updatedAtEpochMillis
+        WHERE id = :id
+        """
+    )
+    suspend fun updateFx(
+        id: Long,
+        gelEquivalent: BigDecimal,
+        rateSource: FxRateSource,
+        manualOverride: Boolean,
+        updatedAtEpochMillis: Long
+    ): Int
+
     @Query("DELETE FROM income_entry WHERE id = :id")
     suspend fun deleteById(id: Long)
 
@@ -168,6 +187,15 @@ interface FxRateDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(entities: List<FxRateEntity>)
+
+    @Transaction
+    suspend fun saveManualOverride(entity: FxRateEntity): FxRateEntity {
+        require(entity.manualOverride)
+        val previous = getRate(entity.rateDate, entity.currencyCode, manualOverride = true)
+        val replacement = entity.copy(id = previous?.id ?: 0L)
+        val insertedId = upsert(replacement)
+        return replacement.copy(id = previous?.id ?: insertedId)
+    }
 
     @Query("DELETE FROM fx_rate")
     suspend fun clear()

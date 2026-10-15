@@ -4,8 +4,10 @@ import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
@@ -23,6 +25,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveRollingIncomeUseCase
 import com.queukat.sbsgeorgia.testing.MainDispatcherRule
+import com.queukat.sbsgeorgia.testing.declarationStateForTest
 import com.queukat.sbsgeorgia.ui.home.HomeViewModel
 import com.queukat.sbsgeorgia.ui.months.MonthsUiState
 import com.queukat.sbsgeorgia.ui.months.MonthsViewModel
@@ -36,6 +39,7 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -213,39 +217,38 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
     private val completeMonthlyDeclarationUseCase =
         CompleteMonthlyDeclarationUseCase(monthlyDeclarationRepository, clock)
 
-    fun homeViewModel(): HomeViewModel {
-        val observeAllSnapshotsUseCase =
-            ObserveAllSnapshotsUseCase(
+    fun homeViewModel(): HomeViewModel = HomeViewModel(
+        observeRollingIncomeUseCase = ObserveRollingIncomeUseCase(
+            incomeRepository,
+            kotlinx.coroutines.Dispatchers.Unconfined
+        ),
+        clock = clock,
+        observeDashboardSummaryUseCase =
+        ObserveDashboardSummaryUseCase(
+            observeState = declarationStateForTest(
+                settingsRepository,
+                incomeRepository,
+                monthlyDeclarationRepository,
+                planner,
+                clock
+            ),
+            planner = planner
+        ),
+        declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,
+        actionPlanner = actionPlanner,
+        completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
+    )
+
+    fun monthsViewModel(): MonthsViewModel = MonthsViewModel(
+        observeAllSnapshotsUseCase =
+        ObserveAllSnapshotsUseCase(
+            declarationStateForTest(
                 settingsRepository = settingsRepository,
                 incomeRepository = incomeRepository,
                 monthlyDeclarationRepository = monthlyDeclarationRepository,
                 planner = planner,
                 clock = clock
             )
-        return HomeViewModel(
-            observeRollingIncomeUseCase = ObserveRollingIncomeUseCase(incomeRepository),
-            clock = clock,
-            observeDashboardSummaryUseCase =
-            ObserveDashboardSummaryUseCase(
-                settingsRepository = settingsRepository,
-                monthlyDeclarationRepository = monthlyDeclarationRepository,
-                observeAllSnapshotsUseCase = observeAllSnapshotsUseCase,
-                planner = planner
-            ),
-            declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,
-            actionPlanner = actionPlanner,
-            completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
-        )
-    }
-
-    fun monthsViewModel(): MonthsViewModel = MonthsViewModel(
-        observeAllSnapshotsUseCase =
-        ObserveAllSnapshotsUseCase(
-            settingsRepository = settingsRepository,
-            incomeRepository = incomeRepository,
-            monthlyDeclarationRepository = monthlyDeclarationRepository,
-            planner = planner,
-            clock = clock
         ),
         actionPlanner = actionPlanner,
         completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
@@ -302,6 +305,16 @@ private class FakeSettingsRepository : SettingsRepository {
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfig.value = config
     }
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig
+    ) {
+        upsertTaxpayerProfile(profile)
+        upsertStatusConfig(config)
+        upsertReminderConfig(reminders)
+    }
 }
 
 private class FakeIncomeRepository(initialEntries: List<IncomeEntry>) : IncomeRepository {
@@ -326,6 +339,17 @@ private class FakeIncomeRepository(initialEntries: List<IncomeEntry>) : IncomeRe
     override suspend fun deleteById(id: Long) {
         entries.value = entries.value.filterNot { it.id == id }
     }
+
+    override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+        var applied = 0
+        updates.forEach { update ->
+            if (getById(update.expected.id) == update.expected) {
+                upsert(update.applyTo(update.expected))
+                applied += 1
+            }
+        }
+        return applied
+    }
 }
 
 private class FakeMonthlyDeclarationRepository : MonthlyDeclarationRepository {
@@ -343,6 +367,15 @@ private class FakeMonthlyDeclarationRepository : MonthlyDeclarationRepository {
         records.value =
             records.value.filterNot { it.yearMonth == record.yearMonth } +
             record
+    }
+
+    override suspend fun completeIfUnchanged(
+        expected: MonthlyDeclarationSnapshot,
+        completed: MonthlyDeclarationRecord
+    ): Boolean {
+        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
+        upsert(completed)
+        return true
     }
 }
 

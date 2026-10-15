@@ -12,6 +12,7 @@ import com.queukat.sbsgeorgia.domain.model.ConfirmImportedStatementResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.ImportedStatementImportInfo
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
+import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
@@ -139,6 +140,17 @@ class ImportStatementViewModelTest {
         override suspend fun upsert(entry: IncomeEntry): Long = entry.id
 
         override suspend fun deleteById(id: Long) = Unit
+
+        override suspend fun applyFxUpdates(updates: List<IncomeFxUpdate>): Int {
+            var applied = 0
+            updates.forEach { update ->
+                if (getById(update.expected.id) == update.expected) {
+                    upsert(update.applyTo(update.expected))
+                    applied += 1
+                }
+            }
+            return applied
+        }
     }
 
     private class EmptyFxRateRepository : FxRateRepository {

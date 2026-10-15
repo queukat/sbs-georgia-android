@@ -123,6 +123,9 @@ private fun BackupRestorePlan.validateIntegrity() {
         require(entity.originalAmount.signum() > 0) {
             "Backup income entry '${entity.id}' must have positive originalAmount."
         }
+        require(entity.gelEquivalent == null || entity.gelEquivalent.signum() >= 0) {
+            "Backup income entry '${entity.id}' has a negative GEL amount."
+        }
         require(isIsoLikeCurrencyCode(entity.originalCurrency)) {
             "Backup income entry '${entity.id}' must have valid originalCurrency."
         }
@@ -200,6 +203,9 @@ private fun BackupRestorePlan.validateIntegrity() {
             require(importedTransaction != null) {
                 "Backup income entry '${entity.id}' references missing sourceTransactionFingerprint " +
                     "'$sourceTransactionFingerprint'."
+            }
+            require(importedTransaction.finalInclusion == entity.declarationInclusion) {
+                "Backup income entry '${entity.id}' has a conflicting transaction inclusion."
             }
             require(importedTransaction.statementId == sourceStatementId) {
                 "Backup income entry '${entity.id}' has conflicting sourceStatementId/" +

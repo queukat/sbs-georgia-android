@@ -405,7 +405,7 @@ fun MonthDetailScreen(
                     }
                 }
             }
-            items(uiState.entries) { entry ->
+            items(uiState.entries, key = { it.id }) { entry ->
                 AppSection(title = formatAmount(entry.originalAmount, entry.originalCurrency)) {
                     KeyValueRow(
                         stringResource(R.string.month_detail_date),

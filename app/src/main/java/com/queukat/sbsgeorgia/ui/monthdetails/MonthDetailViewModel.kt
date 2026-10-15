@@ -9,7 +9,6 @@ import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
-import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
@@ -20,10 +19,12 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveMonthDetailUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ResolveMonthFxUseCase
 import com.queukat.sbsgeorgia.domain.usecase.UpsertMonthlyDeclarationRecordUseCase
 import com.queukat.sbsgeorgia.domain.usecase.buildDeclarationCopyBundle
+import com.queukat.sbsgeorgia.domain.usecase.loadMatchingFxRateDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -93,7 +94,7 @@ constructor(
                                 formConfig = sourceState.formConfig
                             ),
                             actionState = actionState,
-                            fxRateDetails = sourceState.entries.loadFxRateDetails(),
+                            fxRateDetails = loadMatchingFxRateDetails(sourceState.entries, fxRateRepository),
                             isFilingWindowOpen = actionState.filingWindowOpen
                         )
                     }
@@ -168,6 +169,8 @@ constructor(
             if (emitFeedback) {
                 val message =
                     when {
+                        result.skippedChangedEntryCount > 0 ->
+                            appContext.getString(R.string.fx_resolve_entries_changed)
                         result.resolvedEntryCount > 0 && result.unresolvedEntryCount == 0 ->
                             appContext.getString(
                                 R.string.fx_resolve_resolved_all,
@@ -188,26 +191,14 @@ constructor(
                     }
                 _effects.emit(MonthDetailEffect.Message(message))
             }
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            if (emitFeedback) _effects.emit(MonthDetailEffect.Message(appContext.getString(R.string.operation_failed)))
         } finally {
             isResolvingFx.value = false
         }
     }
-
-    private suspend fun List<IncomeEntry>.loadFxRateDetails() = mapNotNull { entry ->
-        if (
-            entry.gelEquivalent == null ||
-            normalizeCurrencyCode(entry.originalCurrency) == GEL_CURRENCY
-        ) {
-            return@mapNotNull null
-        }
-        val rate =
-            fxRateRepository.getRate(
-                rateDate = entry.incomeDate,
-                currencyCode = entry.originalCurrency,
-                manualOverride = entry.manualFxOverride
-            ) ?: return@mapNotNull null
-        entry.id to rate
-    }.toMap()
 
     private data class MonthDetailSourceState(
         val yearMonth: YearMonth,
@@ -216,8 +207,4 @@ constructor(
         val registrationId: String?,
         val formConfig: DeclarationFormConfig
     )
-
-    private companion object {
-        const val GEL_CURRENCY = "GEL"
-    }
 }

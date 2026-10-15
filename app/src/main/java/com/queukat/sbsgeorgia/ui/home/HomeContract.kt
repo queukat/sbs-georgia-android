@@ -9,7 +9,8 @@ import java.time.LocalDate
 data class HomeUiState(
     val summary: DashboardSummary? = null,
     val rollingIncome: RollingIncomeSummary? = null,
-    val duePeriodQuickAccess: HomeDuePeriodQuickAccess? = null
+    val duePeriodQuickAccess: HomeDuePeriodQuickAccess? = null,
+    val completionFailed: Boolean = false
 )
 
 data class HomeDuePeriodQuickAccess(

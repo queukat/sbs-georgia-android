@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
 import androidx.room.InvalidationTracker
 import com.queukat.sbsgeorgia.MainActivity
@@ -25,11 +26,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class DashboardOverviewWidgetProvider : BaseHomeWidgetProvider(WidgetKind.OVERVIEW)
 
@@ -68,6 +72,7 @@ constructor(
 ) {
     @Volatile
     private var started = false
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val observer =
         object : InvalidationTracker.Observer(
@@ -86,8 +91,19 @@ constructor(
         if (started) return
         synchronized(this) {
             if (started) return
-            database.invalidationTracker.addObserver(observer)
             started = true
+            scope.launch {
+                try {
+                    database.invalidationTracker.addObserver(observer)
+                    HomeWidgetUpdater.requestUpdateAll(context)
+                } catch (cancelled: CancellationException) {
+                    started = false
+                    throw cancelled
+                } catch (_: Exception) {
+                    started = false
+                    Log.w("HomeWidgets", "Widget observer could not start.")
+                }
+            }
         }
     }
 }
@@ -100,16 +116,36 @@ enum class WidgetKind {
 
 private object HomeWidgetUpdater {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val updates = Channel<Context>(Channel.CONFLATED)
+    private val renderMutex = Mutex()
+
+    init {
+        scope.launch {
+            for (context in updates) {
+                try {
+                    updateAll(context)
+                } catch (cancelled: CancellationException) {
+                    throw cancelled
+                } catch (_: Exception) {
+                    Log.w("HomeWidgets", "Widget refresh failed; the next update can retry.")
+                }
+            }
+        }
+    }
 
     fun requestUpdateAll(context: Context) {
-        launchUpdate {
-            updateAll(context.applicationContext)
-        }
+        updates.trySend(context.applicationContext)
     }
 
     fun launchUpdate(block: suspend () -> Unit) {
         scope.launch {
-            block()
+            try {
+                block()
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                Log.w("HomeWidgets", "Widget update failed.")
+            }
         }
     }
 
@@ -120,37 +156,40 @@ private object HomeWidgetUpdater {
         widgetKind: WidgetKind
     ) {
         if (appWidgetIds.isEmpty()) return
-
-        val summary = loadDashboardSummary(context)
-        appWidgetIds.forEach { appWidgetId ->
-            val remoteViews =
-                when (widgetKind) {
-                    WidgetKind.OVERVIEW -> buildOverviewRemoteViews(context, summary)
-                    WidgetKind.DUE_PERIOD -> buildDuePeriodRemoteViews(context, summary)
-                    WidgetKind.FOCUS -> buildFocusRemoteViews(context, summary)
-                }
-            appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
+        renderMutex.withLock {
+            render(context, appWidgetManager, appWidgetIds, widgetKind, loadDashboardSummary(context))
         }
     }
 
-    private suspend fun updateAll(context: Context) {
-        val appWidgetManager = AppWidgetManager.getInstance(context)
-        updateForProvider<DashboardOverviewWidgetProvider>(
-            context,
-            appWidgetManager,
-            WidgetKind.OVERVIEW
-        )
-        updateForProvider<DuePeriodWidgetProvider>(context, appWidgetManager, WidgetKind.DUE_PERIOD)
-        updateForProvider<FocusWidgetProvider>(context, appWidgetManager, WidgetKind.FOCUS)
+    private fun render(
+        context: Context,
+        manager: AppWidgetManager,
+        ids: IntArray,
+        kind: WidgetKind,
+        summary: DashboardSummary
+    ) {
+        val views = when (kind) {
+            WidgetKind.OVERVIEW -> buildOverviewRemoteViews(context, summary)
+            WidgetKind.DUE_PERIOD -> buildDuePeriodRemoteViews(context, summary)
+            WidgetKind.FOCUS -> buildFocusRemoteViews(context, summary)
+        }
+        ids.forEach { manager.updateAppWidget(it, views) }
     }
 
-    private suspend inline fun <reified T : AppWidgetProvider> updateForProvider(
-        context: Context,
-        appWidgetManager: AppWidgetManager,
-        widgetKind: WidgetKind
-    ) {
-        val appWidgetIds = appWidgetManager.getAppWidgetIds(ComponentName(context, T::class.java))
-        update(context, appWidgetManager, appWidgetIds, widgetKind)
+    private suspend fun updateAll(context: Context) {
+        renderMutex.withLock {
+            val manager = AppWidgetManager.getInstance(context)
+            val providers = listOf(
+                DashboardOverviewWidgetProvider::class.java to WidgetKind.OVERVIEW,
+                DuePeriodWidgetProvider::class.java to WidgetKind.DUE_PERIOD,
+                FocusWidgetProvider::class.java to WidgetKind.FOCUS
+            ).map { (provider, kind) ->
+                manager.getAppWidgetIds(ComponentName(context, provider)) to kind
+            }.filter { (ids, _) -> ids.isNotEmpty() }
+            if (providers.isEmpty()) return@withLock
+            val summary = loadDashboardSummary(context)
+            providers.forEach { (ids, kind) -> render(context, manager, ids, kind, summary) }
+        }
     }
 
     private suspend fun loadDashboardSummary(context: Context): DashboardSummary {
@@ -159,7 +198,7 @@ private object HomeWidgetUpdater {
                 context.applicationContext,
                 HomeWidgetEntryPoint::class.java
             )
-        return entryPoint.observeDashboardSummaryUseCase().invoke().first()
+        return entryPoint.observeDashboardSummaryUseCase().current()
     }
 
     private fun buildOverviewRemoteViews(context: Context, summary: DashboardSummary): RemoteViews =

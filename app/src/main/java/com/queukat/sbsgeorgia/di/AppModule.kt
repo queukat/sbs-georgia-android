@@ -22,6 +22,7 @@ import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.remote.NbgFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.repository.AppPreferencesRepositoryImpl
+import com.queukat.sbsgeorgia.data.repository.DeclarationDataRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.DeclarationFormConfigRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.FxRateRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.IncomeRepositoryImpl
@@ -29,12 +30,15 @@ import com.queukat.sbsgeorgia.data.repository.MonthlyDeclarationRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.SettingsRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.StatementImportRepositoryImpl
 import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
+import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
+import com.queukat.sbsgeorgia.domain.service.ClockDateSource
+import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.ReminderNotificationStrings
 import com.queukat.sbsgeorgia.worker.AndroidReminderNotificationStrings
 import dagger.Binds
@@ -52,6 +56,12 @@ import kotlinx.serialization.json.Json
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryBindingsModule {
+    @Binds
+    abstract fun bindDeclarationDataRepository(impl: DeclarationDataRepositoryImpl): DeclarationDataRepository
+
+    @Binds
+    abstract fun bindDateSource(impl: ClockDateSource): DateSource
+
     @Binds
     abstract fun bindStatementDocumentReader(impl: AndroidStatementDocumentReader): StatementDocumentReader
 
@@ -160,4 +170,8 @@ object AppModule {
     @Provides
     @IoDispatcher
     fun provideIoDispatcher(): CoroutineDispatcher = Dispatchers.IO
+
+    @Provides
+    @DefaultDispatcher
+    fun provideDefaultDispatcher(): CoroutineDispatcher = Dispatchers.Default
 }
