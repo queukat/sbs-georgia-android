@@ -115,26 +115,26 @@ class StatementImportUseCasesTest {
 
     @Test
     fun excludedIncomeCanBeReselectedWithoutAutoInclusion() = kotlinx.coroutines.test.runTest {
-            val fingerprint = TbcStatementParser()
-                .parse("statement.pdf", "statement", fixtureText("tbc_statement_v1_extracted.txt"))
-                .rows.first().transactionFingerprint
-            val repository = FakeStatementImportRepository(
-                existingTransactionFingerprints = mutableSetOf(fingerprint),
-                recoverableTransactionFingerprints = mutableSetOf(fingerprint)
-            )
-            val result = LoadStatementImportPreviewUseCase(
-                statementDocumentReader = FakeStatementDocumentReader(
-                    ImportedPdfDocument("statement.pdf", "new-statement", ByteArray(0))
-                ),
-                statementTextExtractor = FakeStatementTextExtractor(fixtureText("tbc_statement_v1_extracted.txt")),
-                tbcStatementParser = TbcStatementParser(),
-                statementImportRepository = repository
-            ).invoke("content://statement")
+        val fingerprint = TbcStatementParser()
+            .parse("statement.pdf", "statement", fixtureText("tbc_statement_v1_extracted.txt"))
+            .rows.first().transactionFingerprint
+        val repository = FakeStatementImportRepository(
+            existingTransactionFingerprints = mutableSetOf(fingerprint),
+            recoverableTransactionFingerprints = mutableSetOf(fingerprint)
+        )
+        val result = LoadStatementImportPreviewUseCase(
+            statementDocumentReader = FakeStatementDocumentReader(
+                ImportedPdfDocument("statement.pdf", "new-statement", ByteArray(0))
+            ),
+            statementTextExtractor = FakeStatementTextExtractor(fixtureText("tbc_statement_v1_extracted.txt")),
+            tbcStatementParser = TbcStatementParser(),
+            statementImportRepository = repository
+        ).invoke("content://statement")
 
-            val restored = requireNotNull(result.preview).rows.first()
-            assertTrue(!restored.duplicate)
-            assertEquals(DeclarationInclusion.EXCLUDED, restored.suggestedInclusion)
-        }
+        val restored = requireNotNull(result.preview).rows.first()
+        assertTrue(!restored.duplicate)
+        assertEquals(DeclarationInclusion.EXCLUDED, restored.suggestedInclusion)
+    }
 
     @Test
     fun loadPreviewMarksLaterInternalFingerprintCollisionsAsDuplicates() = kotlinx.coroutines.test.runTest {
