@@ -1,5 +1,7 @@
 package com.queukat.sbsgeorgia.testing
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationData
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
@@ -21,17 +23,23 @@ fun declarationStateForTest(
     incomeRepository: IncomeRepository,
     monthlyDeclarationRepository: MonthlyDeclarationRepository,
     planner: MonthlyDeclarationPlanner,
-    clock: Clock
+    clock: Clock,
+    declarationFormConfigRepository: DeclarationFormConfigRepository? = null
 ): ObserveDeclarationStateUseCase {
     val repository = object : DeclarationDataRepository {
         override fun observeData() = combine(
-            settingsRepository.observeTaxpayerProfile(),
+            combine(
+                settingsRepository.observeTaxpayerProfile(),
             settingsRepository.observeStatusConfig(),
             settingsRepository.observeReminderConfig(),
             incomeRepository.observeAll(),
             monthlyDeclarationRepository.observeAll()
-        ) { profile, config, reminders, entries, records ->
-            DeclarationData(profile, config, reminders, entries, records)
+            ) { profile, config, reminders, entries, records ->
+                DeclarationData(profile, config, reminders, entries, records)
+            },
+            declarationFormConfigRepository?.observeConfig() ?: flowOf(null)
+        ) { data, formConfig ->
+            data.copy(formConfig = formConfig ?: DeclarationFormConfig())
         }
 
         override suspend fun getData() = observeData().first()

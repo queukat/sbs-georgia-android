@@ -41,6 +41,7 @@ data class MonthDetailReadModel(
     val snapshot: MonthlyDeclarationSnapshot?,
     val entries: List<IncomeEntry>,
     val registrationId: String?,
+    val taxpayerName: String?,
     val formConfig: DeclarationFormConfig,
     val referenceDate: LocalDate
 )
@@ -57,6 +58,7 @@ constructor(private val observeState: ObserveDeclarationStateUseCase) {
             snapshot = snapshot,
             entries = entries,
             registrationId = state.data.profile?.registrationId,
+            taxpayerName = state.data.profile?.displayName,
             formConfig = state.data.formConfig,
             referenceDate = state.date
         )
@@ -111,9 +113,14 @@ constructor(private val settingsRepository: SettingsRepository) {
     suspend operator fun invoke(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig? = null
     ) {
-        settingsRepository.upsertSettings(profile, config, reminders)
+        if (formConfig == null) {
+            settingsRepository.upsertSettings(profile, config, reminders)
+        } else {
+            settingsRepository.upsertSettings(profile, config, reminders, formConfig)
+        }
     }
 }
 

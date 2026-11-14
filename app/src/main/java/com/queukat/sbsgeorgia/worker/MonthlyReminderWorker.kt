@@ -4,14 +4,10 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
-import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
+import com.queukat.sbsgeorgia.domain.usecase.ObserveDeclarationStateUseCase
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import java.time.Clock
-import java.time.LocalDate
-import kotlinx.coroutines.flow.first
 
 @HiltWorker
 class MonthlyReminderWorker
@@ -19,17 +15,13 @@ class MonthlyReminderWorker
 constructor(
     @Assisted appContext: Context,
     @Assisted workerParams: WorkerParameters,
-    private val settingsRepository: SettingsRepository,
-    private val observeAllSnapshotsUseCase: ObserveAllSnapshotsUseCase,
-    private val reminderPlanner: ReminderPlanner,
-    private val clock: Clock
+    private val observeDeclarationStateUseCase: ObserveDeclarationStateUseCase,
+    private val reminderPlanner: ReminderPlanner
 ) : CoroutineWorker(appContext, workerParams) {
     override suspend fun doWork(): Result {
-        val today = LocalDate.now(clock)
-        val reminderConfig =
-            settingsRepository.observeReminderConfig().first() ?: return Result.success()
-        val snapshots = observeAllSnapshotsUseCase.current()
-        val notifications = reminderPlanner.buildNotificationsForSnapshots(today, reminderConfig, snapshots)
+        val state = observeDeclarationStateUseCase.current()
+        val config = state.data.reminders ?: return Result.success()
+        val notifications = reminderPlanner.buildNotificationsForSnapshots(state.date, config, state.snapshots)
         notifications.forEach { notification ->
             ReminderNotifications.show(applicationContext, notification)
         }

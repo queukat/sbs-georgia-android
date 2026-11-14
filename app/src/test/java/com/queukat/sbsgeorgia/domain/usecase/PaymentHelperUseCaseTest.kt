@@ -51,20 +51,16 @@ class PaymentHelperUseCaseTest {
                     incomeRepository = incomeRepository,
                     monthlyDeclarationRepository = monthlyRepository,
                     planner = planner,
-                    clock = fixedClock
+                    clock = fixedClock,
+                    declarationFormConfigRepository =
+                    PaymentTestDeclarationFormConfigRepository(
+                        DeclarationFormConfig(
+                            monthlyIncomeField = DeclarationFormField.MONTHLY_POS_INCOME
+                        )
+                    )
                 )
             )
-        val useCase =
-            ObservePaymentHelperUseCase(
-                settingsRepository = settingsRepository,
-                declarationFormConfigRepository =
-                PaymentTestDeclarationFormConfigRepository(
-                    DeclarationFormConfig(
-                        monthlyIncomeField = DeclarationFormField.MONTHLY_POS_INCOME
-                    )
-                ),
-                observeMonthDetailUseCase = observeMonthDetail
-            )
+        val useCase = ObservePaymentHelperUseCase(observeMonthDetail)
 
         val data = useCase(month).first()
 

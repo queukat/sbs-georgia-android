@@ -1,14 +1,11 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
-import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
-import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
-import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import java.math.BigDecimal
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 
 data class PaymentHelperData(
     val incomeMonth: YearMonth,
@@ -23,36 +20,26 @@ data class PaymentHelperData(
 
 class ObservePaymentHelperUseCase
 @Inject
-constructor(
-    private val settingsRepository: SettingsRepository,
-    private val declarationFormConfigRepository: DeclarationFormConfigRepository,
-    private val observeMonthDetailUseCase: ObserveMonthDetailUseCase
-) {
-    operator fun invoke(yearMonth: YearMonth): Flow<PaymentHelperData> = combine(
-        settingsRepository.observeTaxpayerProfile(),
-        observeMonthDetailUseCase(yearMonth),
-        declarationFormConfigRepository.observeConfig()
-    ) { profile, monthDetail, savedFormConfig ->
-        val snapshot = monthDetail.first
-        val registrationId = profile?.registrationId
-        val comment = buildPaymentComment(registrationId, yearMonth)
-        val formConfig = savedFormConfig ?: DeclarationFormConfig()
-        PaymentHelperData(
-            incomeMonth = yearMonth,
-            registrationId = registrationId,
-            taxpayerName = profile?.displayName,
-            treasuryCode = TREASURY_CODE,
-            comment = comment,
-            estimatedTaxAmountGel =
-            snapshot?.estimatedTaxAmountGel ?: BigDecimal.ZERO.setScale(2),
-            snapshot = snapshot,
-            copyBundle =
-            buildDeclarationCopyBundle(
-                snapshot = snapshot,
+constructor(private val observeMonthDetailUseCase: ObserveMonthDetailUseCase) {
+    operator fun invoke(yearMonth: YearMonth): Flow<PaymentHelperData> =
+        observeMonthDetailUseCase.full(yearMonth).map { detail ->
+            val snapshot = detail.snapshot
+            val registrationId = detail.registrationId
+            PaymentHelperData(
+                incomeMonth = yearMonth,
                 registrationId = registrationId,
-                yearMonth = yearMonth,
-                formConfig = formConfig
+                taxpayerName = detail.taxpayerName,
+                treasuryCode = TREASURY_CODE,
+                comment = buildPaymentComment(registrationId, yearMonth),
+                estimatedTaxAmountGel = snapshot?.estimatedTaxAmountGel ?: BigDecimal.ZERO.setScale(2),
+                snapshot = snapshot,
+                copyBundle =
+                buildDeclarationCopyBundle(
+                    snapshot = snapshot,
+                    registrationId = registrationId,
+                    yearMonth = yearMonth,
+                    formConfig = detail.formConfig
+                )
             )
-        )
-    }
+        }
 }
