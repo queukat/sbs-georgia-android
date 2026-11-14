@@ -2,11 +2,35 @@
 import argparse
 import json
 import os
+import signal
+import time
+
+import requests
 from datetime import datetime, timezone
 from pathlib import Path
 
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
+
+
+def delete_edit_with_retries(session, edit_url):
+    """Best-effort recovery for transient Play API/network failures."""
+    for attempt in range(3):
+        try:
+            response = session.delete(edit_url, timeout=30)
+            # A retry may see 404 if the server applied the first DELETE.
+            if response.status_code == 404:
+                return
+            response.raise_for_status()
+            return
+        except requests.RequestException:
+            if attempt == 2:
+                raise
+            time.sleep(2 ** attempt)
+
+
+def cancel_on_sigterm(_signal, _frame):
+    raise KeyboardInterrupt("Interrupted; attempting to remove temporary Play API edit.")
 
 
 def main():
@@ -20,11 +44,13 @@ def main():
         scopes=["https://www.googleapis.com/auth/androidpublisher"],
     )
     session = AuthorizedSession(credentials)
+    signal.signal(signal.SIGTERM, cancel_on_sigterm)
     base = f"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{package}"
     response = session.post(f"{base}/edits", json={}, timeout=30)
     response.raise_for_status()
     edit = response.json()["id"]
     edit_url = f"{base}/edits/{edit}"
+    print("Temporary Play API edit:", edit)
     snapshot = {"package": package, "checkedAt": datetime.now(timezone.utc).isoformat()}
     try:
         for resource in ("tracks", "bundles", "apks", "listings"):
@@ -48,9 +74,10 @@ def main():
         print("Maximum uploaded versionCode:", max(codes, default=0))
         print("Snapshot:", args.output)
     finally:
-        response = session.delete(edit_url, timeout=30)
-        response.raise_for_status()
-        session.close()
+        try:
+            delete_edit_with_retries(session, edit_url)
+        finally:
+            session.close()
 
 
 if __name__ == "__main__":
