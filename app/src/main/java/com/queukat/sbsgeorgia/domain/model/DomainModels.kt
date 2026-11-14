@@ -111,11 +111,10 @@ data class SmallBusinessStatusConfig(
 )
 
 /** Shared setup gate for onboarding, declaration calculations, and backup restore. */
-fun isSetupComplete(profile: TaxpayerProfile?, config: SmallBusinessStatusConfig?): Boolean =
-    profile != null &&
-        config != null &&
-        profile.registrationId.isNotBlank() &&
-        profile.displayName.isNotBlank()
+fun isSetupComplete(profile: TaxpayerProfile?, config: SmallBusinessStatusConfig?): Boolean {
+    if (profile == null || config == null) return false
+    return profile.registrationId.isNotBlank() && profile.displayName.isNotBlank()
+}
 
 data class ReminderConfig(
     val declarationReminderDays: List<Int>,
