@@ -11,11 +11,7 @@ import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
-interface TextDocumentStore {
-    suspend fun writeText(uriString: String, content: String)
-
-    suspend fun readText(uriString: String): String
-}
+typealias TextDocumentStore = com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 
 @Singleton
 class AndroidTextDocumentStore

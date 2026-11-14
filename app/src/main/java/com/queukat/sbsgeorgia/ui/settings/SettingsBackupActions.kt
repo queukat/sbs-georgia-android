@@ -2,7 +2,7 @@ package com.queukat.sbsgeorgia.ui.settings
 
 import android.content.Context
 import com.queukat.sbsgeorgia.R
-import com.queukat.sbsgeorgia.data.export.TextDocumentStore
+import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportMonthlySummariesCsvUseCase

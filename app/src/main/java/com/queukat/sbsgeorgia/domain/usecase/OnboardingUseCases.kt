@@ -1,7 +1,7 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
-import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
-import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
+import com.queukat.sbsgeorgia.domain.repository.StatementDocumentReader
+import com.queukat.sbsgeorgia.domain.repository.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
