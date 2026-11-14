@@ -19,17 +19,16 @@ package selection, metadata layout and publication semantics.
 
 Run the shared matrix in GitHub Actions, not concurrently on the workstation:
 unit tests, debug assembly, Android-test compilation, lint, detekt and ktlint.
-For a release branch, push it and dispatch:
+The CI workflow runs on pushes to `main`. Inspect the run for the pushed commit:
 
 ```powershell
-gh workflow run android-ci.yml --ref <release-branch>
-gh run list --workflow android-ci.yml --branch <release-branch>
+gh run list --workflow android-ci.yml --branch main
 gh run view <run-id>
 ```
 
-Fix actual failures and rerun the relevant checks. Review the final diff once.
-The verified commit may be fast-forwarded to `main`; a PR is optional. Never stage
-all files blindly. The full local equivalent is documented in AGENTS.md for
+Fix actual failures directly on `main` and rerun the relevant checks. Review
+the final diff once; do not create release branches or PRs. Never stage all
+files blindly. The full local equivalent is documented in AGENTS.md for
 reproduction, not as an additional duplicate release gate.
 
 ## Screenshots

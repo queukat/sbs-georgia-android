@@ -24,3 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "sbs-georgia-android"
 include(":app")
+if (providers.gradleProperty("enableBaselineProfile").orNull == "true") {
+    include(":baselineprofile")
+}

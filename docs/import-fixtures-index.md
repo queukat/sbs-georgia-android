@@ -17,6 +17,7 @@ or private taxpayer documents.
 | `tbc_statement_v1_bilingual_headers_extracted.txt` | Bilingual headers and mixed-language hints. | `TbcStatementParserTest` |
 | `tbc_statement_v1_collapsed_bilingual_extracted.txt` | Realistic collapsed bilingual extraction from PdfBox. | `TbcStatementParserTest` |
 | `tbc_statement_business_gel_extracted.txt` | Anonymized business GEL statement: net card settlements, commission text, bank fees and fee-funding credits. | `TbcBusinessStatementParserTest` |
+| `tbc_statement_business_gel_october_extracted.txt` | Anonymized October business GEL statement with additional settlement and fee variations. | `TbcBusinessStatementParserTest` |
 
 Related production code:
 
