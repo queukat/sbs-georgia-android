@@ -165,14 +165,6 @@ constructor(
     private val database: SbsGeorgiaDatabase,
     private val planner: MonthlyDeclarationPlanner
 ) : MonthlyDeclarationRepository {
-    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> =
-        monthlyDeclarationRecordDao.observeAll().map { entities ->
-            entities.map(MonthlyDeclarationRecordEntity::toDomain)
-        }
-
-    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> =
-        monthlyDeclarationRecordDao.observeByPeriod(yearMonth.toString()).map { it?.toDomain() }
-
     override suspend fun upsert(record: MonthlyDeclarationRecord) {
         monthlyDeclarationRecordDao.upsert(record.toEntity())
     }

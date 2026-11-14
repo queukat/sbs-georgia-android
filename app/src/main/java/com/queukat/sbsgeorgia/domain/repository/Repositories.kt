@@ -67,10 +67,6 @@ interface IncomeRepository {
 }
 
 interface MonthlyDeclarationRepository {
-    fun observeAll(): Flow<List<MonthlyDeclarationRecord>>
-
-    fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?>
-
     suspend fun upsert(record: MonthlyDeclarationRecord)
 
     /** Validate the financial snapshot and persist completion in one transaction. */

@@ -132,8 +132,6 @@ private class IncomeStore(initial: List<IncomeEntry> = emptyList()) : IncomeRepo
 }
 private class RecordStore : MonthlyDeclarationRepository {
     val state = MutableStateFlow<List<MonthlyDeclarationRecord>>(emptyList())
-    override fun observeAll() = state
-    override fun observeByMonth(yearMonth: YearMonth) = state.map { it.find { r -> r.yearMonth == yearMonth } }
     override suspend fun upsert(record: MonthlyDeclarationRecord) {
         state.value =
             state.value.filterNot { it.yearMonth == record.yearMonth } + record
@@ -143,7 +141,7 @@ private class RecordStore : MonthlyDeclarationRepository {
         expected: MonthlyDeclarationSnapshot,
         completed: MonthlyDeclarationRecord
     ): Boolean {
-        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
+        if (state.value.firstOrNull { it.yearMonth == completed.yearMonth } != expected.record) return false
         upsert(completed)
         return true
     }
@@ -523,7 +521,7 @@ private suspend fun CoreCheckRunner.checkCompletion() {
         val i = IncomeStore(listOf(entry("2026-12-01", "400"), entry("2027-01-01", "25", id = 2)))
         val r = RecordStore()
         val settings = Settings()
-        val s = ObserveDashboardSummaryUseCase(declarationStateForTest(settings, i, r, p, c), p)().first()
+        val s = ObserveDashboardSummaryUseCase(declarationStateForTest(settings, i, r.state, p, c), p)().first()
         check(
             s.currentDuePeriod?.period?.incomeMonth == YearMonth.of(2026, 12)
         )

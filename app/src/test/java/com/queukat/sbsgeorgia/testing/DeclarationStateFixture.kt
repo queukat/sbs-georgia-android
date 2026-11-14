@@ -1,11 +1,11 @@
 package com.queukat.sbsgeorgia.testing
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.repository.DeclarationData
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
-import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
@@ -13,6 +13,7 @@ import com.queukat.sbsgeorgia.domain.usecase.ObserveDeclarationStateUseCase
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
@@ -21,7 +22,7 @@ import kotlinx.coroutines.flow.flowOf
 fun declarationStateForTest(
     settingsRepository: SettingsRepository,
     incomeRepository: IncomeRepository,
-    monthlyDeclarationRepository: MonthlyDeclarationRepository,
+    monthlyRecords: Flow<List<MonthlyDeclarationRecord>>,
     planner: MonthlyDeclarationPlanner,
     clock: Clock,
     declarationFormConfigRepository: DeclarationFormConfigRepository? = null
@@ -33,7 +34,7 @@ fun declarationStateForTest(
                 settingsRepository.observeStatusConfig(),
                 settingsRepository.observeReminderConfig(),
                 incomeRepository.observeAll(),
-                monthlyDeclarationRepository.observeAll()
+                monthlyRecords
             ) { profile, config, reminders, entries, records ->
                 DeclarationData(profile, config, reminders, entries, records)
             },

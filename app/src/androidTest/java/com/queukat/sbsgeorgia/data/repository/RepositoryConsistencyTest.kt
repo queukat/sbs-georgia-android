@@ -32,7 +32,6 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -243,7 +242,11 @@ class RepositoryConsistencyTest {
         )
         val result = runCatching { CompleteMonthlyDeclarationUseCase(monthly, clock)(snapshot) }
         assertTrue(result.exceptionOrNull() is IllegalStateException)
-        assertNull(monthly.observeByMonth(YearMonth.of(2026, 3)).first())
+        assertNull(
+            database.monthlyDeclarationRecordDao().getAll().firstOrNull {
+                it.year == 2026 && it.month == 3
+            }
+        )
     }
 
     @Test
@@ -259,6 +262,10 @@ class RepositoryConsistencyTest {
             before.records
         ).first { it.period.incomeMonth == YearMonth.of(2026, 3) }
         CompleteMonthlyDeclarationUseCase(monthly, clock)(snapshot)
-        assertNotNull(monthly.observeByMonth(YearMonth.of(2026, 3)).first()?.declarationFiledDate)
+        assertNotNull(
+            database.monthlyDeclarationRecordDao().getAll().firstOrNull {
+                it.year == 2026 && it.month == 3
+            }?.declarationFiledDate
+        )
     }
 }

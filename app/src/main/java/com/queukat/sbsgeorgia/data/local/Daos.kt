@@ -128,14 +128,8 @@ interface IncomeEntryDao {
 
 @Dao
 interface MonthlyDeclarationRecordDao {
-    @Query("SELECT * FROM monthly_declaration_record ORDER BY year DESC, month DESC")
-    fun observeAll(): Flow<List<MonthlyDeclarationRecordEntity>>
-
     @Query("SELECT * FROM monthly_declaration_record ORDER BY year ASC, month ASC")
     suspend fun getAll(): List<MonthlyDeclarationRecordEntity>
-
-    @Query("SELECT * FROM monthly_declaration_record WHERE periodKey = :periodKey LIMIT 1")
-    fun observeByPeriod(periodKey: String): Flow<MonthlyDeclarationRecordEntity?>
 
     @Upsert
     suspend fun upsert(entity: MonthlyDeclarationRecordEntity)

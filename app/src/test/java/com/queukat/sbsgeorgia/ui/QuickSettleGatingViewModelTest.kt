@@ -220,7 +220,7 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
             observeState = declarationStateForTest(
                 settingsRepository,
                 incomeRepository,
-                monthlyDeclarationRepository,
+                monthlyDeclarationRepository.records,
                 planner,
                 clock
             ),
@@ -236,7 +236,7 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
             declarationStateForTest(
                 settingsRepository = settingsRepository,
                 incomeRepository = incomeRepository,
-                monthlyDeclarationRepository = monthlyDeclarationRepository,
+                monthlyRecords = monthlyDeclarationRepository.records,
                 planner = planner,
                 clock = clock
             )
@@ -331,14 +331,8 @@ private class FakeIncomeRepository(initialEntries: List<IncomeEntry>) : IncomeRe
 }
 
 private class FakeMonthlyDeclarationRepository : MonthlyDeclarationRepository {
-    private val records = MutableStateFlow<List<MonthlyDeclarationRecord>>(emptyList())
+    val records = MutableStateFlow<List<MonthlyDeclarationRecord>>(emptyList())
     val savedRecords = mutableListOf<MonthlyDeclarationRecord>()
-
-    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = records
-
-    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> = records.map { allRecords ->
-        allRecords.firstOrNull { it.yearMonth == yearMonth }
-    }
 
     override suspend fun upsert(record: MonthlyDeclarationRecord) {
         savedRecords += record
@@ -351,7 +345,7 @@ private class FakeMonthlyDeclarationRepository : MonthlyDeclarationRepository {
         expected: MonthlyDeclarationSnapshot,
         completed: MonthlyDeclarationRecord
     ): Boolean {
-        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
+        if (records.value.firstOrNull { it.yearMonth == completed.yearMonth } != expected.record) return false
         upsert(completed)
         return true
     }

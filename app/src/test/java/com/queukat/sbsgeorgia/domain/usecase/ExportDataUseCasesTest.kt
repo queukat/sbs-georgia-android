@@ -16,7 +16,6 @@ import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
-import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.testing.declarationStateForTest
@@ -123,14 +122,12 @@ class ExportDataUseCasesTest {
                     )
                 )
             )
-        val recordRepository =
-            FakeExportMonthlyDeclarationRepository(
-                listOf(
-                    MonthlyDeclarationRecord(
-                        yearMonth = YearMonth.of(2026, 2),
-                        workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
-                        zeroDeclarationPrepared = false
-                    )
+        val records =
+            listOf(
+                MonthlyDeclarationRecord(
+                    yearMonth = YearMonth.of(2026, 2),
+                    workflowStatus = MonthlyWorkflowStatus.READY_TO_FILE,
+                    zeroDeclarationPrepared = false
                 )
             )
 
@@ -139,7 +136,7 @@ class ExportDataUseCasesTest {
                 declarationStateForTest(
                     settingsRepository = settingsRepository,
                     incomeRepository = incomeRepository,
-                    monthlyDeclarationRepository = recordRepository,
+                    monthlyRecords = flowOf(records),
                     planner =
                     MonthlyDeclarationPlanner(
                         fixedClock,
@@ -302,21 +299,3 @@ private class FakeExportIncomeRepository(entries: List<IncomeEntry>) : IncomeRep
     }
 }
 
-private class FakeExportMonthlyDeclarationRepository(records: List<MonthlyDeclarationRecord>) :
-    MonthlyDeclarationRepository {
-    private val state = MutableStateFlow(records)
-
-    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = state
-
-    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> =
-        flowOf(state.value.firstOrNull { it.yearMonth == yearMonth })
-
-    override suspend fun upsert(record: MonthlyDeclarationRecord) {
-        state.value = state.value.filterNot { it.yearMonth == record.yearMonth } + record
-    }
-
-    override suspend fun completeIfUnchanged(
-        expected: MonthlyDeclarationSnapshot,
-        completed: MonthlyDeclarationRecord
-    ): Boolean = error("Export must not complete a declaration")
-}

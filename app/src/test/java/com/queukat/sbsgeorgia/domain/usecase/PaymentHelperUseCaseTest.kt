@@ -7,14 +7,11 @@ import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.IncomeFxUpdate
 import com.queukat.sbsgeorgia.domain.model.IncomeSourceType
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
-import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.GeorgiaTaxBusinessCalendar
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
@@ -38,7 +35,6 @@ class PaymentHelperUseCaseTest {
         val month = YearMonth.of(2026, 3)
         val settingsRepository = PaymentTestSettingsRepository()
         val incomeRepository = PaymentTestIncomeRepository(month)
-        val monthlyRepository = PaymentTestMonthlyRepository()
         val planner =
             MonthlyDeclarationPlanner(
                 clock = fixedClock,
@@ -49,7 +45,7 @@ class PaymentHelperUseCaseTest {
                 declarationStateForTest(
                     settingsRepository = settingsRepository,
                     incomeRepository = incomeRepository,
-                    monthlyDeclarationRepository = monthlyRepository,
+                    monthlyRecords = flowOf(emptyList()),
                     planner = planner,
                     clock = fixedClock,
                     declarationFormConfigRepository =
@@ -154,19 +150,3 @@ private class PaymentTestIncomeRepository(month: YearMonth) : IncomeRepository {
     }
 }
 
-private class PaymentTestMonthlyRepository : MonthlyDeclarationRepository {
-    override fun observeAll(): Flow<List<MonthlyDeclarationRecord>> = flowOf(emptyList())
-
-    override fun observeByMonth(yearMonth: YearMonth): Flow<MonthlyDeclarationRecord?> = flowOf(null)
-
-    override suspend fun upsert(record: MonthlyDeclarationRecord) = Unit
-
-    override suspend fun completeIfUnchanged(
-        expected: MonthlyDeclarationSnapshot,
-        completed: MonthlyDeclarationRecord
-    ): Boolean {
-        if (observeByMonth(completed.yearMonth).first() != expected.record) return false
-        upsert(completed)
-        return true
-    }
-}
