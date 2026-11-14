@@ -64,6 +64,9 @@ constructor(
         val existingFingerprints = statementImportRepository.existingTransactionFingerprints(
             preview.rows.mapTo(mutableSetOf(), ImportedStatementPreviewRow::transactionFingerprint)
         )
+        val recoverableFingerprints = statementImportRepository.recoverableTransactionFingerprints(
+            preview.rows.mapTo(mutableSetOf(), ImportedStatementPreviewRow::transactionFingerprint)
+        )
         val previewDuplicateFingerprints =
             preview.rows
                 .groupingBy(ImportedStatementPreviewRow::transactionFingerprint)
@@ -77,7 +80,13 @@ constructor(
                 val duplicateInsidePreview =
                     row.transactionFingerprint in previewDuplicateFingerprints &&
                         !seenFingerprints.add(row.transactionFingerprint)
-                row.copy(duplicate = alreadyImported || duplicateInsidePreview)
+                val canRestore = row.transactionFingerprint in recoverableFingerprints
+                row.copy(
+                    duplicate = (alreadyImported && !canRestore) || duplicateInsidePreview,
+                    // Previously excluded rows remain excluded until a deliberate user choice.
+                    suggestedInclusion =
+                    if (canRestore) DeclarationInclusion.EXCLUDED else row.suggestedInclusion
+                )
             }
 
         return LoadImportPreviewResult(

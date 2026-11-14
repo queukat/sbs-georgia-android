@@ -117,6 +117,12 @@ interface StatementImportRepository {
     suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> =
         fingerprints.filter { hasTransactionFingerprint(it) }.toSet()
 
+    /**
+     * Previously excluded bank transactions without a live income entry can be
+     * manually included again. This is never an automatic income re-import.
+     */
+    suspend fun recoverableTransactionFingerprints(fingerprints: Set<String>): Set<String> = emptySet()
+
     suspend fun confirmImport(
         sourceFileName: String,
         sourceFingerprint: String,

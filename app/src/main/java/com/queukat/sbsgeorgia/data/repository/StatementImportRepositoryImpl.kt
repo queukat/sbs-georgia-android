@@ -52,6 +52,12 @@ constructor(
         }
     }
 
+    override suspend fun recoverableTransactionFingerprints(fingerprints: Set<String>): Set<String> = buildSet {
+        fingerprints.toList().chunked(400).forEach { batch ->
+            addAll(importedTransactionDao.recoverableFingerprints(batch))
+        }
+    }
+
     override suspend fun confirmImport(
         sourceFileName: String,
         sourceFingerprint: String,
@@ -68,66 +74,64 @@ constructor(
                     )
                 )
 
-        // Preview can be stale by the time confirmation owns the transaction.
-        val existing = existingTransactionFingerprints(rows.map { it.transactionFingerprint }.toSet())
-        val nonPreviewDuplicates = rows.filterNot { it.duplicate || it.transactionFingerprint in existing }
-        val insertResults =
-            importedTransactionDao.insertAll(
-                nonPreviewDuplicates.map { row ->
-                    ImportedTransactionEntity(
-                        statementId = statementId,
-                        transactionFingerprint = row.transactionFingerprint,
-                        incomeDate = row.incomeDate,
-                        description = row.description,
-                        additionalInformation = row.additionalInformation,
-                        paidOut = row.paidOut?.amount,
-                        paidIn = row.paidIn?.amount,
-                        balance = row.balance?.amount,
-                        suggestedInclusion = row.suggestedInclusion,
-                        finalInclusion = row.finalInclusion
-                    )
-                }
-            )
+        // Re-evaluate all duplicate guards inside the write transaction: the
+        // user's preview may be stale or another import may have completed.
+        val uniqueRows = rows.filterNot { it.duplicate }
+            .distinctBy { it.transactionFingerprint }
+        val fingerprints = uniqueRows.mapTo(mutableSetOf()) { it.transactionFingerprint }
+        val existing = existingTransactionFingerprints(fingerprints)
+        val recoverable = recoverableTransactionFingerprints(fingerprints)
+        val newRows = uniqueRows.filterNot { it.transactionFingerprint in existing }
+        val restoring = uniqueRows.filter {
+            it.transactionFingerprint in recoverable &&
+                it.finalInclusion == DeclarationInclusion.INCLUDED
+        }
+        val insertResults = importedTransactionDao.insertAll(
+            newRows.map { row ->
+                ImportedTransactionEntity(
+                    statementId = statementId,
+                    transactionFingerprint = row.transactionFingerprint,
+                    incomeDate = row.incomeDate,
+                    description = row.description,
+                    additionalInformation = row.additionalInformation,
+                    paidOut = row.paidOut?.amount,
+                    paidIn = row.paidIn?.amount,
+                    balance = row.balance?.amount,
+                    suggestedInclusion = row.suggestedInclusion,
+                    finalInclusion = row.finalInclusion
+                )
+            }
+        )
 
         var storedTransactionCount = 0
         var importedIncomeCount = 0
-        var skippedDuplicateCount = rows.size - nonPreviewDuplicates.size
+        var skippedDuplicateCount = rows.size - newRows.size - restoring.size
         var excludedCount = 0
 
-        nonPreviewDuplicates.zip(insertResults).forEach { (row, insertId) ->
-            if (insertId == -1L) {
+        newRows.zip(insertResults).forEach { (row, insertedId) ->
+            if (insertedId == -1L) {
                 skippedDuplicateCount += 1
                 return@forEach
             }
-
             storedTransactionCount += 1
             if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
-                val incomeDate =
-                    requireNotNull(row.incomeDate) {
-                        "Included imported income rows must have an income date."
-                    }
-                incomeEntryDao.upsert(
-                    IncomeEntryEntity(
-                        sourceType = IncomeSourceType.IMPORTED_STATEMENT,
-                        incomeDate = incomeDate,
-                        originalAmount = row.amount,
-                        originalCurrency = normalizeCurrencyCode(row.currency),
-                        sourceCategory = row.sourceCategory.trim(),
-                        note = buildNote(row.description, row.additionalInformation),
-                        declarationInclusion = DeclarationInclusion.INCLUDED,
-                        gelEquivalent = row.amount.takeIf { normalizeCurrencyCode(row.currency) == "GEL" },
-                        rateSource = FxRateSource.NONE,
-                        manualFxOverride = false,
-                        sourceStatementId = statementId,
-                        sourceTransactionFingerprint = row.transactionFingerprint,
-                        createdAtEpochMillis = importedAtEpochMillis,
-                        updatedAtEpochMillis = importedAtEpochMillis
-                    )
-                )
+                insertIncomeEntry(row, statementId, importedAtEpochMillis)
                 importedIncomeCount += 1
             } else {
                 excludedCount += 1
             }
+        }
+
+        restoring.forEach { row ->
+            val previous = requireNotNull(importedTransactionDao.getByFingerprint(row.transactionFingerprint))
+            val incomeDate = requireNotNull(row.incomeDate) {
+                "Restored imported income rows must have an income date."
+            }
+            check(importedTransactionDao.restoreIncludedByFingerprint(row.transactionFingerprint, incomeDate) == 1)
+            // Keep the original statement link; a re-imported overlapping PDF
+            // may have a different source fingerprint and therefore statementId.
+            insertIncomeEntry(row, previous.statementId, importedAtEpochMillis)
+            importedIncomeCount += 1
         }
 
         ConfirmImportedStatementResult(
@@ -135,6 +139,34 @@ constructor(
             storedTransactionCount = storedTransactionCount,
             skippedDuplicateCount = skippedDuplicateCount,
             excludedCount = excludedCount
+        )
+    }
+
+    private suspend fun insertIncomeEntry(
+        row: ApprovedImportedStatementRow,
+        statementId: Long,
+        importedAtEpochMillis: Long
+    ) {
+        val incomeDate = requireNotNull(row.incomeDate) {
+            "Included imported income rows must have an income date."
+        }
+        incomeEntryDao.upsert(
+            IncomeEntryEntity(
+                sourceType = IncomeSourceType.IMPORTED_STATEMENT,
+                incomeDate = incomeDate,
+                originalAmount = row.amount,
+                originalCurrency = normalizeCurrencyCode(row.currency),
+                sourceCategory = row.sourceCategory.trim(),
+                note = buildNote(row.description, row.additionalInformation),
+                declarationInclusion = DeclarationInclusion.INCLUDED,
+                gelEquivalent = row.amount.takeIf { normalizeCurrencyCode(row.currency) == "GEL" },
+                rateSource = FxRateSource.NONE,
+                manualFxOverride = false,
+                sourceStatementId = statementId,
+                sourceTransactionFingerprint = row.transactionFingerprint,
+                createdAtEpochMillis = importedAtEpochMillis,
+                updatedAtEpochMillis = importedAtEpochMillis
+            )
         )
     }
 

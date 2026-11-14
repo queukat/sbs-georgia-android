@@ -249,6 +249,31 @@ interface ImportedTransactionDao {
     @Query("SELECT transactionFingerprint FROM imported_transaction WHERE transactionFingerprint IN (:fingerprints)")
     suspend fun existingFingerprints(fingerprints: List<String>): List<String>
 
+    @Query("SELECT * FROM imported_transaction WHERE transactionFingerprint = :fingerprint LIMIT 1")
+    suspend fun getByFingerprint(fingerprint: String): ImportedTransactionEntity?
+
+    @Query(
+        """
+        SELECT transactionFingerprint FROM imported_transaction
+        WHERE transactionFingerprint IN (:fingerprints)
+            AND finalInclusion = 'excluded'
+            AND NOT EXISTS (
+                SELECT 1 FROM income_entry
+                WHERE income_entry.sourceTransactionFingerprint = imported_transaction.transactionFingerprint
+            )
+        """
+    )
+    suspend fun recoverableFingerprints(fingerprints: List<String>): List<String>
+
+    @Query(
+        """
+        UPDATE imported_transaction
+        SET finalInclusion = 'included', incomeDate = :incomeDate
+        WHERE transactionFingerprint = :fingerprint AND finalInclusion = 'excluded'
+        """
+    )
+    suspend fun restoreIncludedByFingerprint(fingerprint: String, incomeDate: LocalDate): Int
+
     @Query(
         """
         UPDATE imported_transaction
