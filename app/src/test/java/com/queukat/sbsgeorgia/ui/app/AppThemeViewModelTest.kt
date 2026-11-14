@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.app
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -82,14 +83,6 @@ private class FakeSettingsRepository : SettingsRepository {
 
     override fun observeReminderConfig(): Flow<ReminderConfig?> = reminderConfig
 
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
-        taxpayerProfile.value = profile
-    }
-
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) {
-        statusConfig.value = config
-    }
-
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfig.value = config
     }
@@ -97,10 +90,11 @@ private class FakeSettingsRepository : SettingsRepository {
     override suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
-        upsertTaxpayerProfile(profile)
-        upsertStatusConfig(config)
+        taxpayerProfile.value = profile
+        statusConfig.value = config
         upsertReminderConfig(reminders)
     }
 }

@@ -5,6 +5,7 @@ import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmImportedStatementResult
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRate
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
@@ -154,12 +155,6 @@ private class Settings(c: SmallBusinessStatusConfig = config) : SettingsReposito
     override fun observeTaxpayerProfile() = p
     override fun observeStatusConfig() = status
     override fun observeReminderConfig() = r
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
-        p.value = profile
-    }
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) {
-        status.value = config
-    }
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         r.value = config
     }
@@ -167,10 +162,11 @@ private class Settings(c: SmallBusinessStatusConfig = config) : SettingsReposito
     override suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
-        upsertTaxpayerProfile(profile)
-        upsertStatusConfig(config)
+        p.value = profile
+        status.value = config
         upsertReminderConfig(reminders)
     }
 }

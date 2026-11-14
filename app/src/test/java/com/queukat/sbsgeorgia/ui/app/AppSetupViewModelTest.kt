@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.ui.app
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
@@ -14,6 +15,7 @@ import java.time.LocalTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -86,17 +88,16 @@ class AppSetupViewModelTest {
             preferencesRepository.quickStartGuideState.value
         )
 
-        settingsRepository.upsertTaxpayerProfile(
+        settingsRepository.upsertSettings(
             TaxpayerProfile(
                 registrationId = "123456789",
                 displayName = "Test Entrepreneur"
-            )
-        )
-        settingsRepository.upsertStatusConfig(
+            ),
             SmallBusinessStatusConfig(
                 effectiveDate = LocalDate.of(2026, 1, 1),
                 defaultTaxRatePercent = BigDecimal("1.0")
-            )
+            ),
+            requireNotNull(settingsRepository.observeReminderConfig().first())
         )
         advanceUntilIdle()
 
@@ -184,14 +185,6 @@ private class SetupFakeSettingsRepository(
 
     override fun observeReminderConfig(): Flow<ReminderConfig?> = reminderConfig
 
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
-        taxpayerProfile.value = profile
-    }
-
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) {
-        statusConfig.value = config
-    }
-
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfig.value = config
     }
@@ -199,10 +192,11 @@ private class SetupFakeSettingsRepository(
     override suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
-        upsertTaxpayerProfile(profile)
-        upsertStatusConfig(config)
+        taxpayerProfile.value = profile
+        statusConfig.value = config
         upsertReminderConfig(reminders)
     }
 }

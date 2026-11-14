@@ -33,23 +33,16 @@ interface SettingsRepository {
 
     fun observeReminderConfig(): Flow<ReminderConfig?>
 
-    suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile)
-
-    suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig)
-
     suspend fun upsertReminderConfig(config: ReminderConfig)
 
-    suspend fun upsertSettings(profile: TaxpayerProfile, config: SmallBusinessStatusConfig, reminders: ReminderConfig)
-
-    /** Full settings write must include the copy-field config in the same Room transaction. */
+    /** Persist profile, status, reminders and optional copy fields atomically. */
     suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
         reminders: ReminderConfig,
-        formConfig: DeclarationFormConfig
-    ) {
-        error("Atomic declaration form settings are unsupported by this repository.")
-    }
+        formConfig: DeclarationFormConfig? = null
+    )
+
 }
 
 interface DeclarationFormConfigRepository {

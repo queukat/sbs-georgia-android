@@ -56,32 +56,11 @@ constructor(
         it?.toDomain()
     }
 
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
-        taxpayerProfileDao.upsert(profile.toEntity())
-    }
-
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) {
-        statusConfigDao.upsert(config.toEntity())
-    }
-
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderConfigDao.upsert(config.toEntity())
     }
 
     override suspend fun upsertSettings(
-        profile: TaxpayerProfile,
-        config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
-    ) = writeSettings(profile, config, reminders, null)
-
-    override suspend fun upsertSettings(
-        profile: TaxpayerProfile,
-        config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig,
-        formConfig: DeclarationFormConfig
-    ) = writeSettings(profile, config, reminders, formConfig)
-
-    private suspend fun writeSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
         reminders: ReminderConfig,
@@ -94,6 +73,7 @@ constructor(
             formConfig?.let { declarationFormConfigDao.upsert(it.toEntity()) }
         }
     }
+
 }
 
 @Singleton

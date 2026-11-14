@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FilingWindow
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
@@ -256,14 +257,6 @@ private class FakeExportSettingsRepository(
 
     override fun observeReminderConfig(): Flow<ReminderConfig?> = reminderState
 
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) {
-        profileState.value = profile
-    }
-
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) {
-        configState.value = config
-    }
-
     override suspend fun upsertReminderConfig(config: ReminderConfig) {
         reminderState.value = config
     }
@@ -271,10 +264,11 @@ private class FakeExportSettingsRepository(
     override suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
-        upsertTaxpayerProfile(profile)
-        upsertStatusConfig(config)
+        profileState.value = profile
+        configState.value = config
         upsertReminderConfig(reminders)
     }
 }

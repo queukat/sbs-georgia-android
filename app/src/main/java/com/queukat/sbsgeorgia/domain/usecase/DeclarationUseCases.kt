@@ -108,11 +108,7 @@ constructor(private val settingsRepository: SettingsRepository) {
         reminders: ReminderConfig,
         formConfig: DeclarationFormConfig? = null
     ) {
-        if (formConfig == null) {
-            settingsRepository.upsertSettings(profile, config, reminders)
-        } else {
-            settingsRepository.upsertSettings(profile, config, reminders, formConfig)
-        }
+        settingsRepository.upsertSettings(profile, config, reminders, formConfig)
     }
 }
 

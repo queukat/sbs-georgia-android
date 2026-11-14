@@ -92,16 +92,13 @@ private class PaymentTestSettingsRepository : SettingsRepository {
 
     override fun observeReminderConfig(): Flow<ReminderConfig?> = flowOf(null)
 
-    override suspend fun upsertTaxpayerProfile(profile: TaxpayerProfile) = Unit
-
-    override suspend fun upsertStatusConfig(config: SmallBusinessStatusConfig) = Unit
-
     override suspend fun upsertReminderConfig(config: ReminderConfig) = Unit
 
     override suspend fun upsertSettings(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
-        reminders: ReminderConfig
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
         upsertTaxpayerProfile(profile)
         upsertStatusConfig(config)
