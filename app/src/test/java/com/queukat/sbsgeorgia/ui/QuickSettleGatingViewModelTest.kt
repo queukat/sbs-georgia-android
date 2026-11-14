@@ -1,6 +1,5 @@
 package com.queukat.sbsgeorgia.ui
 
-import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
@@ -13,7 +12,6 @@ import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
-import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
@@ -23,7 +21,6 @@ import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.domain.usecase.CompleteMonthlyDeclarationUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveAllSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDashboardSummaryUseCase
-import com.queukat.sbsgeorgia.domain.usecase.ObserveRollingIncomeUseCase
 import com.queukat.sbsgeorgia.testing.MainDispatcherRule
 import com.queukat.sbsgeorgia.testing.declarationStateForTest
 import com.queukat.sbsgeorgia.ui.home.HomeViewModel
@@ -218,11 +215,6 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         CompleteMonthlyDeclarationUseCase(monthlyDeclarationRepository, clock)
 
     fun homeViewModel(): HomeViewModel = HomeViewModel(
-        observeRollingIncomeUseCase = ObserveRollingIncomeUseCase(
-            incomeRepository,
-            kotlinx.coroutines.Dispatchers.Unconfined
-        ),
-        clock = clock,
         observeDashboardSummaryUseCase =
         ObserveDashboardSummaryUseCase(
             observeState = declarationStateForTest(
@@ -234,7 +226,6 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
             ),
             planner = planner
         ),
-        declarationFormConfigRepository = DefaultDeclarationFormConfigRepository,
         actionPlanner = actionPlanner,
         completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
     )
@@ -253,12 +244,6 @@ private class QuickSettleFixture(entries: List<IncomeEntry>) {
         actionPlanner = actionPlanner,
         completeMonthlyDeclarationUseCase = completeMonthlyDeclarationUseCase
     )
-}
-
-private object DefaultDeclarationFormConfigRepository : DeclarationFormConfigRepository {
-    override fun observeConfig(): Flow<DeclarationFormConfig?> = flowOf(null)
-
-    override suspend fun upsertConfig(config: DeclarationFormConfig) = Unit
 }
 
 private class FakeSettingsRepository : SettingsRepository {

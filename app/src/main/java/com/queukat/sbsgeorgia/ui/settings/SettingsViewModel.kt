@@ -11,7 +11,7 @@ import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
-import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
+import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.ReminderNotification
 import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
@@ -33,6 +33,7 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.LocalTime
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -45,7 +46,7 @@ class SettingsViewModel
 @Inject
 constructor(
     private val settingsRepository: SettingsRepository,
-    private val declarationFormConfigRepository: DeclarationFormConfigRepository,
+    private val declarationDataRepository: DeclarationDataRepository,
     private val upsertSettingsUseCase: UpsertSettingsUseCase,
     private val loadOnboardingDocumentPreviewUseCase: LoadOnboardingDocumentPreviewUseCase,
     private val exportIncomeEntriesCsvUseCase: ExportIncomeEntriesCsvUseCase,
@@ -192,8 +193,8 @@ constructor(
                 persistedConfig?.copy(themeMode = mode) ?: ReminderConfig(
                     declarationReminderDays = settingsDefaultReminderDays,
                     paymentReminderDays = settingsDefaultReminderDays,
-                    declarationRemindersEnabled = true,
-                    paymentRemindersEnabled = true,
+                    declarationRemindersEnabled = false,
+                    paymentRemindersEnabled = false,
                     defaultReminderTime = LocalTime.of(9, 0),
                     themeMode = mode
                 )
@@ -230,6 +231,7 @@ constructor(
 
     fun save() {
         val current = _uiState.value
+        if (current.isSaving) return
         when (val validation = validator.validate(current)) {
             is SettingsValidationResult.Invalid -> {
                 _uiState.value = current.copy(errorMessage = validation.errorMessage)
@@ -237,31 +239,39 @@ constructor(
             is SettingsValidationResult.Valid -> {
                 _uiState.value = current.copy(isSaving = true, errorMessage = null)
                 viewModelScope.launch {
-                    val input = validation.value
-                    val reminders =
-                        ReminderConfig(
-                            declarationReminderDays = input.declarationReminderDays,
-                            paymentReminderDays = input.paymentReminderDays,
-                            declarationRemindersEnabled = current.declarationRemindersEnabled,
-                            paymentRemindersEnabled = current.paymentRemindersEnabled,
-                            defaultReminderTime = input.defaultReminderTime,
-                            themeMode = current.themeMode
+                    try {
+                        val input = validation.value
+                        val reminders =
+                            ReminderConfig(
+                                declarationReminderDays = input.declarationReminderDays,
+                                paymentReminderDays = input.paymentReminderDays,
+                                declarationRemindersEnabled = current.declarationRemindersEnabled,
+                                paymentRemindersEnabled = current.paymentRemindersEnabled,
+                                defaultReminderTime = input.defaultReminderTime,
+                                themeMode = current.themeMode
+                            )
+                        upsertSettingsUseCase(
+                            profile = input.setup.toTaxpayerProfile(persistedProfile),
+                            config = input.setup.toStatusConfig(persistedStatusConfig),
+                            reminders = reminders,
+                            formConfig =
+                            DeclarationFormConfig(
+                                includeCumulativeIncome = current.includeCumulativeIncomeField,
+                                includeMonthlyIncome = current.includeMonthlyIncomeField,
+                                monthlyIncomeField = current.monthlyIncomeField
+                            )
                         )
-                    upsertSettingsUseCase(
-                        profile = input.setup.toTaxpayerProfile(persistedProfile),
-                        config = input.setup.toStatusConfig(persistedStatusConfig),
-                        reminders = reminders
-                    )
-                    declarationFormConfigRepository.upsertConfig(
-                        DeclarationFormConfig(
-                            includeCumulativeIncome = current.includeCumulativeIncomeField,
-                            includeMonthlyIncome = current.includeMonthlyIncomeField,
-                            monthlyIncomeField = current.monthlyIncomeField
+                        reminderScheduler.reschedule(reminders)
+                        _effects.emit(SettingsEffect.Saved)
+                    } catch (cancelled: CancellationException) {
+                        throw cancelled
+                    } catch (_: Exception) {
+                        _uiState.value = _uiState.value.copy(
+                            errorMessage = appContext.getString(R.string.operation_failed)
                         )
-                    )
-                    reminderScheduler.reschedule(reminders)
-                    _uiState.value = _uiState.value.copy(isSaving = false)
-                    _effects.emit(SettingsEffect.Saved)
+                    } finally {
+                        _uiState.value = _uiState.value.copy(isSaving = false)
+                    }
                 }
             }
         }
@@ -345,10 +355,11 @@ constructor(
     }
 
     private suspend fun loadCurrentSettings() {
-        val profile = settingsRepository.observeTaxpayerProfile().first()
-        val config = settingsRepository.observeStatusConfig().first()
-        val reminderConfig = settingsRepository.observeReminderConfig().first()
-        val declarationFormConfig = declarationFormConfigRepository.observeConfig().first()
+        val snapshot = declarationDataRepository.getData()
+        val profile = snapshot.profile
+        val config = snapshot.config
+        val reminderConfig = snapshot.reminders
+        val declarationFormConfig = snapshot.formConfig
         persistedProfile = profile
         persistedStatusConfig = config
         _uiState.value =
