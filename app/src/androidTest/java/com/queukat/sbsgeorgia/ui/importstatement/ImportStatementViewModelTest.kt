@@ -108,11 +108,9 @@ class ImportStatementViewModelTest {
     private class RecordingStatementImportRepository : StatementImportRepository {
         val confirmedRows = mutableListOf<ApprovedImportedStatementRow>()
 
-        override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean = false
-
         override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? = null
 
-        override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean = false
+        override suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> = emptySet()
 
         override suspend fun confirmImport(
             sourceFileName: String,

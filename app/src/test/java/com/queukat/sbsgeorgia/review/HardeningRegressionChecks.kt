@@ -24,7 +24,6 @@ import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.GeorgiaTaxBusinessCalendar
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
 import com.queukat.sbsgeorgia.domain.usecase.ApplyManualFxOverrideUseCase
-import com.queukat.sbsgeorgia.domain.usecase.ObserveCurrentYearSnapshotsUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveDeclarationStateUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ObserveMonthDetailUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ResolveMonthFxUseCase
@@ -290,7 +289,9 @@ object HardeningRegressionChecks {
                 val date = MutableStateFlow(LocalDate.of(2026, 12, 31))
                 val outputs = Channel<List<MonthlyDeclarationSnapshot>>(Channel.UNLIMITED)
                 val job = launch {
-                    ObserveCurrentYearSnapshotsUseCase(pipeline(store, date))().collect { outputs.send(it) }
+                    pipeline(store, date).project { state ->
+                        state.snapshots.filter { it.period.incomeMonth.year == state.date.year }
+                    }.collect { outputs.send(it) }
                 }
                 try {
                     check(outputs.receive().all { it.period.incomeMonth.year == 2026 })

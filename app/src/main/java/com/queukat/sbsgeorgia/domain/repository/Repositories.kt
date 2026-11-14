@@ -108,14 +108,9 @@ sealed interface FxRateFetchResult {
 }
 
 interface StatementImportRepository {
-    suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean
-
     suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo?
 
-    suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean
-
-    suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> =
-        fingerprints.filter { hasTransactionFingerprint(it) }.toSet()
+    suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String>
 
     /**
      * Previously excluded bank transactions without a live income entry can be

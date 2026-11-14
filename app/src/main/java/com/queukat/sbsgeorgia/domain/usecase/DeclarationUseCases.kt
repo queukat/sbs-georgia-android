@@ -21,14 +21,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class ObserveCurrentYearSnapshotsUseCase
-@Inject
-constructor(private val observeState: ObserveDeclarationStateUseCase) {
-    operator fun invoke(year: Int? = null): Flow<List<MonthlyDeclarationSnapshot>> = observeState.project { state ->
-        state.snapshots.filter { it.period.incomeMonth.year == (year ?: state.date.year) }
-    }
-}
-
 class ObserveAllSnapshotsUseCase
 @Inject
 constructor(private val observeState: ObserveDeclarationStateUseCase) {

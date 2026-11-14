@@ -28,9 +28,6 @@ constructor(
     private val importedTransactionDao: ImportedTransactionDao,
     private val incomeEntryDao: IncomeEntryDao
 ) : StatementImportRepository {
-    override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean =
-        importedStatementDao.existsBySourceFingerprint(sourceFingerprint)
-
     override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? =
         importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.let { entity ->
             ImportedStatementImportInfo(
@@ -39,10 +36,6 @@ constructor(
                 importedAtEpochMillis = entity.importedAtEpochMillis
             )
         }
-
-    override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean =
-        importedTransactionDao.existsByFingerprint(transactionFingerprint) ||
-            incomeEntryDao.existsBySourceTransactionFingerprint(transactionFingerprint)
 
     override suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> = buildSet {
         // Stay safely below the SQLite bind-parameter limit on old Android versions.

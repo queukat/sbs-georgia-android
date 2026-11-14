@@ -195,15 +195,8 @@ private class Rates(private val failure: Throwable? = null) : FxRateRepository {
 private class ImportStore(private val income: IncomeStore) : StatementImportRepository {
     var confirmations = 0
     var batchReads = 0
-    var singleReads = 0
     val fingerprints = mutableSetOf<String>()
-    override suspend fun hasStatementFingerprint(sourceFingerprint: String) = false
     override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? = null
-    override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean {
-        singleReads++
-        return transactionFingerprint in
-            fingerprints
-    }
     override suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> {
         batchReads++
         return fingerprints.intersect(this.fingerprints)
@@ -590,6 +583,5 @@ private suspend fun CoreCheckRunner.checkFixtures(fixtures: File) {
         val s = loader("local:test")
         check(s.preview!!.rows.isNotEmpty())
         check(r.batchReads == 1)
-        check(r.singleReads == 0)
     }
 }

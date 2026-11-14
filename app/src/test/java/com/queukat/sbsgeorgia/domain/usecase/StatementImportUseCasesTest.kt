@@ -624,14 +624,11 @@ private class FakeStatementImportRepository(
 ) : StatementImportRepository {
     val confirmedRows = mutableListOf<ApprovedImportedStatementRow>()
 
-    override suspend fun hasStatementFingerprint(sourceFingerprint: String): Boolean =
-        sourceFingerprint in existingStatementFingerprints
-
     override suspend fun getStatementImportInfo(sourceFingerprint: String): ImportedStatementImportInfo? =
         existingStatementImports[sourceFingerprint]
 
-    override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean =
-        transactionFingerprint in existingTransactionFingerprints
+    override suspend fun existingTransactionFingerprints(fingerprints: Set<String>): Set<String> =
+        this.existingTransactionFingerprints.intersect(fingerprints)
 
     override suspend fun recoverableTransactionFingerprints(fingerprints: Set<String>): Set<String> =
         recoverableTransactionFingerprints.intersect(fingerprints)

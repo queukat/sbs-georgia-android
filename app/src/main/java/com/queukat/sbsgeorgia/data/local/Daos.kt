@@ -93,17 +93,6 @@ interface IncomeEntryDao {
     suspend fun getById(id: Long): IncomeEntryEntity?
 
     @Query(
-        """
-        SELECT EXISTS(
-            SELECT 1 FROM income_entry
-            WHERE sourceTransactionFingerprint = :transactionFingerprint
-            LIMIT 1
-        )
-        """
-    )
-    suspend fun existsBySourceTransactionFingerprint(transactionFingerprint: String): Boolean
-
-    @Query(
         "SELECT sourceTransactionFingerprint FROM income_entry WHERE sourceTransactionFingerprint IN (:fingerprints)"
     )
     suspend fun existingSourceFingerprints(fingerprints: List<String>): List<String>
@@ -209,17 +198,6 @@ interface ImportedStatementDao {
     @Query("SELECT * FROM imported_statement WHERE sourceFingerprint = :sourceFingerprint LIMIT 1")
     suspend fun getBySourceFingerprint(sourceFingerprint: String): ImportedStatementEntity?
 
-    @Query(
-        """
-        SELECT EXISTS(
-            SELECT 1 FROM imported_statement
-            WHERE sourceFingerprint = :sourceFingerprint
-            LIMIT 1
-        )
-        """
-    )
-    suspend fun existsBySourceFingerprint(sourceFingerprint: String): Boolean
-
     @Insert
     suspend fun insert(entity: ImportedStatementEntity): Long
 
@@ -234,17 +212,6 @@ interface ImportedStatementDao {
 interface ImportedTransactionDao {
     @Query("SELECT * FROM imported_transaction ORDER BY statementId ASC, id ASC")
     suspend fun getAll(): List<ImportedTransactionEntity>
-
-    @Query(
-        """
-        SELECT EXISTS(
-            SELECT 1 FROM imported_transaction
-            WHERE transactionFingerprint = :transactionFingerprint
-            LIMIT 1
-        )
-        """
-    )
-    suspend fun existsByFingerprint(transactionFingerprint: String): Boolean
 
     @Query("SELECT transactionFingerprint FROM imported_transaction WHERE transactionFingerprint IN (:fingerprints)")
     suspend fun existingFingerprints(fingerprints: List<String>): List<String>
