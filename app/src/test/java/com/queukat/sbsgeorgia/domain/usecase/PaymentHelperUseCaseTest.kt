@@ -149,4 +149,3 @@ private class PaymentTestIncomeRepository(month: YearMonth) : IncomeRepository {
         return applied
     }
 }
-

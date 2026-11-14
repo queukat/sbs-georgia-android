@@ -298,4 +298,3 @@ private class FakeExportIncomeRepository(entries: List<IncomeEntry>) : IncomeRep
         return applied
     }
 }
-
