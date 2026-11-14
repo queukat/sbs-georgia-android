@@ -5,7 +5,6 @@ import android.content.SharedPreferences
 import androidx.room.Room
 import com.queukat.sbsgeorgia.data.export.AndroidTextDocumentStore
 import com.queukat.sbsgeorgia.data.export.AppBackupManager
-import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.data.importer.AndroidStatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.PdfBoxStatementTextExtractor
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
@@ -39,6 +38,7 @@ import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
+import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.service.ClockDateSource
 import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.ReminderNotificationStrings

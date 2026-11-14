@@ -1,15 +1,15 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
-import com.queukat.sbsgeorgia.domain.repository.StatementDocumentReader
-import com.queukat.sbsgeorgia.domain.repository.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
-import com.queukat.sbsgeorgia.domain.service.onboarding.OnboardingDocumentParser
+import com.queukat.sbsgeorgia.domain.repository.StatementDocumentReader
+import com.queukat.sbsgeorgia.domain.repository.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
+import com.queukat.sbsgeorgia.domain.service.onboarding.OnboardingDocumentParser
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first

@@ -1,9 +1,9 @@
 package com.queukat.sbsgeorgia.testing
 
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
-import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationData
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
+import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
 import com.queukat.sbsgeorgia.domain.repository.MonthlyDeclarationRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository

@@ -5,7 +5,6 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
-import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
@@ -13,8 +12,10 @@ import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
+import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.service.ReminderNotification
 import com.queukat.sbsgeorgia.domain.service.ReminderPlanner
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import com.queukat.sbsgeorgia.domain.service.ReminderType
 import com.queukat.sbsgeorgia.domain.usecase.ExportBackupJsonUseCase
 import com.queukat.sbsgeorgia.domain.usecase.ExportIncomeEntriesCsvUseCase
@@ -26,7 +27,6 @@ import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
 import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
-import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import com.queukat.sbsgeorgia.worker.ReminderTestScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -269,7 +269,7 @@ constructor(
                         throw cancelled
                     } catch (_: Exception) {
                         _uiState.value = _uiState.value.copy(
-                            errorMessage = appContext.getString(R.string.operation_failed)
+                            errorMessage = appContext.getString(R.string.settings_message_data_operation_failed)
                         )
                     } finally {
                         _uiState.value = _uiState.value.copy(isSaving = false)

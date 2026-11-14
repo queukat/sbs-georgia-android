@@ -1,7 +1,5 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
-import com.queukat.sbsgeorgia.domain.repository.StatementDocumentReader
-import com.queukat.sbsgeorgia.domain.repository.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
 import com.queukat.sbsgeorgia.domain.model.ConfirmStatementImportWorkflowResult
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
@@ -11,7 +9,9 @@ import com.queukat.sbsgeorgia.domain.model.LoadImportPreviewResult
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import com.queukat.sbsgeorgia.domain.repository.IncomeRepository
+import com.queukat.sbsgeorgia.domain.repository.StatementDocumentReader
 import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
+import com.queukat.sbsgeorgia.domain.repository.StatementTextExtractor
 import com.queukat.sbsgeorgia.domain.service.TaxPaymentDetection
 import com.queukat.sbsgeorgia.domain.service.tbc.TbcStatementParser
 import java.time.Clock
