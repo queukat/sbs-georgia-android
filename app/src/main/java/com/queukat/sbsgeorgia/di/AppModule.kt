@@ -40,7 +40,9 @@ import com.queukat.sbsgeorgia.domain.repository.StatementImportRepository
 import com.queukat.sbsgeorgia.domain.service.ClockDateSource
 import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.ReminderNotificationStrings
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import com.queukat.sbsgeorgia.worker.AndroidReminderNotificationStrings
+import com.queukat.sbsgeorgia.worker.ReminderScheduler
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -99,6 +101,9 @@ abstract class RepositoryBindingsModule {
 
     @Binds
     abstract fun bindReminderNotificationStrings(impl: AndroidReminderNotificationStrings): ReminderNotificationStrings
+
+    @Binds
+    abstract fun bindReminderSchedulePort(impl: ReminderScheduler): ReminderSchedulePort
 }
 
 @Module

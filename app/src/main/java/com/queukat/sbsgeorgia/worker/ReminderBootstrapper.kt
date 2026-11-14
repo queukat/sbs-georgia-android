@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.worker
 
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineScope
@@ -14,15 +15,13 @@ class ReminderBootstrapper
 @Inject
 constructor(
     private val settingsRepository: SettingsRepository,
-    private val reminderScheduler: ReminderScheduler
+    private val reminderScheduler: ReminderSchedulePort
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     fun scheduleStoredConfigIfPresent() {
         scope.launch {
-            settingsRepository.observeReminderConfig().first()?.let(
-                reminderScheduler::ensureScheduled
-            )
+            reminderScheduler.reconcile(settingsRepository.observeReminderConfig().first())
         }
     }
 }

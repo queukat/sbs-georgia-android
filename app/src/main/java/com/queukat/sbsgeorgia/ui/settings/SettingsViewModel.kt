@@ -25,7 +25,7 @@ import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
 import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
-import com.queukat.sbsgeorgia.worker.ReminderScheduler
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import com.queukat.sbsgeorgia.worker.ReminderTestScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -55,7 +55,7 @@ constructor(
     private val textDocumentStore: TextDocumentStore,
     private val observeDashboardSummaryUseCase: ObserveDashboardSummaryUseCase,
     private val reminderPlanner: ReminderPlanner,
-    private val reminderScheduler: ReminderScheduler,
+    private val reminderScheduler: ReminderSchedulePort,
     private val backupRestoreController: BackupRestoreController,
     private val reminderTestScheduler: ReminderTestScheduler,
     @param:ApplicationContext private val appContext: Context,

@@ -7,7 +7,7 @@ import com.queukat.sbsgeorgia.data.export.TextDocumentStore
 import com.queukat.sbsgeorgia.domain.model.isSetupComplete
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.ImportBackupJsonUseCase
-import com.queukat.sbsgeorgia.worker.ReminderScheduler
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -20,7 +20,7 @@ constructor(
     private val textDocumentStore: TextDocumentStore,
     private val importBackupJsonUseCase: ImportBackupJsonUseCase,
     private val settingsRepository: SettingsRepository,
-    private val reminderScheduler: ReminderScheduler,
+    private val reminderScheduler: ReminderSchedulePort,
     @param:ApplicationContext private val context: Context
 ) {
     suspend fun restore(uriString: String): BackupRestoreUiResult {

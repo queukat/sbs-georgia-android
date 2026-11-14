@@ -9,7 +9,7 @@ import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.service.onboarding.OnboardingDocumentParser
-import com.queukat.sbsgeorgia.worker.ReminderScheduler
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import java.time.LocalTime
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
@@ -37,7 +37,7 @@ class CompleteOnboardingUseCase
 constructor(
     private val settingsRepository: SettingsRepository,
     private val upsertSettingsUseCase: UpsertSettingsUseCase,
-    private val reminderScheduler: ReminderScheduler
+    private val reminderScheduler: ReminderSchedulePort
 ) {
     suspend operator fun invoke(profile: TaxpayerProfile, config: SmallBusinessStatusConfig) {
         val reminders =

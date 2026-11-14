@@ -5,12 +5,14 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
+import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.ZonedDateTime
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.flow.first
 
 @Singleton
 class ReminderScheduler
@@ -18,8 +20,8 @@ class ReminderScheduler
 constructor(
     @param:ApplicationContext private val context: Context,
     private val clock: Clock
-) {
-    fun cancelAll() {
+) : ReminderSchedulePort {
+    override fun cancelAll() {
         WorkManager.getInstance(context).cancelUniqueWork(UNIQUE_WORK_NAME)
     }
 
@@ -27,9 +29,31 @@ constructor(
         schedule(reminderConfig, ExistingPeriodicWorkPolicy.KEEP)
     }
 
-    fun reschedule(reminderConfig: ReminderConfig) {
-        schedule(reminderConfig, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
+    override fun reschedule(config: ReminderConfig) {
+        schedule(config, ExistingPeriodicWorkPolicy.CANCEL_AND_REENQUEUE)
     }
+
+    override suspend fun reconcile(config: ReminderConfig?) {
+        if (config == null || (!config.declarationRemindersEnabled && !config.paymentRemindersEnabled)) {
+            cancelAll()
+            return
+        }
+
+        // Query WorkManager's durable state, not a separate SharedPreferences stamp:
+        // a crash between enqueue and writing a stamp would otherwise hide lost work.
+        val workManager = WorkManager.getInstance(context)
+        val current = workManager.getWorkInfosForUniqueWorkFlow(UNIQUE_WORK_NAME).first()
+        val matching = current.any { !it.state.isFinished && scheduleTag(config) in it.tags }
+        if (matching) {
+            ensureScheduled(config)
+        } else {
+            reschedule(config)
+        }
+    }
+
+    private fun scheduleTag(config: ReminderConfig): String =
+        "reminder-schedule:${config.defaultReminderTime}:" +
+            "${config.declarationRemindersEnabled}:${config.paymentRemindersEnabled}"
 
     private fun schedule(reminderConfig: ReminderConfig, policy: ExistingPeriodicWorkPolicy) {
         val workManager = WorkManager.getInstance(context)
@@ -59,6 +83,7 @@ constructor(
             PeriodicWorkRequestBuilder<MonthlyReminderWorker>(1, TimeUnit.DAYS)
                 .setInitialDelay(initialDelayMillis, TimeUnit.MILLISECONDS)
                 .addTag(UNIQUE_WORK_NAME)
+                .addTag(scheduleTag(reminderConfig))
                 .build()
 
         workManager.enqueueUniquePeriodicWork(
