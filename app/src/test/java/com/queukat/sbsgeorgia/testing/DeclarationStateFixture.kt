@@ -30,10 +30,10 @@ fun declarationStateForTest(
         override fun observeData() = combine(
             combine(
                 settingsRepository.observeTaxpayerProfile(),
-            settingsRepository.observeStatusConfig(),
-            settingsRepository.observeReminderConfig(),
-            incomeRepository.observeAll(),
-            monthlyDeclarationRepository.observeAll()
+                settingsRepository.observeStatusConfig(),
+                settingsRepository.observeReminderConfig(),
+                incomeRepository.observeAll(),
+                monthlyDeclarationRepository.observeAll()
             ) { profile, config, reminders, entries, records ->
                 DeclarationData(profile, config, reminders, entries, records)
             },

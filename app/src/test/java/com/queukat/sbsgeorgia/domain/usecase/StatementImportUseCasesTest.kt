@@ -114,8 +114,7 @@ class StatementImportUseCasesTest {
     }
 
     @Test
-    fun loadPreviewAllowsManualRecoveryWithoutAutomaticallyIncludingExcludedIncome() =
-        kotlinx.coroutines.test.runTest {
+    fun excludedIncomeCanBeReselectedWithoutAutoInclusion() = kotlinx.coroutines.test.runTest {
             val fingerprint = TbcStatementParser()
                 .parse("statement.pdf", "statement", fixtureText("tbc_statement_v1_extracted.txt"))
                 .rows.first().transactionFingerprint

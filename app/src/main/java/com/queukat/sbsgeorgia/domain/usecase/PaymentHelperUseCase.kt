@@ -20,7 +20,9 @@ data class PaymentHelperData(
 
 class ObservePaymentHelperUseCase
 @Inject
-constructor(private val observeMonthDetailUseCase: ObserveMonthDetailUseCase) {
+constructor(
+    private val observeMonthDetailUseCase: ObserveMonthDetailUseCase
+) {
     operator fun invoke(yearMonth: YearMonth): Flow<PaymentHelperData> =
         observeMonthDetailUseCase.full(yearMonth).map { detail ->
             val snapshot = detail.snapshot

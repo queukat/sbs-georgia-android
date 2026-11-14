@@ -36,5 +36,4 @@ class WorkflowStatusPolicyTest {
         assertTrue(WorkflowStatusPolicy.isEditable(MonthlyWorkflowStatus.DRAFT))
         assertTrue(WorkflowStatusPolicy.isEditable(MonthlyWorkflowStatus.SETTLED))
     }
-
 }

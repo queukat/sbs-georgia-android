@@ -51,9 +51,8 @@ constructor(
         }
     }
 
-    private fun scheduleTag(config: ReminderConfig): String =
-        "reminder-schedule:${config.defaultReminderTime}:" +
-            "${config.declarationRemindersEnabled}:${config.paymentRemindersEnabled}"
+    private fun scheduleTag(config: ReminderConfig): String = "reminder-schedule:${config.defaultReminderTime}:" +
+        "${config.declarationRemindersEnabled}:${config.paymentRemindersEnabled}"
 
     private fun schedule(reminderConfig: ReminderConfig, policy: ExistingPeriodicWorkPolicy) {
         val workManager = WorkManager.getInstance(context)

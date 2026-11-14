@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
-import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
 import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.requiresFxResolution
 import com.queukat.sbsgeorgia.domain.repository.FxRateRepository
@@ -183,5 +182,4 @@ constructor(
             isResolvingFx.value = false
         }
     }
-
 }
