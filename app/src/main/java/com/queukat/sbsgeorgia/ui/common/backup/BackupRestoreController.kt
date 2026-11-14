@@ -4,6 +4,7 @@ import android.content.Context
 import com.queukat.sbsgeorgia.R
 import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
 import com.queukat.sbsgeorgia.data.export.TextDocumentStore
+import com.queukat.sbsgeorgia.domain.model.isSetupComplete
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.ImportBackupJsonUseCase
 import com.queukat.sbsgeorgia.worker.ReminderScheduler
@@ -34,11 +35,7 @@ constructor(
 
         val profile = settingsRepository.observeTaxpayerProfile().first()
         val config = settingsRepository.observeStatusConfig().first()
-        val setupComplete =
-            profile != null &&
-                config != null &&
-                profile.registrationId.isNotBlank() &&
-                profile.displayName.isNotBlank()
+        val setupComplete = isSetupComplete(profile, config)
 
         return BackupRestoreUiResult(
             message = result.toSummaryMessage(context),

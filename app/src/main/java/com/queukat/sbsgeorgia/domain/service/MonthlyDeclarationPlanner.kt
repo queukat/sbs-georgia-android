@@ -12,6 +12,7 @@ import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
 import com.queukat.sbsgeorgia.domain.model.TaxpayerProfile
+import com.queukat.sbsgeorgia.domain.model.isSetupComplete
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -99,7 +100,7 @@ constructor(
                 SmallBusinessTaxPolicy.rateFor(cumulative, it)
             }
             val estimatedTax = effectiveRate
-                ?.takeUnless { calculationIncomplete || period.outOfScope || profile == null }
+                ?.takeUnless { calculationIncomplete || period.outOfScope || !isSetupComplete(profile, config) }
                 ?.let { graph20.multiply(it).divide(ONE_HUNDRED, 2, RoundingMode.HALF_UP) }
 
             val effectiveStatus =
@@ -127,12 +128,11 @@ constructor(
                         reviewEntries.isEmpty(),
                     zeroDeclarationPrepared = record?.zeroDeclarationPrepared ?: false,
                     reviewNeeded =
-                    profile == null ||
-                        config == null ||
+                    !isSetupComplete(profile, config) ||
                         currentReviewNeeded ||
                         priorPeriodDataIncomplete ||
                         period.outOfScope,
-                    setupRequired = profile == null || config == null,
+                    setupRequired = !isSetupComplete(profile, config),
                     record = record,
                     priorPeriodDataIncomplete = priorPeriodDataIncomplete,
                     effectiveTaxRatePercent = effectiveRate?.takeUnless { calculationIncomplete }
@@ -215,7 +215,7 @@ constructor(
         return DashboardSummary(
             taxpayerName = profile?.displayName,
             registrationId = profile?.registrationId,
-            setupComplete = profile != null && config != null,
+            setupComplete = isSetupComplete(profile, config),
             ytdIncomeGel = snapshots
                 .filter { it.period.incomeMonth.year == now.year }
                 .maxByOrNull { it.period.incomeMonth }

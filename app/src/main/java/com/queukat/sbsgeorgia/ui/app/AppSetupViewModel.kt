@@ -2,6 +2,7 @@ package com.queukat.sbsgeorgia.ui.app
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.queukat.sbsgeorgia.domain.model.isSetupComplete
 import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,38 +19,18 @@ constructor(
     settingsRepository: SettingsRepository,
     private val appPreferencesRepository: AppPreferencesRepository
 ) : ViewModel() {
-    init {
-        viewModelScope.launch {
-            combine(
-                settingsRepository.observeTaxpayerProfile(),
-                settingsRepository.observeStatusConfig(),
-                appPreferencesRepository.observeQuickStartGuideState()
-            ) { profile, config, guideState ->
-                val needsOnboarding =
-                    profile == null ||
-                        config == null ||
-                        profile.registrationId.isBlank() ||
-                        profile.displayName.isBlank()
-                if (!guideState.initialized) {
-                    appPreferencesRepository.initializeQuickStartGuide(
-                        hasCompletedSetup = !needsOnboarding
-                    )
-                }
-            }.collect {}
-        }
-    }
-
     val uiState =
         combine(
             settingsRepository.observeTaxpayerProfile(),
             settingsRepository.observeStatusConfig(),
             appPreferencesRepository.observeQuickStartGuideState()
         ) { profile, config, guideState ->
-            val needsOnboarding =
-                profile == null ||
-                    config == null ||
-                    profile.registrationId.isBlank() ||
-                    profile.displayName.isBlank()
+            val needsOnboarding = !isSetupComplete(profile, config)
+            if (!guideState.initialized) {
+                appPreferencesRepository.initializeQuickStartGuide(
+                    hasCompletedSetup = !needsOnboarding
+                )
+            }
             AppSetupUiState(
                 initialized = true,
                 needsOnboarding = needsOnboarding,

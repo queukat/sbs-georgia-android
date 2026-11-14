@@ -119,6 +119,11 @@ data class SmallBusinessStatusConfig(
     val certificateIssuedDate: LocalDate? = null
 )
 
+/** Shared setup gate for onboarding, declaration calculations, and backup restore. */
+fun isSetupComplete(profile: TaxpayerProfile?, config: SmallBusinessStatusConfig?): Boolean =
+    profile != null && config != null &&
+        profile.registrationId.isNotBlank() && profile.displayName.isNotBlank()
+
 data class ReminderConfig(
     val declarationReminderDays: List<Int>,
     val paymentReminderDays: List<Int>,
