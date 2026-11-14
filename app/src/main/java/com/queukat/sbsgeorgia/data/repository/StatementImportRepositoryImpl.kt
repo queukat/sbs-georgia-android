@@ -57,16 +57,6 @@ constructor(
         rows: List<ApprovedImportedStatementRow>,
         importedAtEpochMillis: Long
     ): ConfirmImportedStatementResult = database.withTransaction {
-        val statementId =
-            importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.id
-                ?: importedStatementDao.insert(
-                    ImportedStatementEntity(
-                        sourceFileName = sourceFileName,
-                        sourceFingerprint = sourceFingerprint,
-                        importedAtEpochMillis = importedAtEpochMillis
-                    )
-                )
-
         // Re-evaluate all duplicate guards inside the write transaction: the
         // user's preview may be stale or another import may have completed.
         val uniqueRows = rows.filterNot { it.duplicate }
@@ -79,10 +69,33 @@ constructor(
             it.transactionFingerprint in recoverable &&
                 it.finalInclusion == DeclarationInclusion.INCLUDED
         }
+        // An already-excluded transaction kept excluded is not a new source
+        // import. Do not create an orphan imported_statement for this preview.
+        if (newRows.isEmpty() && restoring.isEmpty()) {
+            return@withTransaction ConfirmImportedStatementResult(
+                importedIncomeCount = 0,
+                storedTransactionCount = 0,
+                skippedDuplicateCount = rows.size,
+                excludedCount = 0
+            )
+        }
+
+        val statementId = if (newRows.isNotEmpty()) {
+            importedStatementDao.getBySourceFingerprint(sourceFingerprint)?.id
+                ?: importedStatementDao.insert(
+                    ImportedStatementEntity(
+                        sourceFileName = sourceFileName,
+                        sourceFingerprint = sourceFingerprint,
+                        importedAtEpochMillis = importedAtEpochMillis
+                    )
+                )
+        } else {
+            null // Recovery keeps the original statementId.
+        }
         val insertResults = importedTransactionDao.insertAll(
             newRows.map { row ->
                 ImportedTransactionEntity(
-                    statementId = statementId,
+                    statementId = requireNotNull(statementId),
                     transactionFingerprint = row.transactionFingerprint,
                     incomeDate = row.incomeDate,
                     description = row.description,
@@ -108,7 +121,7 @@ constructor(
             }
             storedTransactionCount += 1
             if (row.finalInclusion == DeclarationInclusion.INCLUDED) {
-                insertIncomeEntry(row, statementId, importedAtEpochMillis)
+                insertIncomeEntry(row, requireNotNull(statementId), importedAtEpochMillis)
                 importedIncomeCount += 1
             } else {
                 excludedCount += 1

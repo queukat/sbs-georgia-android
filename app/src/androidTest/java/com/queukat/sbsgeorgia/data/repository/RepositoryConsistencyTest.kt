@@ -209,6 +209,7 @@ class RepositoryConsistencyTest {
         assertEquals(originalStatementId, restoredEntry.sourceStatementId)
         assertEquals(fingerprint, restoredEntry.sourceTransactionFingerprint)
         assertEquals(1, database.importedTransactionDao().getAll().size)
+        assertEquals(1, database.importedStatementDao().getAll().size)
         assertEquals(DeclarationInclusion.INCLUDED, database.importedTransactionDao().getAll().single().finalInclusion)
 
         val replay = repo.confirmImport(
@@ -220,6 +221,44 @@ class RepositoryConsistencyTest {
         assertEquals(0, replay.importedIncomeCount)
         assertEquals(1, replay.skippedDuplicateCount)
         assertEquals(1, database.incomeEntryDao().getAll().size)
+    }
+
+    @Test
+    fun repeatingExcludedTransactionsDoesNotCreateAnEmptyStatement() = runTest {
+        val repository = StatementImportRepositoryImpl(
+            database,
+            database.importedStatementDao(),
+            database.importedTransactionDao(),
+            database.incomeEntryDao()
+        )
+        val excludedRow = ApprovedImportedStatementRow(
+            transactionFingerprint = "excluded-bank-fee",
+            incomeDate = LocalDate.of(2026, 3, 15),
+            description = "Synthetic fee",
+            additionalInformation = null,
+            paidOut = null,
+            paidIn = null,
+            balance = null,
+            suggestedInclusion = DeclarationInclusion.EXCLUDED,
+            finalInclusion = DeclarationInclusion.EXCLUDED,
+            amount = BigDecimal("2.00"),
+            currency = "GEL",
+            sourceCategory = "Bank fee",
+            duplicate = false
+        )
+        repository.confirmImport("first.pdf", "first-statement", listOf(excludedRow), 1L)
+        val replay = repository.confirmImport(
+            "overlap.pdf",
+            "overlapping-statement",
+            listOf(excludedRow),
+            2L
+        )
+        assertEquals(0, replay.importedIncomeCount)
+        assertEquals(0, replay.storedTransactionCount)
+        assertEquals(1, replay.skippedDuplicateCount)
+        assertEquals(1, database.importedStatementDao().getAll().size)
+        assertEquals(1, database.importedTransactionDao().getAll().size)
+        assertTrue(database.incomeEntryDao().getAll().isEmpty())
     }
 
     @Test
