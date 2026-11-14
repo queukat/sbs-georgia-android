@@ -73,7 +73,6 @@ constructor(
             formConfig?.let { declarationFormConfigDao.upsert(it.toEntity()) }
         }
     }
-
 }
 
 @Singleton

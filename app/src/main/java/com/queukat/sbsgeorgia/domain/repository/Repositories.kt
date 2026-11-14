@@ -42,7 +42,6 @@ interface SettingsRepository {
         reminders: ReminderConfig,
         formConfig: DeclarationFormConfig? = null
     )
-
 }
 
 interface DeclarationFormConfigRepository {
