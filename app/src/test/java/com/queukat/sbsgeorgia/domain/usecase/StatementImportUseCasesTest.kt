@@ -114,6 +114,30 @@ class StatementImportUseCasesTest {
     }
 
     @Test
+    fun loadPreviewAllowsManualRecoveryWithoutAutomaticallyIncludingExcludedIncome() =
+        kotlinx.coroutines.test.runTest {
+            val fingerprint = TbcStatementParser()
+                .parse("statement.pdf", "statement", fixtureText("tbc_statement_v1_extracted.txt"))
+                .rows.first().transactionFingerprint
+            val repository = FakeStatementImportRepository(
+                existingTransactionFingerprints = mutableSetOf(fingerprint),
+                recoverableTransactionFingerprints = mutableSetOf(fingerprint)
+            )
+            val result = LoadStatementImportPreviewUseCase(
+                statementDocumentReader = FakeStatementDocumentReader(
+                    ImportedPdfDocument("statement.pdf", "new-statement", ByteArray(0))
+                ),
+                statementTextExtractor = FakeStatementTextExtractor(fixtureText("tbc_statement_v1_extracted.txt")),
+                tbcStatementParser = TbcStatementParser(),
+                statementImportRepository = repository
+            ).invoke("content://statement")
+
+            val restored = requireNotNull(result.preview).rows.first()
+            assertTrue(!restored.duplicate)
+            assertEquals(DeclarationInclusion.EXCLUDED, restored.suggestedInclusion)
+        }
+
+    @Test
     fun loadPreviewMarksLaterInternalFingerprintCollisionsAsDuplicates() = kotlinx.coroutines.test.runTest {
         val result =
             LoadStatementImportPreviewUseCase(
@@ -596,6 +620,7 @@ private class FakeStatementImportRepository(
     val existingStatementFingerprints: MutableSet<String> = mutableSetOf(),
     val existingStatementImports: MutableMap<String, ImportedStatementImportInfo> = mutableMapOf(),
     val existingTransactionFingerprints: MutableSet<String> = mutableSetOf(),
+    val recoverableTransactionFingerprints: MutableSet<String> = mutableSetOf(),
     val onConfirm: (suspend (List<ApprovedImportedStatementRow>, Long) -> Unit)? = null
 ) : StatementImportRepository {
     val confirmedRows = mutableListOf<ApprovedImportedStatementRow>()
@@ -608,6 +633,9 @@ private class FakeStatementImportRepository(
 
     override suspend fun hasTransactionFingerprint(transactionFingerprint: String): Boolean =
         transactionFingerprint in existingTransactionFingerprints
+
+    override suspend fun recoverableTransactionFingerprints(fingerprints: Set<String>): Set<String> =
+        recoverableTransactionFingerprints.intersect(fingerprints)
 
     override suspend fun confirmImport(
         sourceFileName: String,

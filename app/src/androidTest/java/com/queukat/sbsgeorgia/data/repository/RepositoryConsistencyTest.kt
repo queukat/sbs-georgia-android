@@ -7,6 +7,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteDataSource
 import com.queukat.sbsgeorgia.data.remote.OfficialFxRemoteResult
+import com.queukat.sbsgeorgia.domain.model.ApprovedImportedStatementRow
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
 import com.queukat.sbsgeorgia.domain.model.FxRateSource
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
@@ -146,6 +149,78 @@ class RepositoryConsistencyTest {
             }
             writer.await()
         }
+    }
+
+    @Test
+    fun declarationFormConfigIsReadInSameCommittedSnapshotAsOtherSettings() = runTest {
+        val form = DeclarationFormConfig(
+            monthlyIncomeField = DeclarationFormField.MONTHLY_POS_INCOME
+        )
+        settings.upsertSettings(profile, config, reminders, form)
+        val snapshot = data.getData()
+
+        assertEquals(form, snapshot.formConfig)
+        assertEquals(profile, snapshot.profile)
+        assertEquals(config, snapshot.config)
+        assertEquals(reminders, snapshot.reminders)
+    }
+
+    @Test
+    fun previouslyDeletedStatementIncomeCanBeManuallyRestoredWithoutDuplicateMetadata() = runTest {
+        val repo = StatementImportRepositoryImpl(
+            database,
+            database.importedStatementDao(),
+            database.importedTransactionDao(),
+            database.incomeEntryDao()
+        )
+        val fingerprint = "synthetic-recoverable-transaction"
+        val sourceRow = ApprovedImportedStatementRow(
+            transactionFingerprint = fingerprint,
+            incomeDate = LocalDate.of(2026, 3, 15),
+            description = "Synthetic business payment",
+            additionalInformation = null,
+            paidOut = null,
+            paidIn = null,
+            balance = null,
+            suggestedInclusion = DeclarationInclusion.INCLUDED,
+            finalInclusion = DeclarationInclusion.INCLUDED,
+            amount = BigDecimal("125.00"),
+            currency = "GEL",
+            sourceCategory = "Services",
+            duplicate = false
+        )
+        val first = repo.confirmImport("first.pdf", "first-statement", listOf(sourceRow), 1L)
+        assertEquals(1, first.importedIncomeCount)
+        val originalEntry = database.incomeEntryDao().getAll().single()
+        val originalStatementId = originalEntry.sourceStatementId
+
+        income.deleteById(originalEntry.id)
+        assertEquals(DeclarationInclusion.EXCLUDED, database.importedTransactionDao().getAll().single().finalInclusion)
+        assertTrue(fingerprint in repo.recoverableTransactionFingerprints(setOf(fingerprint)))
+
+        val recovered = repo.confirmImport(
+            "overlap.pdf",
+            "overlapping-statement",
+            listOf(sourceRow.copy(suggestedInclusion = DeclarationInclusion.EXCLUDED)),
+            2L
+        )
+        assertEquals(1, recovered.importedIncomeCount)
+        assertEquals(0, recovered.storedTransactionCount)
+        val restoredEntry = database.incomeEntryDao().getAll().single()
+        assertEquals(originalStatementId, restoredEntry.sourceStatementId)
+        assertEquals(fingerprint, restoredEntry.sourceTransactionFingerprint)
+        assertEquals(1, database.importedTransactionDao().getAll().size)
+        assertEquals(DeclarationInclusion.INCLUDED, database.importedTransactionDao().getAll().single().finalInclusion)
+
+        val replay = repo.confirmImport(
+            "overlap.pdf",
+            "overlapping-statement",
+            listOf(sourceRow),
+            3L
+        )
+        assertEquals(0, replay.importedIncomeCount)
+        assertEquals(1, replay.skippedDuplicateCount)
+        assertEquals(1, database.incomeEntryDao().getAll().size)
     }
 
     @Test
