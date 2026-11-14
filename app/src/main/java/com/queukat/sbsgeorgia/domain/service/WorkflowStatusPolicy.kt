@@ -19,41 +19,6 @@ object WorkflowStatusPolicy {
 
     fun isEditable(status: MonthlyWorkflowStatus): Boolean = status != MonthlyWorkflowStatus.OVERDUE
 
-    fun allowedTransitions(status: MonthlyWorkflowStatus): Set<MonthlyWorkflowStatus> = when (status) {
-        MonthlyWorkflowStatus.DRAFT -> setOf(MonthlyWorkflowStatus.READY_TO_FILE)
-        MonthlyWorkflowStatus.READY_TO_FILE ->
-            setOf(
-                MonthlyWorkflowStatus.FILED,
-                MonthlyWorkflowStatus.DRAFT
-            )
-        MonthlyWorkflowStatus.FILED ->
-            setOf(
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-                MonthlyWorkflowStatus.READY_TO_FILE
-            )
-        MonthlyWorkflowStatus.TAX_PAYMENT_PENDING ->
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.FILED
-            )
-        MonthlyWorkflowStatus.PAYMENT_SENT ->
-            setOf(
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING
-            )
-        MonthlyWorkflowStatus.PAYMENT_CREDITED -> setOf(MonthlyWorkflowStatus.SETTLED)
-        MonthlyWorkflowStatus.SETTLED -> emptySet()
-        MonthlyWorkflowStatus.OVERDUE ->
-            setOf(
-                MonthlyWorkflowStatus.READY_TO_FILE,
-                MonthlyWorkflowStatus.FILED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            )
-    }
-
     private val declarationDateRequiredStatuses =
         setOf(
             MonthlyWorkflowStatus.FILED,

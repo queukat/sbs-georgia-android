@@ -26,52 +26,15 @@ class WorkflowStatusPolicyTest {
     }
 
     @Test
-    fun `overdue is derived and remains non editable while allowing recovery transitions`() {
+    fun `overdue is derived while every persisted status remains editable`() {
         assertFalse(WorkflowStatusPolicy.isEditable(MonthlyWorkflowStatus.OVERDUE))
         assertFalse(MonthlyWorkflowStatus.OVERDUE in WorkflowStatusPolicy.editableStatuses)
         assertEquals(
-            setOf(
-                MonthlyWorkflowStatus.READY_TO_FILE,
-                MonthlyWorkflowStatus.FILED,
-                MonthlyWorkflowStatus.TAX_PAYMENT_PENDING,
-                MonthlyWorkflowStatus.PAYMENT_SENT,
-                MonthlyWorkflowStatus.PAYMENT_CREDITED,
-                MonthlyWorkflowStatus.SETTLED
-            ),
-            WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.OVERDUE)
+            MonthlyWorkflowStatus.entries.filterNot { it == MonthlyWorkflowStatus.OVERDUE },
+            WorkflowStatusPolicy.editableStatuses
         )
+        assertTrue(WorkflowStatusPolicy.isEditable(MonthlyWorkflowStatus.DRAFT))
+        assertTrue(WorkflowStatusPolicy.isEditable(MonthlyWorkflowStatus.SETTLED))
     }
 
-    @Test
-    fun `normal transitions retain required rollback paths and settled has none`() {
-        assertEquals(
-            setOf(MonthlyWorkflowStatus.FILED, MonthlyWorkflowStatus.DRAFT),
-            WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.READY_TO_FILE)
-        )
-        assertEquals(
-            setOf(MonthlyWorkflowStatus.PAYMENT_CREDITED, MonthlyWorkflowStatus.TAX_PAYMENT_PENDING),
-            WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.PAYMENT_SENT)
-        )
-        assertTrue(WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.SETTLED).isEmpty())
-    }
-
-    @Test
-    fun `payment transitions cannot skip confirmation stages`() {
-        assertFalse(
-            MonthlyWorkflowStatus.PAYMENT_SENT in
-                WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.FILED)
-        )
-        assertFalse(
-            MonthlyWorkflowStatus.PAYMENT_CREDITED in
-                WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.TAX_PAYMENT_PENDING)
-        )
-        assertFalse(
-            MonthlyWorkflowStatus.SETTLED in
-                WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.PAYMENT_SENT)
-        )
-        assertEquals(
-            setOf(MonthlyWorkflowStatus.SETTLED),
-            WorkflowStatusPolicy.allowedTransitions(MonthlyWorkflowStatus.PAYMENT_CREDITED)
-        )
-    }
 }

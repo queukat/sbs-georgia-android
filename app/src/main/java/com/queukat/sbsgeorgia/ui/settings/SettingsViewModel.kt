@@ -25,6 +25,7 @@ import com.queukat.sbsgeorgia.domain.usecase.UpsertSettingsUseCase
 import com.queukat.sbsgeorgia.ui.common.backup.BackupRestoreController
 import com.queukat.sbsgeorgia.ui.common.document.DocumentImportAction
 import com.queukat.sbsgeorgia.ui.common.document.documentImportStrings
+import com.queukat.sbsgeorgia.ui.common.document.loadDocumentImportPreview
 import com.queukat.sbsgeorgia.domain.service.ReminderSchedulePort
 import com.queukat.sbsgeorgia.worker.ReminderTestScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -93,11 +94,7 @@ constructor(
                 )
             )
         )
-    private val documentImportHandler =
-        SettingsDocumentImportHandler(
-            strings = appContext.documentImportStrings(),
-            loadPreview = loadOnboardingDocumentPreviewUseCase::invoke
-        )
+    private val documentImportStrings = appContext.documentImportStrings()
     private val backupActions =
         SettingsBackupActions(
             textDocumentStore = textDocumentStore,
@@ -214,7 +211,12 @@ constructor(
     fun loadDocument(uri: Uri, action: DocumentImportAction) {
         viewModelScope.launch {
             _uiState.value = SettingsFormReducer.startDocumentLoading(_uiState.value)
-            val result = documentImportHandler.load(uri, action)
+            val result = loadDocumentImportPreview(
+                uriString = uri.toString(),
+                action = action,
+                strings = documentImportStrings,
+                loadPreview = loadOnboardingDocumentPreviewUseCase::invoke
+            )
             _uiState.value = SettingsFormReducer.applyDocumentLoadResult(_uiState.value, result)
         }
     }
@@ -225,7 +227,7 @@ constructor(
             SettingsFormReducer.applyPreview(
                 state = _uiState.value,
                 preview = preview,
-                previewAppliedMessage = documentImportHandler.previewAppliedMessage
+                previewAppliedMessage = documentImportStrings.previewApplied
             )
     }
 

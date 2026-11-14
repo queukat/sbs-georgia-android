@@ -93,15 +93,6 @@ enum class MonthlyWorkflowStatus(val dbCode: String) {
     }
 }
 
-enum class TaxPaymentStatus {
-    NOT_STARTED,
-    PENDING,
-    SENT,
-    CREDITED,
-    SETTLED,
-    OVERDUE
-}
-
 data class TaxpayerProfile(
     val registrationId: String,
     val displayName: String,
@@ -131,27 +122,6 @@ data class ReminderConfig(
     val paymentRemindersEnabled: Boolean,
     val defaultReminderTime: LocalTime,
     val themeMode: ThemeMode
-)
-
-data class ImportedStatement(
-    val id: Long,
-    val sourceFileName: String,
-    val sourceFingerprint: String,
-    val importedAtEpochMillis: Long
-)
-
-data class ImportedTransaction(
-    val id: Long,
-    val statementId: Long,
-    val transactionFingerprint: String,
-    val incomeDate: LocalDate?,
-    val description: String,
-    val additionalInformation: String?,
-    val paidOut: BigDecimal?,
-    val paidIn: BigDecimal?,
-    val balance: BigDecimal?,
-    val suggestedInclusion: DeclarationInclusion,
-    val finalInclusion: DeclarationInclusion
 )
 
 data class IncomeEntry(

@@ -289,9 +289,6 @@ constructor(
     fun isFilingWindowOpen(period: MonthlyDeclarationPeriod, referenceDate: LocalDate = LocalDate.now(clock)): Boolean =
         !referenceDate.isBefore(period.filingWindow.start)
 
-    fun allowedTransitions(status: MonthlyWorkflowStatus): Set<MonthlyWorkflowStatus> =
-        WorkflowStatusPolicy.allowedTransitions(status)
-
     private fun resolveGelEquivalent(entry: IncomeEntry): BigDecimal? = when {
         entry.gelEquivalent != null -> entry.gelEquivalent
         normalizeCurrencyCode(entry.originalCurrency) == GEL_CURRENCY -> entry.originalAmount
