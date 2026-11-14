@@ -138,14 +138,7 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
-    reminderConfig?.let { entity ->
-        require(entity.declarationReminderDays.all { it in 1..15 }) {
-            "Backup reminder config has invalid declaration reminder days."
-        }
-        require(entity.paymentReminderDays.all { it in 1..15 }) {
-            "Backup reminder config has invalid payment reminder days."
-        }
-    }
+    validateReminders()
 
     fxRates.forEach { entity ->
         require(isIsoLikeCurrencyCode(entity.currencyCode)) {
@@ -159,19 +152,7 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
-    monthlyDeclarationRecords.forEach { entity ->
-        require(entity.workflowStatus != MonthlyWorkflowStatus.OVERDUE.dbCode) {
-            "Backup monthly declaration record '${entity.periodKey}' cannot persist an overdue status."
-        }
-        require(entity.paymentAmountGel == null || entity.paymentAmountGel.signum() > 0) {
-            "Backup monthly declaration record '${entity.periodKey}' must have positive paymentAmountGel."
-        }
-        val expectedPeriodKey = YearMonth.of(entity.year, entity.month).toString()
-        require(entity.periodKey == expectedPeriodKey) {
-            "Backup monthly declaration record '${entity.periodKey}' does not match " +
-                "year=${entity.year}, month=${entity.month}."
-        }
-    }
+    validateMonthlyRecords()
 
     val importedStatementIds = importedStatements.map(ImportedStatementEntity::id).toSet()
     val incomeEntriesBySourceFingerprint =
@@ -227,6 +208,33 @@ private fun BackupRestorePlan.validateIntegrity() {
                 "Backup income entry '${entity.id}' has conflicting sourceStatementId/" +
                     "sourceTransactionFingerprint linkage."
             }
+        }
+    }
+}
+
+private fun BackupRestorePlan.validateReminders() {
+    reminderConfig?.let { entity ->
+        require(entity.declarationReminderDays.all { it in 1..15 }) {
+            "Backup reminder config has invalid declaration reminder days."
+        }
+        require(entity.paymentReminderDays.all { it in 1..15 }) {
+            "Backup reminder config has invalid payment reminder days."
+        }
+    }
+}
+
+private fun BackupRestorePlan.validateMonthlyRecords() {
+    monthlyDeclarationRecords.forEach { entity ->
+        require(entity.workflowStatus != MonthlyWorkflowStatus.OVERDUE.dbCode) {
+            "Backup monthly declaration record '${entity.periodKey}' cannot persist an overdue status."
+        }
+        require(entity.paymentAmountGel == null || entity.paymentAmountGel.signum() > 0) {
+            "Backup monthly declaration record '${entity.periodKey}' must have positive paymentAmountGel."
+        }
+        val expectedPeriodKey = YearMonth.of(entity.year, entity.month).toString()
+        require(entity.periodKey == expectedPeriodKey) {
+            "Backup monthly declaration record '${entity.periodKey}' does not match " +
+                "year=${entity.year}, month=${entity.month}."
         }
     }
 }
