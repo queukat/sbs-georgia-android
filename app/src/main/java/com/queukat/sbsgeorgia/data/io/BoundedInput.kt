@@ -14,9 +14,8 @@ fun InputStream.readBytesLimited(maxBytes: Int): ByteArray {
     require(maxBytes >= 0)
     val output = ByteArrayOutputStream(minOf(maxBytes, 8192))
     val buffer = ByteArray(8192)
-    while (true) {
-        val count = read(buffer)
-        if (count == -1) break
+    var count = read(buffer)
+    while (count != -1) {
         if (count == 0) {
             val single = read()
             if (single == -1) break
@@ -26,6 +25,7 @@ fun InputStream.readBytesLimited(maxBytes: Int): ByteArray {
             require(count <= maxBytes - output.size()) { "The selected input exceeds the supported size limit." }
             output.write(buffer, 0, count)
         }
+        count = read(buffer)
     }
     return output.toByteArray()
 }

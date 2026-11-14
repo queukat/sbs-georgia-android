@@ -170,171 +170,183 @@ object HardeningRegressionChecks {
                 throw AssertionError("FAILED: $name", error)
             }
         }
-        test("FX fetch cannot overwrite an edit made while awaiting the rate") {
-            val original = entry()
-            val store = IncomeStore(listOf(original))
-            val edited = original.copy(originalAmount = BigDecimal("500"), note = "new", updatedAtEpochMillis = 1L)
-            val result = ResolveMonthFxUseCase(Rates(rate) { store.upsert(edited) }, store, clock)(listOf(original))
-            check(store.rows.value.single() == edited)
-            check(result.resolvedEntryCount == 0 && result.skippedChangedEntryCount == 1)
-        }
-        test("FX fetch cannot resurrect a deleted income") {
-            val original = entry()
-            val store = IncomeStore(listOf(original))
-            val result = ResolveMonthFxUseCase(Rates(rate) { store.deleteById(1L) }, store, clock)(listOf(original))
-            check(store.rows.value.isEmpty() && result.skippedChangedEntryCount == 1)
-        }
-        test("500 entries sharing a date and currency use one FX fetch and one write batch") {
-            val entries = (1L..500L).map { entry(it) }
-            val store = IncomeStore(entries)
-            val rates = Rates(rate)
-            val result = ResolveMonthFxUseCase(rates, store, clock)(entries)
-            check(result.resolvedEntryCount == 500 && rates.fetches == 1 && store.batchWrites == 1)
-            check(store.rows.value.all { it.gelEquivalent == BigDecimal("270.00") })
-        }
-        test("unaffected entries still resolve when one entry changes") {
-            val entries = listOf(entry(), entry(2L))
-            val store = IncomeStore(entries)
-            val result = ResolveMonthFxUseCase(
-                Rates(rate) { store.deleteById(1L) },
-                store,
-                clock
-            )(entries)
-            check(result.resolvedEntryCount == 1 && result.skippedChangedEntryCount == 1)
-            check(store.rows.value.single().id == 2L)
-        }
-        test("excluded and review-required income do not request automatic FX") {
-            val entries = listOf(
-                entry().copy(declarationInclusion = DeclarationInclusion.EXCLUDED),
-                entry(2L).copy(declarationInclusion = DeclarationInclusion.REVIEW_REQUIRED)
-            )
-            val rates = Rates(rate)
-            ResolveMonthFxUseCase(rates, IncomeStore(entries), clock)(entries)
-            check(rates.fetches == 0)
-        }
-        test("FX display queries once for 500 matching rows") {
-            val entries = (1L..500L).map { entry(it).copy(gelEquivalent = BigDecimal("270.00")) }
-            val rates = Rates(rate)
-            check(loadMatchingFxRateDetails(entries, rates).size == 500)
-            check(rates.reads == 1)
-        }
-        test("incompatible current cache rate is not presented as a historical applied rate") {
-            val rates = Rates(rate.copy(rateToGel = BigDecimal("2.8")))
-            val resolved = entry().copy(gelEquivalent = BigDecimal("270.00"))
-            check(loadMatchingFxRateDetails(listOf(resolved), rates).isEmpty())
-        }
-        test("manual FX cannot overwrite an edit made while saving the override") {
-            val original = entry()
-            val store = IncomeStore(listOf(original))
-            val changed = original.copy(note = "newer note")
-            val useCase = ApplyManualFxOverrideUseCase(Rates(rate) { store.upsert(changed) }, store, clock)
-            check(runCatching { useCase(1L, 1, BigDecimal("2.8")) }.exceptionOrNull() is IllegalStateException)
-            check(store.rows.value.single() == changed)
-        }
-        test("invalid manual FX is rejected before any write") {
-            val store = IncomeStore(listOf(entry()))
-            val useCase = ApplyManualFxOverrideUseCase(Rates(rate), store, clock)
-            check(runCatching { useCase(1L, 0, BigDecimal.ONE) }.isFailure)
-            check(runCatching { useCase(1L, 1, BigDecimal.ZERO) }.isFailure)
-            check(store.batchWrites == 0)
-        }
-        test("zero and negative manual income are rejected at the domain boundary") {
-            val store = IncomeStore(emptyList())
-            val useCase = UpsertManualIncomeEntryUseCase(store)
-            check(runCatching { useCase(entry().copy(originalAmount = BigDecimal.ZERO)) }.isFailure)
-            check(runCatching { useCase(entry().copy(originalAmount = BigDecimal("-1"))) }.isFailure)
-            check(store.rows.value.isEmpty())
-        }
-        test("repeated manual override preserves PK and actually replaces its value") {
-            val dao = RatesDao()
-            val remote = object : OfficialFxRemoteDataSource {
-                override suspend fun fetchDailyRates(date: LocalDate) = OfficialFxRemoteResult.NotFound
-            }
-            val repository = FxRateRepositoryImpl(dao, remote)
-            repository.upsertManualOverride(day, "usd", 1, BigDecimal("2.7"))
-            val id = dao.rows.single().id
-            val result = repository.upsertManualOverride(day, "USD", 100, BigDecimal("275"))
-            check(result.units == 100 && result.rateToGel == BigDecimal("275"))
-            check(dao.rows.single().id == id && dao.rows.single().rateToGel == BigDecimal("275"))
-        }
-        val initial = DeclarationData(
-            TaxpayerProfile("123456789", "Synthetic Test"),
-            SmallBusinessStatusConfig(LocalDate.of(2024, 1, 1), BigDecimal.ONE),
-            null,
-            listOf(entry().copy(originalCurrency = "GEL", gelEquivalent = BigDecimal("100"))),
-            emptyList()
-        )
-        val planner = MonthlyDeclarationPlanner(clock, GeorgiaTaxBusinessCalendar())
-        fun pipeline(store: DataStore, date: MutableStateFlow<LocalDate>) = ObserveDeclarationStateUseCase(
-            store,
-            planner,
-            clock,
-            object : DateSource {
-                override fun observeDate() = date
-            },
-            Dispatchers.Unconfined
-        )
-        test("calendar rollover updates current-year snapshots without database writes") {
-            coroutineScope {
-                val store = DataStore(initial)
-                val date = MutableStateFlow(LocalDate.of(2026, 12, 31))
-                val outputs = Channel<List<MonthlyDeclarationSnapshot>>(Channel.UNLIMITED)
-                val job = launch {
-                    ObserveCurrentYearSnapshotsUseCase(pipeline(store, date))().collect { outputs.send(it) }
-                }
-                try {
-                    check(outputs.receive().all { it.period.incomeMonth.year == 2026 })
-                    date.value = LocalDate.of(2027, 1, 1)
-                    val next = outputs.receive()
-                    check(next.isNotEmpty() && next.all { it.period.incomeMonth.year == 2027 })
-                    check(store.state.value == initial)
-                } finally {
-                    job.cancel()
-                }
-            }
-        }
-        test("month details use entries and totals from the same data snapshot") {
-            val store = DataStore(initial)
-            val pipe = pipeline(store, MutableStateFlow(LocalDate.now(clock)))
-            val (snapshot, entries) = ObserveMonthDetailUseCase(pipe)(YearMonth.of(2026, 3)).first()
-            check(entries.size == 1)
-            check(snapshot!!.graph20TotalGel.compareTo(entries.single().originalAmount) == 0)
-        }
-        test("fresh reads for widgets and workers do not rely on a UI subscription") {
-            val store = DataStore(initial)
-            val pipe = pipeline(store, MutableStateFlow(LocalDate.now(clock)))
-            pipe.current()
-            store.state.value = initial.copy(entries = emptyList())
-            check(pipe.current().data.entries.isEmpty() && store.freshReads == 2)
-        }
-        test("partitioned calculations preserve planner results and empty intermediate years") {
-            val store = DataStore(initial)
-            val snapshots = pipeline(store, MutableStateFlow(LocalDate.now(clock))).current().snapshots
-            val expected = (2024..2026).reversed().flatMap { year ->
-                planner.buildYearSnapshots(year, initial.profile, initial.config, initial.entries, initial.records)
-            }
-            check(snapshots == expected)
-            check(snapshots.count { it.period.incomeMonth.year == 2025 } == 12)
-        }
-        test("bounded input accepts exactly the configured limit") {
-            val bytes = ByteArray(8192) { (it % 127).toByte() }
-            check(ByteArrayInputStream(bytes).readBytesLimited(bytes.size).contentEquals(bytes))
-        }
-        test("bounded input rejects one byte over the limit") {
-            check(runCatching { ByteArrayInputStream(ByteArray(8193)).readBytesLimited(8192) }.isFailure)
-        }
-        test("zero-byte limit accepts empty input but rejects content") {
-            check(ByteArrayInputStream(byteArrayOf()).readBytesLimited(0).isEmpty())
-            check(runCatching { ByteArrayInputStream(byteArrayOf(1)).readBytesLimited(0) }.isFailure)
-        }
-        test("provider returning zero bytes cannot spin indefinitely or bypass the limit") {
-            val source = object : InputStream() {
-                var remaining = 4
-                override fun read(buffer: ByteArray, offset: Int, length: Int) = if (remaining > 0) 0 else -1
-                override fun read() = if (remaining-- > 0) 65 else -1
-            }
-            check(runCatching { source.readBytesLimited(3) }.isFailure)
-        }
+        runFxCases(::test)
+        runPipelineCases(::test)
+        runInputCases(::test)
         println("SUCCESS: $count hardening regression checks. Room generation and Android runtime NOT exercised.")
+    }
+    
+    private suspend fun runFxCases(test: suspend (String, suspend () -> Unit) -> Unit) {
+    test("FX fetch cannot overwrite an edit made while awaiting the rate") {
+        val original = entry()
+        val store = IncomeStore(listOf(original))
+        val edited = original.copy(originalAmount = BigDecimal("500"), note = "new", updatedAtEpochMillis = 1L)
+        val result = ResolveMonthFxUseCase(Rates(rate) { store.upsert(edited) }, store, clock)(listOf(original))
+        check(store.rows.value.single() == edited)
+        check(result.resolvedEntryCount == 0 && result.skippedChangedEntryCount == 1)
+    }
+    test("FX fetch cannot resurrect a deleted income") {
+        val original = entry()
+        val store = IncomeStore(listOf(original))
+        val result = ResolveMonthFxUseCase(Rates(rate) { store.deleteById(1L) }, store, clock)(listOf(original))
+        check(store.rows.value.isEmpty() && result.skippedChangedEntryCount == 1)
+    }
+    test("500 entries sharing a date and currency use one FX fetch and one write batch") {
+        val entries = (1L..500L).map { entry(it) }
+        val store = IncomeStore(entries)
+        val rates = Rates(rate)
+        val result = ResolveMonthFxUseCase(rates, store, clock)(entries)
+        check(result.resolvedEntryCount == 500 && rates.fetches == 1 && store.batchWrites == 1)
+        check(store.rows.value.all { it.gelEquivalent == BigDecimal("270.00") })
+    }
+    test("unaffected entries still resolve when one entry changes") {
+        val entries = listOf(entry(), entry(2L))
+        val store = IncomeStore(entries)
+        val result = ResolveMonthFxUseCase(
+            Rates(rate) { store.deleteById(1L) },
+            store,
+            clock
+        )(entries)
+        check(result.resolvedEntryCount == 1 && result.skippedChangedEntryCount == 1)
+        check(store.rows.value.single().id == 2L)
+    }
+    test("excluded and review-required income do not request automatic FX") {
+        val entries = listOf(
+            entry().copy(declarationInclusion = DeclarationInclusion.EXCLUDED),
+            entry(2L).copy(declarationInclusion = DeclarationInclusion.REVIEW_REQUIRED)
+        )
+        val rates = Rates(rate)
+        ResolveMonthFxUseCase(rates, IncomeStore(entries), clock)(entries)
+        check(rates.fetches == 0)
+    }
+    test("FX display queries once for 500 matching rows") {
+        val entries = (1L..500L).map { entry(it).copy(gelEquivalent = BigDecimal("270.00")) }
+        val rates = Rates(rate)
+        check(loadMatchingFxRateDetails(entries, rates).size == 500)
+        check(rates.reads == 1)
+    }
+    test("incompatible current cache rate is not presented as a historical applied rate") {
+        val rates = Rates(rate.copy(rateToGel = BigDecimal("2.8")))
+        val resolved = entry().copy(gelEquivalent = BigDecimal("270.00"))
+        check(loadMatchingFxRateDetails(listOf(resolved), rates).isEmpty())
+    }
+    test("manual FX cannot overwrite an edit made while saving the override") {
+        val original = entry()
+        val store = IncomeStore(listOf(original))
+        val changed = original.copy(note = "newer note")
+        val useCase = ApplyManualFxOverrideUseCase(Rates(rate) { store.upsert(changed) }, store, clock)
+        check(runCatching { useCase(1L, 1, BigDecimal("2.8")) }.exceptionOrNull() is IllegalStateException)
+        check(store.rows.value.single() == changed)
+    }
+    test("invalid manual FX is rejected before any write") {
+        val store = IncomeStore(listOf(entry()))
+        val useCase = ApplyManualFxOverrideUseCase(Rates(rate), store, clock)
+        check(runCatching { useCase(1L, 0, BigDecimal.ONE) }.isFailure)
+        check(runCatching { useCase(1L, 1, BigDecimal.ZERO) }.isFailure)
+        check(store.batchWrites == 0)
+    }
+    test("zero and negative manual income are rejected at the domain boundary") {
+        val store = IncomeStore(emptyList())
+        val useCase = UpsertManualIncomeEntryUseCase(store)
+        check(runCatching { useCase(entry().copy(originalAmount = BigDecimal.ZERO)) }.isFailure)
+        check(runCatching { useCase(entry().copy(originalAmount = BigDecimal("-1"))) }.isFailure)
+        check(store.rows.value.isEmpty())
+    }
+    test("repeated manual override preserves PK and actually replaces its value") {
+        val dao = RatesDao()
+        val remote = object : OfficialFxRemoteDataSource {
+            override suspend fun fetchDailyRates(date: LocalDate) = OfficialFxRemoteResult.NotFound
+        }
+        val repository = FxRateRepositoryImpl(dao, remote)
+        repository.upsertManualOverride(day, "usd", 1, BigDecimal("2.7"))
+        val id = dao.rows.single().id
+        val result = repository.upsertManualOverride(day, "USD", 100, BigDecimal("275"))
+        check(result.units == 100 && result.rateToGel == BigDecimal("275"))
+        check(dao.rows.single().id == id && dao.rows.single().rateToGel == BigDecimal("275"))
+    }
+    }
+
+    private suspend fun runPipelineCases(test: suspend (String, suspend () -> Unit) -> Unit) {
+    val initial = DeclarationData(
+        TaxpayerProfile("123456789", "Synthetic Test"),
+        SmallBusinessStatusConfig(LocalDate.of(2024, 1, 1), BigDecimal.ONE),
+        null,
+        listOf(entry().copy(originalCurrency = "GEL", gelEquivalent = BigDecimal("100"))),
+        emptyList()
+    )
+    val planner = MonthlyDeclarationPlanner(clock, GeorgiaTaxBusinessCalendar())
+    fun pipeline(store: DataStore, date: MutableStateFlow<LocalDate>) = ObserveDeclarationStateUseCase(
+        store,
+        planner,
+        clock,
+        object : DateSource {
+            override fun observeDate() = date
+        },
+        Dispatchers.Unconfined
+    )
+    test("calendar rollover updates current-year snapshots without database writes") {
+        coroutineScope {
+            val store = DataStore(initial)
+            val date = MutableStateFlow(LocalDate.of(2026, 12, 31))
+            val outputs = Channel<List<MonthlyDeclarationSnapshot>>(Channel.UNLIMITED)
+            val job = launch {
+                ObserveCurrentYearSnapshotsUseCase(pipeline(store, date))().collect { outputs.send(it) }
+            }
+            try {
+                check(outputs.receive().all { it.period.incomeMonth.year == 2026 })
+                date.value = LocalDate.of(2027, 1, 1)
+                val next = outputs.receive()
+                check(next.isNotEmpty() && next.all { it.period.incomeMonth.year == 2027 })
+                check(store.state.value == initial)
+            } finally {
+                job.cancel()
+            }
+        }
+    }
+    test("month details use entries and totals from the same data snapshot") {
+        val store = DataStore(initial)
+        val pipe = pipeline(store, MutableStateFlow(LocalDate.now(clock)))
+        val (snapshot, entries) = ObserveMonthDetailUseCase(pipe)(YearMonth.of(2026, 3)).first()
+        check(entries.size == 1)
+        check(snapshot!!.graph20TotalGel.compareTo(entries.single().originalAmount) == 0)
+    }
+    test("fresh reads for widgets and workers do not rely on a UI subscription") {
+        val store = DataStore(initial)
+        val pipe = pipeline(store, MutableStateFlow(LocalDate.now(clock)))
+        pipe.current()
+        store.state.value = initial.copy(entries = emptyList())
+        check(pipe.current().data.entries.isEmpty() && store.freshReads == 2)
+    }
+    test("partitioned calculations preserve planner results and empty intermediate years") {
+        val store = DataStore(initial)
+        val snapshots = pipeline(store, MutableStateFlow(LocalDate.now(clock))).current().snapshots
+        val expected = (2024..2026).reversed().flatMap { year ->
+            planner.buildYearSnapshots(year, initial.profile, initial.config, initial.entries, initial.records)
+        }
+        check(snapshots == expected)
+        check(snapshots.count { it.period.incomeMonth.year == 2025 } == 12)
+    }
+    }
+
+    private suspend fun runInputCases(test: suspend (String, suspend () -> Unit) -> Unit) {
+    test("bounded input accepts exactly the configured limit") {
+        val bytes = ByteArray(8192) { (it % 127).toByte() }
+        check(ByteArrayInputStream(bytes).readBytesLimited(bytes.size).contentEquals(bytes))
+    }
+    test("bounded input rejects one byte over the limit") {
+        check(runCatching { ByteArrayInputStream(ByteArray(8193)).readBytesLimited(8192) }.isFailure)
+    }
+    test("zero-byte limit accepts empty input but rejects content") {
+        check(ByteArrayInputStream(byteArrayOf()).readBytesLimited(0).isEmpty())
+        check(runCatching { ByteArrayInputStream(byteArrayOf(1)).readBytesLimited(0) }.isFailure)
+    }
+    test("provider returning zero bytes cannot spin indefinitely or bypass the limit") {
+        val source = object : InputStream() {
+            var remaining = 4
+            override fun read(buffer: ByteArray, offset: Int, length: Int) = if (remaining > 0) 0 else -1
+            override fun read() = if (remaining-- > 0) 65 else -1
+        }
+        check(runCatching { source.readBytesLimited(3) }.isFailure)
+    }
     }
 }
