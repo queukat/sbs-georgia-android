@@ -12,6 +12,7 @@ import com.queukat.sbsgeorgia.data.local.TaxpayerProfileEntity
 import com.queukat.sbsgeorgia.data.local.toEntity
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationInclusion
+import com.queukat.sbsgeorgia.domain.model.MonthlyWorkflowStatus
 import com.queukat.sbsgeorgia.domain.model.isIsoLikeCurrencyCode
 import com.queukat.sbsgeorgia.domain.model.normalizeCurrencyCode
 import java.time.YearMonth
@@ -137,6 +138,15 @@ private fun BackupRestorePlan.validateIntegrity() {
         }
     }
 
+    reminderConfig?.let { entity ->
+        require(entity.declarationReminderDays.all { it in 1..15 }) {
+            "Backup reminder config has invalid declaration reminder days."
+        }
+        require(entity.paymentReminderDays.all { it in 1..15 }) {
+            "Backup reminder config has invalid payment reminder days."
+        }
+    }
+
     fxRates.forEach { entity ->
         require(isIsoLikeCurrencyCode(entity.currencyCode)) {
             "Backup FX rate '${entity.id}' must have valid currencyCode."
@@ -150,6 +160,12 @@ private fun BackupRestorePlan.validateIntegrity() {
     }
 
     monthlyDeclarationRecords.forEach { entity ->
+        require(entity.workflowStatus != MonthlyWorkflowStatus.OVERDUE.dbCode) {
+            "Backup monthly declaration record '${entity.periodKey}' cannot persist an overdue status."
+        }
+        require(entity.paymentAmountGel == null || entity.paymentAmountGel.signum() > 0) {
+            "Backup monthly declaration record '${entity.periodKey}' must have positive paymentAmountGel."
+        }
         val expectedPeriodKey = YearMonth.of(entity.year, entity.month).toString()
         require(entity.periodKey == expectedPeriodKey) {
             "Backup monthly declaration record '${entity.periodKey}' does not match " +
