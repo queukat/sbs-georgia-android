@@ -35,6 +35,7 @@ from pathlib import Path
 r=Path(sys.argv[1]);names=sorted({e.attrib['name'] for p in (r/'app/src/main/res/values').glob('*.xml') for e in E.parse(p).getroot() if e.tag=='string'})
 Path(sys.argv[2]).write_text('package com.queukat.sbsgeorgia\nobject R { object string {\n'+'\n'.join(f'const val {n}: Int = {i}' for i,n in enumerate(names,1))+'\n} }\n')
 PY
+python3 scripts/check-domain-boundaries.py
 B=app/src/main/java/com/queukat/sbsgeorgia
 mapfile -t SOURCES < <(find "$B/domain/model" "$B/domain/service" "$B/domain/repository" -name '*.kt' | sort)
 "$KOTLINC" -jvm-target 17 -cp "$COROUTINES" -include-runtime -d "$TMP/checks.jar" \

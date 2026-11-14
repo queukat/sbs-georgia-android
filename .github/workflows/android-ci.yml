@@ -32,6 +32,9 @@ jobs:
       - name: Make Gradle wrapper executable
         run: chmod +x ./gradlew
 
+      - name: Verify domain dependency boundaries
+        run: python3 scripts/check-domain-boundaries.py
+
       - name: Run tests, builds, and static analysis
         run: >-
           ./gradlew
