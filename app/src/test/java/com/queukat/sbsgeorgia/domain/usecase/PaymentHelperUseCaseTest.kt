@@ -95,11 +95,7 @@ private class PaymentTestSettingsRepository : SettingsRepository {
         config: SmallBusinessStatusConfig,
         reminders: ReminderConfig,
         formConfig: DeclarationFormConfig?
-    ) {
-        upsertTaxpayerProfile(profile)
-        upsertStatusConfig(config)
-        upsertReminderConfig(reminders)
-    }
+    ) = Unit
 }
 
 private class PaymentTestDeclarationFormConfigRepository(private val config: DeclarationFormConfig) :
