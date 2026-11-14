@@ -4,6 +4,7 @@ import androidx.room.withTransaction
 import com.queukat.sbsgeorgia.data.local.SbsGeorgiaDatabase
 import com.queukat.sbsgeorgia.data.local.toDomain
 import com.queukat.sbsgeorgia.di.IoDispatcher
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.repository.DeclarationData
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import javax.inject.Inject
@@ -26,6 +27,7 @@ constructor(
         "taxpayer_profile",
         "small_business_status_config",
         "reminder_config",
+        "declaration_form_config",
         "income_entry",
         "monthly_declaration_record"
     ).map { getData() }.distinctUntilChanged().flowOn(ioDispatcher)
@@ -37,7 +39,8 @@ constructor(
                 config = database.smallBusinessStatusConfigDao().get()?.toDomain(),
                 reminders = database.reminderConfigDao().get()?.toDomain(),
                 entries = database.incomeEntryDao().getAll().map { it.toDomain() },
-                records = database.monthlyDeclarationRecordDao().getAll().map { it.toDomain() }
+                records = database.monthlyDeclarationRecordDao().getAll().map { it.toDomain() },
+                formConfig = database.declarationFormConfigDao().get()?.toDomain() ?: DeclarationFormConfig()
             )
         }
     }

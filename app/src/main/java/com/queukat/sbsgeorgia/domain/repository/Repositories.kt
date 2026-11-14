@@ -40,6 +40,16 @@ interface SettingsRepository {
     suspend fun upsertReminderConfig(config: ReminderConfig)
 
     suspend fun upsertSettings(profile: TaxpayerProfile, config: SmallBusinessStatusConfig, reminders: ReminderConfig)
+
+    /** Full settings write must include the copy-field config in the same Room transaction. */
+    suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig
+    ) {
+        error("Atomic declaration form settings are unsupported by this repository.")
+    }
 }
 
 interface DeclarationFormConfigRepository {

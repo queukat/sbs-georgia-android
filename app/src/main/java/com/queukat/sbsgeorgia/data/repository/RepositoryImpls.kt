@@ -41,7 +41,8 @@ constructor(
     private val database: SbsGeorgiaDatabase,
     private val taxpayerProfileDao: TaxpayerProfileDao,
     private val statusConfigDao: SmallBusinessStatusConfigDao,
-    private val reminderConfigDao: ReminderConfigDao
+    private val reminderConfigDao: ReminderConfigDao,
+    private val declarationFormConfigDao: DeclarationFormConfigDao = database.declarationFormConfigDao()
 ) : SettingsRepository {
     override fun observeTaxpayerProfile(): Flow<TaxpayerProfile?> = taxpayerProfileDao.observe().map {
         it?.toDomain()
@@ -71,11 +72,26 @@ constructor(
         profile: TaxpayerProfile,
         config: SmallBusinessStatusConfig,
         reminders: ReminderConfig
+    ) = writeSettings(profile, config, reminders, null)
+
+    override suspend fun upsertSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig
+    ) = writeSettings(profile, config, reminders, formConfig)
+
+    private suspend fun writeSettings(
+        profile: TaxpayerProfile,
+        config: SmallBusinessStatusConfig,
+        reminders: ReminderConfig,
+        formConfig: DeclarationFormConfig?
     ) {
         database.withTransaction {
             taxpayerProfileDao.upsert(profile.toEntity())
             statusConfigDao.upsert(config.toEntity())
             reminderConfigDao.upsert(reminders.toEntity())
+            formConfig?.let { declarationFormConfigDao.upsert(it.toEntity()) }
         }
     }
 }

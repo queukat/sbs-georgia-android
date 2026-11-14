@@ -1,5 +1,6 @@
 package com.queukat.sbsgeorgia.domain.repository
 
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
@@ -13,7 +14,8 @@ data class DeclarationData(
     val config: SmallBusinessStatusConfig?,
     val reminders: ReminderConfig?,
     val entries: List<IncomeEntry>,
-    val records: List<MonthlyDeclarationRecord>
+    val records: List<MonthlyDeclarationRecord>,
+    val formConfig: DeclarationFormConfig = DeclarationFormConfig()
 )
 
 interface DeclarationDataRepository {

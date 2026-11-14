@@ -2,10 +2,12 @@ package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.di.DefaultDispatcher
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
+import com.queukat.sbsgeorgia.domain.model.RollingIncomeSummary
 import com.queukat.sbsgeorgia.domain.repository.DeclarationData
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.service.DateSource
 import com.queukat.sbsgeorgia.domain.service.MonthlyDeclarationPlanner
+import com.queukat.sbsgeorgia.domain.service.buildRollingIncomeSummary
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
@@ -20,7 +22,8 @@ import kotlinx.coroutines.withContext
 data class DeclarationState(
     val data: DeclarationData,
     val date: LocalDate,
-    val snapshots: List<MonthlyDeclarationSnapshot>
+    val snapshots: List<MonthlyDeclarationSnapshot>,
+    val rollingIncome: RollingIncomeSummary = buildRollingIncomeSummary(data.entries, date)
 )
 
 /** One calculation pipeline, reused by screens, CSV, workers and widgets. */

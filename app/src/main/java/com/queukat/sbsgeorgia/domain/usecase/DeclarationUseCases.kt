@@ -1,6 +1,7 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
 import com.queukat.sbsgeorgia.domain.model.DashboardSummary
+import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationRecord
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
@@ -18,6 +19,7 @@ import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 
 class ObserveCurrentYearSnapshotsUseCase
 @Inject
@@ -35,17 +37,33 @@ constructor(private val observeState: ObserveDeclarationStateUseCase) {
     suspend fun current(): List<MonthlyDeclarationSnapshot> = observeState.current().snapshots
 }
 
+data class MonthDetailReadModel(
+    val snapshot: MonthlyDeclarationSnapshot?,
+    val entries: List<IncomeEntry>,
+    val registrationId: String?,
+    val formConfig: DeclarationFormConfig,
+    val referenceDate: LocalDate
+)
+
 class ObserveMonthDetailUseCase
 @Inject
 constructor(private val observeState: ObserveDeclarationStateUseCase) {
+    fun full(yearMonth: YearMonth): Flow<MonthDetailReadModel> = observeState.project { state ->
+        val snapshot = state.snapshots.firstOrNull { it.period.incomeMonth == yearMonth }
+        // Totals, entries, profile and copy-field configuration come from one Room snapshot.
+        val entries = state.data.entries.filter { YearMonth.from(it.incomeDate) == yearMonth }
+            .sortedWith(compareByDescending<IncomeEntry> { it.incomeDate }.thenByDescending { it.id })
+        MonthDetailReadModel(
+            snapshot = snapshot,
+            entries = entries,
+            registrationId = state.data.profile?.registrationId,
+            formConfig = state.data.formConfig,
+            referenceDate = state.date
+        )
+    }
+
     operator fun invoke(yearMonth: YearMonth): Flow<Pair<MonthlyDeclarationSnapshot?, List<IncomeEntry>>> =
-        observeState.project { state ->
-            val snapshot = state.snapshots.firstOrNull { it.period.incomeMonth == yearMonth }
-            // Total and visible rows must always describe the same database revision.
-            val entries = state.data.entries.filter { YearMonth.from(it.incomeDate) == yearMonth }
-                .sortedWith(compareByDescending<IncomeEntry> { it.incomeDate }.thenByDescending { it.id })
-            snapshot to entries
-        }
+        full(yearMonth).map { it.snapshot to it.entries }
 }
 
 class ObserveDashboardSummaryUseCase
@@ -55,6 +73,10 @@ constructor(
     private val planner: MonthlyDeclarationPlanner
 ) {
     operator fun invoke(): Flow<DashboardSummary> = observeState.project(::buildSummary)
+
+    fun withDeclarationState(): Flow<Pair<DashboardSummary, DeclarationState>> = observeState.project { state ->
+        buildSummary(state) to state
+    }
 
     suspend fun current(): DashboardSummary = buildSummary(observeState.current())
 
