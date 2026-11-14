@@ -4,7 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.room.Room
 import com.queukat.sbsgeorgia.data.export.AndroidTextDocumentStore
-import com.queukat.sbsgeorgia.data.export.TextDocumentStore
+import com.queukat.sbsgeorgia.data.export.AppBackupManager
+import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
 import com.queukat.sbsgeorgia.data.importer.AndroidStatementDocumentReader
 import com.queukat.sbsgeorgia.data.importer.PdfBoxStatementTextExtractor
 import com.queukat.sbsgeorgia.data.importer.StatementDocumentReader
@@ -29,6 +30,7 @@ import com.queukat.sbsgeorgia.data.repository.IncomeRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.MonthlyDeclarationRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.SettingsRepositoryImpl
 import com.queukat.sbsgeorgia.data.repository.StatementImportRepositoryImpl
+import com.queukat.sbsgeorgia.domain.repository.AppBackupRepository
 import com.queukat.sbsgeorgia.domain.repository.AppPreferencesRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationDataRepository
 import com.queukat.sbsgeorgia.domain.repository.DeclarationFormConfigRepository
@@ -75,6 +77,9 @@ abstract class RepositoryBindingsModule {
 
     @Binds
     abstract fun bindAppPreferencesRepository(impl: AppPreferencesRepositoryImpl): AppPreferencesRepository
+
+    @Binds
+    abstract fun bindAppBackupRepository(impl: AppBackupManager): AppBackupRepository
 
     @Binds
     abstract fun bindSettingsRepository(impl: SettingsRepositoryImpl): SettingsRepository

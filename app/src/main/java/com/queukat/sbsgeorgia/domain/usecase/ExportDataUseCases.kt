@@ -1,7 +1,7 @@
 package com.queukat.sbsgeorgia.domain.usecase
 
-import com.queukat.sbsgeorgia.data.export.AppBackupManager
-import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
+import com.queukat.sbsgeorgia.domain.model.BackupRestoreResult
+import com.queukat.sbsgeorgia.domain.repository.AppBackupRepository
 import com.queukat.sbsgeorgia.domain.model.IncomeEntry
 import com.queukat.sbsgeorgia.domain.model.MonthlyCurrencyTotal
 import com.queukat.sbsgeorgia.domain.model.MonthlyDeclarationSnapshot
@@ -127,13 +127,13 @@ constructor(private val observeState: ObserveDeclarationStateUseCase) {
 
 class ExportBackupJsonUseCase
 @Inject
-constructor(private val appBackupManager: AppBackupManager) {
+constructor(private val appBackupManager: AppBackupRepository) {
     suspend operator fun invoke(): String = appBackupManager.exportJson()
 }
 
 class ImportBackupJsonUseCase
 @Inject
-constructor(private val appBackupManager: AppBackupManager) {
+constructor(private val appBackupManager: AppBackupRepository) {
     suspend operator fun invoke(content: String): BackupRestoreResult = appBackupManager.importJson(content)
 }
 

@@ -19,6 +19,7 @@ import com.queukat.sbsgeorgia.data.local.TaxpayerProfileDao
 import com.queukat.sbsgeorgia.data.local.toEntity
 import com.queukat.sbsgeorgia.di.IoDispatcher
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
+import com.queukat.sbsgeorgia.domain.repository.AppBackupRepository
 import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -44,8 +45,8 @@ constructor(
     private val backupValidator: BackupValidator,
     private val clock: Clock,
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) {
-    suspend fun exportJson(): String = withContext(ioDispatcher) {
+) : AppBackupRepository {
+    override suspend fun exportJson(): String = withContext(ioDispatcher) {
         val document = database.withTransaction {
             val declarationFormConfig =
                 declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
@@ -71,7 +72,7 @@ constructor(
         json.encodeToString(document)
     }
 
-    suspend fun importJson(content: String): BackupRestoreResult = withContext(ioDispatcher) {
+    override suspend fun importJson(content: String): BackupRestoreResult = withContext(ioDispatcher) {
         val restorePlan = backupValidator.buildRestorePlan(content)
 
         database.withTransaction {

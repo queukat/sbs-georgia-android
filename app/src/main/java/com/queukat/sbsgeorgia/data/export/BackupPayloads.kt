@@ -120,10 +120,5 @@ data class ImportedTransactionPayload(
     val finalInclusion: String
 )
 
-data class BackupRestoreResult(
-    val reminderConfigImported: Boolean,
-    val incomeEntryCount: Int,
-    val monthlyRecordCount: Int,
-    val importedStatementCount: Int,
-    val importedTransactionCount: Int
-)
+// Source-compatible alias for existing data-layer callers and tests.
+typealias BackupRestoreResult = com.queukat.sbsgeorgia.domain.model.BackupRestoreResult
