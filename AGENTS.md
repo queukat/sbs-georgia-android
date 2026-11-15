@@ -228,6 +228,12 @@ SBS Georgia Android - offline-first Android-приложение для инди
   one invented or averaged monthly rate.
 - Backup restore replaces local tables inside a Room transaction. If imported setup
   is incomplete, onboarding remains active.
+- Restore of legacy JSON backup format v1 normalizes completed zero declarations
+  saved as `settled` with `zeroDeclarationPrepared=true` and a fictitious zero
+  payment to `FILED`, retaining the filing date/notes but clearing payment
+  amount and payment dates. Positive actual payments are never discarded; zero
+  amounts for other payment states still fail validation. The source JSON is
+  not rewritten, and the Room schema version is unchanged.
 - Reminders are daily WorkManager jobs scheduled by stored reminder config and
   bootstrapped on app launch.
 - Widgets render through `RemoteViews` and refresh from Room invalidation observer.

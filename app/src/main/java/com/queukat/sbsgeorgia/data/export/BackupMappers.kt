@@ -146,12 +146,13 @@ internal fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecor
         notes = notes
     )
 
-internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecordEntity =
-    MonthlyDeclarationRecordEntity(
+internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecordEntity {
+    val status = MonthlyWorkflowStatus.fromPersisted(workflowStatus)
+    val record = MonthlyDeclarationRecordEntity(
         periodKey = periodKey,
         year = year,
         month = month,
-        workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
+        workflowStatus = status.dbCode,
         zeroDeclarationPrepared = zeroDeclarationPrepared,
         declarationFiledDate = declarationFiledDate?.let(LocalDate::parse),
         paymentSentDate = paymentSentDate?.let(LocalDate::parse),
@@ -159,6 +160,25 @@ internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecor
         paymentAmountGel = paymentAmountGel?.let(::BigDecimal),
         notes = notes
     )
+
+    // Earlier format-v1 backups marked completed zero-tax months as SETTLED,
+    // with a fictitious 0 GEL payment and payment dates. Keep the filing date
+    // and user notes, but restore the current FILED representation instead.
+    // Parse all supplied dates before normalization, so malformed data still fails.
+    val completedZeroDeclaration =
+        record.zeroDeclarationPrepared &&
+            record.declarationFiledDate != null &&
+            (status == MonthlyWorkflowStatus.SETTLED || status == MonthlyWorkflowStatus.FILED) &&
+            (record.paymentAmountGel == null || record.paymentAmountGel.signum() == 0)
+    if (!completedZeroDeclaration) return record
+
+    return record.copy(
+        workflowStatus = MonthlyWorkflowStatus.FILED.dbCode,
+        paymentSentDate = null,
+        paymentCreditedDate = null,
+        paymentAmountGel = null
+    )
+}
 
 internal fun FxRateEntity.toPayload(): FxRatePayload = FxRatePayload(
     id = id,
