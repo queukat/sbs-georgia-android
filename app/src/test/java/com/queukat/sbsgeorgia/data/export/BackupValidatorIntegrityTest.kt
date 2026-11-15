@@ -1,5 +1,8 @@
 package com.queukat.sbsgeorgia.data.export
 
+import com.queukat.sbsgeorgia.data.local.MonthlyDeclarationRecordEntity
+import java.math.BigDecimal
+import java.time.LocalDate
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -132,6 +135,32 @@ class BackupValidatorIntegrityTest {
         assertEquals(null, record.paymentSentDate)
         assertEquals(null, record.paymentCreditedDate)
         assertEquals(null, record.paymentAmountGel)
+    }
+
+    @Test
+    fun exportCanonicalizesLegacyZeroTaxWithoutMutatingLiveRoomEntity() {
+        val source = MonthlyDeclarationRecordEntity(
+            periodKey = "2026-02",
+            year = 2026,
+            month = 2,
+            workflowStatus = "settled",
+            zeroDeclarationPrepared = true,
+            declarationFiledDate = LocalDate.of(2026, 4, 15),
+            paymentSentDate = LocalDate.of(2026, 4, 15),
+            paymentCreditedDate = LocalDate.of(2026, 4, 15),
+            paymentAmountGel = BigDecimal("0.00"),
+            notes = "Preserve note"
+        )
+
+        val exported = source.toPayload()
+        assertEquals("filed", exported.workflowStatus)
+        assertEquals("2026-04-15", exported.declarationFiledDate)
+        assertEquals(null, exported.paymentAmountGel)
+        assertEquals(null, exported.paymentSentDate)
+        assertEquals(null, exported.paymentCreditedDate)
+        assertEquals("Preserve note", exported.notes)
+        assertEquals("settled", source.workflowStatus)
+        assertEquals("0.00", source.paymentAmountGel?.toPlainString())
     }
 
     @Test

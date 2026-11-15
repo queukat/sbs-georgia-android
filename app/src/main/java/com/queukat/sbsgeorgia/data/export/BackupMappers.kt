@@ -132,19 +132,21 @@ internal fun IncomeEntryPayload.toEntity(): IncomeEntryEntity = IncomeEntryEntit
     updatedAtEpochMillis = updatedAtEpochMillis
 )
 
-internal fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecordPayload =
-    MonthlyDeclarationRecordPayload(
-        periodKey = periodKey,
-        year = year,
-        month = month,
-        workflowStatus = MonthlyWorkflowStatus.fromPersisted(workflowStatus).dbCode,
-        zeroDeclarationPrepared = zeroDeclarationPrepared,
-        declarationFiledDate = declarationFiledDate?.toString(),
-        paymentSentDate = paymentSentDate?.toString(),
-        paymentCreditedDate = paymentCreditedDate?.toString(),
-        paymentAmountGel = paymentAmountGel?.toPlainString(),
-        notes = notes
+internal fun MonthlyDeclarationRecordEntity.toPayload(): MonthlyDeclarationRecordPayload {
+    val canonical = normalizeLegacyZeroDeclaration()
+    return MonthlyDeclarationRecordPayload(
+        periodKey = canonical.periodKey,
+        year = canonical.year,
+        month = canonical.month,
+        workflowStatus = canonical.workflowStatus,
+        zeroDeclarationPrepared = canonical.zeroDeclarationPrepared,
+        declarationFiledDate = canonical.declarationFiledDate?.toString(),
+        paymentSentDate = canonical.paymentSentDate?.toString(),
+        paymentCreditedDate = canonical.paymentCreditedDate?.toString(),
+        paymentAmountGel = canonical.paymentAmountGel?.toPlainString(),
+        notes = canonical.notes
     )
+}
 
 internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecordEntity {
     val status = MonthlyWorkflowStatus.fromPersisted(workflowStatus)
@@ -161,18 +163,23 @@ internal fun MonthlyDeclarationRecordPayload.toEntity(): MonthlyDeclarationRecor
         notes = notes
     )
 
-    // Earlier format-v1 backups marked completed zero-tax months as SETTLED,
-    // with a fictitious 0 GEL payment and payment dates. Keep the filing date
-    // and user notes, but restore the current FILED representation instead.
     // Parse all supplied dates before normalization, so malformed data still fails.
-    val completedZeroDeclaration =
-        record.zeroDeclarationPrepared &&
-            record.declarationFiledDate != null &&
-            (status == MonthlyWorkflowStatus.SETTLED || status == MonthlyWorkflowStatus.FILED) &&
-            (record.paymentAmountGel == null || record.paymentAmountGel.signum() == 0)
-    if (!completedZeroDeclaration) return record
+    return record.normalizeLegacyZeroDeclaration()
+}
 
-    return record.copy(
+/** Canonicalize historical zero-tax rows both on import and on export. */
+private fun MonthlyDeclarationRecordEntity.normalizeLegacyZeroDeclaration(): MonthlyDeclarationRecordEntity {
+    val status = MonthlyWorkflowStatus.fromPersisted(workflowStatus)
+    // Older quick-settle stored a fictitious payment for a filed zero declaration.
+    // Do not erase real positive payments or infer a filing date that is absent.
+    val completedZeroDeclaration =
+        zeroDeclarationPrepared &&
+            declarationFiledDate != null &&
+            (status == MonthlyWorkflowStatus.SETTLED || status == MonthlyWorkflowStatus.FILED) &&
+            (paymentAmountGel == null || paymentAmountGel.signum() == 0)
+    if (!completedZeroDeclaration) return this
+
+    return copy(
         workflowStatus = MonthlyWorkflowStatus.FILED.dbCode,
         paymentSentDate = null,
         paymentCreditedDate = null,

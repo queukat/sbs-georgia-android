@@ -256,6 +256,37 @@ class AppBackupManagerTest {
         }
     }
 
+    @Test
+    fun exportCanonicalizesLegacyZeroTaxStillStoredInOldRoomData() = runTest {
+        val database = buildDatabase("legacy-export")
+        try {
+            database.monthlyDeclarationRecordDao().upsert(
+                MonthlyDeclarationRecordEntity(
+                    periodKey = "2026-02",
+                    year = 2026,
+                    month = 2,
+                    workflowStatus = "settled",
+                    zeroDeclarationPrepared = true,
+                    declarationFiledDate = LocalDate.of(2026, 4, 15),
+                    paymentSentDate = LocalDate.of(2026, 4, 15),
+                    paymentCreditedDate = LocalDate.of(2026, 4, 15),
+                    paymentAmountGel = BigDecimal.ZERO.setScale(2),
+                    notes = "Old note"
+                )
+            )
+            val exported = json.decodeFromString<AppBackupDocument>(backupManager(database).exportJson())
+            val month = exported.monthlyDeclarationRecords.single()
+            assertEquals("filed", month.workflowStatus)
+            assertEquals(null, month.paymentAmountGel)
+            assertEquals(null, month.paymentSentDate)
+            assertEquals(null, month.paymentCreditedDate)
+            assertEquals("Old note", month.notes)
+            assertEquals("settled", database.monthlyDeclarationRecordDao().getAll().single().workflowStatus)
+        } finally {
+            database.close()
+        }
+    }
+
     private fun buildDatabase(name: String): SbsGeorgiaDatabase = Room
         .inMemoryDatabaseBuilder(appContext, SbsGeorgiaDatabase::class.java)
         .allowMainThreadQueries()
