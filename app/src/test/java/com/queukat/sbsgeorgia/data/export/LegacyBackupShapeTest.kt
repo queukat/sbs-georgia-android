@@ -90,7 +90,11 @@ class LegacyBackupShapeTest {
                 declarationFiledDate = if (legacyZero) "2026-04-15" else "2026-04-02",
                 paymentSentDate = if (filedZero) null else "2026-04-02",
                 paymentCreditedDate = if (filedZero) null else "2026-04-02",
-                paymentAmountGel = if (legacyZero) "0.00" else if (filedZero) null else "25.00",
+                paymentAmountGel = when {
+                    legacyZero -> "0.00"
+                    filedZero -> null
+                    else -> "25.00"
+                },
                 notes = ""
             )
         },
