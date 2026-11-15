@@ -204,6 +204,58 @@ class AppBackupManagerTest {
         }
     }
 
+    @Test
+    fun importLegacySettledZeroMonthPreservesFilingAndExportsCanonicalRecord() = runTest {
+        val database = buildDatabase("legacy-zero-declaration")
+        try {
+            // Wire format v1 can omit formatVersion; this is a synthetic historical backup.
+            val legacyBackup = """
+                {
+                  "exportedAtEpochMillis": 1,
+                  "monthlyDeclarationRecords": [
+                    {"periodKey":"2026-02","year":2026,"month":2,
+                     "workflowStatus":"settled","zeroDeclarationPrepared":true,
+                     "declarationFiledDate":"2026-04-15",
+                     "paymentSentDate":"2026-04-15",
+                     "paymentCreditedDate":"2026-04-15",
+                     "paymentAmountGel":"0.00","notes":"Filed"},
+                    {"periodKey":"2026-03","year":2026,"month":3,
+                     "workflowStatus":"settled","zeroDeclarationPrepared":false,
+                     "declarationFiledDate":"2026-04-02",
+                     "paymentSentDate":"2026-04-02",
+                     "paymentCreditedDate":"2026-04-02",
+                     "paymentAmountGel":"81.60","notes":""}
+                  ]
+                }
+            """.trimIndent()
+            val manager = backupManager(database)
+            val result = manager.importJson(legacyBackup)
+            assertEquals(2, result.monthlyRecordCount)
+
+            val restored = database.monthlyDeclarationRecordDao().getAll()
+            val zero = restored.single { it.periodKey == "2026-02" }
+            val paid = restored.single { it.periodKey == "2026-03" }
+            assertEquals("filed", zero.workflowStatus)
+            assertEquals(true, zero.zeroDeclarationPrepared)
+            assertEquals(LocalDate.of(2026, 4, 15), zero.declarationFiledDate)
+            assertEquals(null, zero.paymentSentDate)
+            assertEquals(null, zero.paymentCreditedDate)
+            assertEquals(null, zero.paymentAmountGel)
+            assertEquals("Filed", zero.notes)
+            assertEquals("settled", paid.workflowStatus)
+            assertEquals("81.60", paid.paymentAmountGel?.toPlainString())
+
+            val exported = json.decodeFromString<AppBackupDocument>(manager.exportJson())
+            val exportedZero = exported.monthlyDeclarationRecords.single { it.periodKey == "2026-02" }
+            assertEquals("filed", exportedZero.workflowStatus)
+            assertEquals(null, exportedZero.paymentAmountGel)
+            assertEquals(null, exportedZero.paymentSentDate)
+            assertEquals(null, exportedZero.paymentCreditedDate)
+        } finally {
+            database.close()
+        }
+    }
+
     private fun buildDatabase(name: String): SbsGeorgiaDatabase = Room
         .inMemoryDatabaseBuilder(appContext, SbsGeorgiaDatabase::class.java)
         .allowMainThreadQueries()
