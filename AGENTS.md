@@ -233,8 +233,10 @@ SBS Georgia Android - offline-first Android-приложение для инди
   on both import and export, retaining the filing date/notes but clearing
   payment amount and payment dates. Positive actual payments are never discarded;
   zero amounts for other payment states still fail validation. Export never
-  mutates the live Room records, the source JSON is not rewritten, and the Room
-  schema version is unchanged.
+  mutates the live Room records, and the source JSON is not rewritten.
+  Room schema v7 also migrates matching legacy rows already on a user's phone
+  when upgrading from v6 or earlier (the v5→v6→v7 chain is registered). Existing
+  saved JSON files remain usable through the new restore path.
 - Reminders are daily WorkManager jobs scheduled by stored reminder config and
   bootstrapped on app launch.
 - Widgets render through `RemoteViews` and refresh from Room invalidation observer.

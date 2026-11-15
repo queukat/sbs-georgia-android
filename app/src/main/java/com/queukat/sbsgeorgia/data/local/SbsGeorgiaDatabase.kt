@@ -18,7 +18,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ImportedTransactionEntity::class,
         FxRateEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(AppTypeConverters::class)
@@ -156,6 +156,54 @@ abstract class SbsGeorgiaDatabase : RoomDatabase() {
                         ) VALUES(1, 1, 1, 20)
                         """.trimIndent()
                     )
+                }
+            }
+
+        /**
+         * Data-only migration: older builds completed zero-tax months as SETTLED
+         * with a fictitious zero payment and payment dates. Keep the real filing
+         * date and notes, but convert those rows to FILED without payment data.
+         *
+         * Check the exact decimal value rather than using SQLite CAST AS REAL:
+         * it would treat malformed strings and tiny nonzero amounts as zero.
+         */
+        val MIGRATION_6_7: Migration =
+            object : Migration(6, 7) {
+                override fun migrate(db: SupportSQLiteDatabase) {
+                    val zeroTaxPeriods = mutableListOf<String>()
+                    db.query(
+                        """
+                        SELECT periodKey, paymentAmountGel
+                        FROM monthly_declaration_record
+                        WHERE zeroDeclarationPrepared = 1
+                          AND declarationFiledDate IS NOT NULL
+                          AND LOWER(workflowStatus) IN ('settled', 'filed')
+                        """.trimIndent()
+                    ).use { cursor ->
+                        val periodIndex = cursor.getColumnIndexOrThrow("periodKey")
+                        val amountIndex = cursor.getColumnIndexOrThrow("paymentAmountGel")
+                        while (cursor.moveToNext()) {
+                            val zeroPayment =
+                                cursor.isNull(amountIndex) ||
+                                    cursor.getString(amountIndex).toBigDecimalOrNull()?.signum() == 0
+                            if (zeroPayment) {
+                                zeroTaxPeriods += cursor.getString(periodIndex)
+                            }
+                        }
+                    }
+                    zeroTaxPeriods.forEach { period ->
+                        db.execSQL(
+                            """
+                            UPDATE monthly_declaration_record
+                            SET workflowStatus = 'filed',
+                                paymentSentDate = NULL,
+                                paymentCreditedDate = NULL,
+                                paymentAmountGel = NULL
+                            WHERE periodKey = ?
+                            """.trimIndent(),
+                            arrayOf(period)
+                        )
+                    }
                 }
             }
     }

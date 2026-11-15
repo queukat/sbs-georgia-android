@@ -131,7 +131,8 @@ object AppModule {
             SbsGeorgiaDatabase.MIGRATION_2_3,
             SbsGeorgiaDatabase.MIGRATION_3_4,
             SbsGeorgiaDatabase.MIGRATION_4_5,
-            SbsGeorgiaDatabase.MIGRATION_5_6
+            SbsGeorgiaDatabase.MIGRATION_5_6,
+            SbsGeorgiaDatabase.MIGRATION_6_7
         ).build()
 
     @Provides
