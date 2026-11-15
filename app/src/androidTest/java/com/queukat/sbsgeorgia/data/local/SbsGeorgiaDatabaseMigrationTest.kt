@@ -261,6 +261,53 @@ class SbsGeorgiaDatabaseMigrationTest {
         migrated.close()
     }
 
+    @Test
+    @Throws(IOException::class)
+    fun migrate1To7PreservesFirstReleaseDataAndCanonicalizesFiledZeroTax() {
+        helper.createDatabase(TEST_DB, 1).apply {
+            execSQL(
+                """
+                INSERT INTO monthly_declaration_record(
+                    periodKey, year, month, workflowStatus, zeroDeclarationPrepared,
+                    declarationFiledDate, paymentSentDate, paymentCreditedDate, notes
+                ) VALUES(
+                    '2026-02', 2026, 2, 'settled', 1,
+                    '2026-04-15', '2026-04-15', '2026-04-15', 'First release'
+                )
+                """.trimIndent()
+            )
+            close()
+        }
+        val migrated = helper.runMigrationsAndValidate(
+            TEST_DB,
+            7,
+            true,
+            SbsGeorgiaDatabase.MIGRATION_1_2,
+            SbsGeorgiaDatabase.MIGRATION_2_3,
+            SbsGeorgiaDatabase.MIGRATION_3_4,
+            SbsGeorgiaDatabase.MIGRATION_4_5,
+            SbsGeorgiaDatabase.MIGRATION_5_6,
+            SbsGeorgiaDatabase.MIGRATION_6_7
+        )
+        migrated.query(
+            """
+            SELECT workflowStatus, declarationFiledDate,
+                   paymentSentDate, paymentCreditedDate, paymentAmountGel, notes
+            FROM monthly_declaration_record WHERE periodKey = '2026-02'
+            """.trimIndent()
+        ).use { cursor ->
+            assertEquals(1, cursor.count)
+            cursor.moveToFirst()
+            assertEquals("filed", cursor.getString(0))
+            assertEquals("2026-04-15", cursor.getString(1))
+            assertEquals(null, cursor.getString(2))
+            assertEquals(null, cursor.getString(3))
+            assertEquals(null, cursor.getString(4))
+            assertEquals("First release", cursor.getString(5))
+        }
+        migrated.close()
+    }
+
     private companion object {
         const val TEST_DB = "migration-test"
     }
