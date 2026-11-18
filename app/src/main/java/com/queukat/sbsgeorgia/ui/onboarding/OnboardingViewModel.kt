@@ -5,6 +5,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.data.export.BackupRestoreLog
+import com.queukat.sbsgeorgia.data.export.safeUriDiagnostic
+import com.queukat.sbsgeorgia.data.export.toBackupDiagnosticSummary
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.usecase.CompleteOnboardingUseCase
 import com.queukat.sbsgeorgia.domain.usecase.LoadOnboardingDocumentPreviewUseCase
@@ -25,6 +28,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.Clock
 import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -108,6 +112,8 @@ constructor(
     }
 
     fun restoreBackup(uri: Uri) {
+        val uriDiag = safeUriDiagnostic(uri.toString())
+        BackupRestoreLog.info("OnboardingVM", "restoreBackup requested ($uriDiag)")
         viewModelScope.launch {
             _uiState.value =
                 _uiState.value.copy(
@@ -119,6 +125,10 @@ constructor(
             runCatching {
                 backupRestoreController.restore(uri.toString())
             }.onSuccess { result ->
+                BackupRestoreLog.info(
+                    "OnboardingVM",
+                    "restoreBackup succeeded (setupComplete=${result.setupComplete})"
+                )
                 loadExistingValues(
                     infoMessage =
                     buildString {
@@ -135,13 +145,27 @@ constructor(
                     errorMessage = null,
                     isRestoringBackup = false
                 )
-            }.onFailure {
+            }.onFailure { error ->
+                if (error is CancellationException) {
+                    BackupRestoreLog.warn("OnboardingVM", "restoreBackup cancelled ($uriDiag)")
+                    throw error
+                }
+                val summary = error.toBackupDiagnosticSummary()
+                BackupRestoreLog.error(
+                    "OnboardingVM",
+                    "restoreBackup failed ($uriDiag): $summary",
+                    error
+                )
+                val baseMessage = appContext.getString(R.string.onboarding_restore_backup_failed)
                 _uiState.value =
                     _uiState.value.copy(
                         isRestoringBackup = false,
-                        errorMessage = appContext.getString(
-                            R.string.onboarding_restore_backup_failed
-                        )
+                        errorMessage =
+                        if (summary.isBlank()) {
+                            baseMessage
+                        } else {
+                            "$baseMessage\n\n$summary"
+                        }
                     )
             }
         }

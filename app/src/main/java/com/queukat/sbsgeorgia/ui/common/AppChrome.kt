@@ -11,9 +11,12 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -200,7 +203,11 @@ fun StatusBanner(message: String, tone: SbsStatusTone, modifier: Modifier = Modi
             SbsStatusTone.Error -> MaterialTheme.colorScheme.error
             SbsStatusTone.Success -> MaterialTheme.colorScheme.primary
         },
-        modifier = modifier
+        modifier =
+        modifier
+            .fillMaxWidth()
+            .heightIn(max = 200.dp)
+            .verticalScroll(rememberScrollState())
     )
 }
 

@@ -5,6 +5,9 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.data.export.BackupRestoreLog
+import com.queukat.sbsgeorgia.data.export.safeUriDiagnostic
+import com.queukat.sbsgeorgia.data.export.toBackupDiagnosticSummary
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.ReminderConfig
 import com.queukat.sbsgeorgia.domain.model.SmallBusinessStatusConfig
@@ -298,16 +301,24 @@ constructor(
     }
 
     fun exportBackupJson(uriString: String) {
-        runDataOperation {
-            _effects.emit(
-                SettingsEffect.Message(backupActions.exportBackupJson(uriString).message)
-            )
+        val uriDiag = safeUriDiagnostic(uriString)
+        BackupRestoreLog.info("SettingsVM", "exportBackupJson requested ($uriDiag)")
+        runDataOperation("exportBackupJson") {
+            val result = backupActions.exportBackupJson(uriString)
+            BackupRestoreLog.info("SettingsVM", "exportBackupJson succeeded ($uriDiag)")
+            _effects.emit(SettingsEffect.Message(result.message))
         }
     }
 
     fun importBackupJson(uriString: String) {
-        runDataOperation {
+        val uriDiag = safeUriDiagnostic(uriString)
+        BackupRestoreLog.info("SettingsVM", "importBackupJson requested ($uriDiag)")
+        runDataOperation("importBackupJson") {
             val result = backupRestoreController.restore(uriString)
+            BackupRestoreLog.info(
+                "SettingsVM",
+                "importBackupJson finished ($uriDiag, setupComplete=${result.setupComplete})"
+            )
             loadCurrentSettings()
             _effects.emit(SettingsEffect.Message(result.message))
         }
@@ -339,18 +350,35 @@ constructor(
         }
     }
 
-    private fun runDataOperation(block: suspend () -> Unit) {
-        if (_uiState.value.isDataOperationInProgress) return
+    private fun runDataOperation(operationName: String = "dataOperation", block: suspend () -> Unit) {
+        if (_uiState.value.isDataOperationInProgress) {
+            BackupRestoreLog.warn("SettingsVM", "$operationName ignored: operation already in progress")
+            return
+        }
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isDataOperationInProgress = true)
+            _uiState.value =
+                _uiState.value.copy(
+                    isDataOperationInProgress = true,
+                    errorMessage = null
+                )
             runCatching {
                 block()
-            }.onFailure {
-                _effects.emit(
-                    SettingsEffect.Message(
-                        appContext.getString(R.string.settings_message_data_operation_failed)
-                    )
-                )
+            }.onFailure { error ->
+                if (error is CancellationException) {
+                    BackupRestoreLog.warn("SettingsVM", "$operationName cancelled")
+                    throw error
+                }
+                val summary = error.toBackupDiagnosticSummary()
+                BackupRestoreLog.error("SettingsVM", "$operationName failed: $summary", error)
+                val baseMessage = appContext.getString(R.string.settings_message_data_operation_failed)
+                val fullMessage =
+                    if (summary.isBlank()) {
+                        baseMessage
+                    } else {
+                        "$baseMessage\n\n$summary"
+                    }
+                _uiState.value = _uiState.value.copy(errorMessage = fullMessage)
+                _effects.emit(SettingsEffect.Message(fullMessage))
             }
             _uiState.value = _uiState.value.copy(isDataOperationInProgress = false)
         }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +41,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.data.export.BackupRestoreLog
+import com.queukat.sbsgeorgia.data.export.safeUriDiagnostic
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormConfig
 import com.queukat.sbsgeorgia.domain.model.DeclarationFormField
 import com.queukat.sbsgeorgia.domain.model.ThemeMode
@@ -107,6 +110,14 @@ fun SettingsRoute(innerPadding: PaddingValues) {
         rememberLauncherForActivityResult(
             contract = ActivityResultContracts.OpenDocument()
         ) { uri: Uri? ->
+            if (uri != null) {
+                BackupRestoreLog.info(
+                    "SettingsScreen",
+                    "importBackupJsonLauncher returned uri (${safeUriDiagnostic(uri.toString())})"
+                )
+            } else {
+                BackupRestoreLog.warn("SettingsScreen", "importBackupJsonLauncher cancelled (uri=null)")
+            }
             pendingBackupImportUri = uri?.toString()
         }
     val importDocumentLauncher =
@@ -124,7 +135,11 @@ fun SettingsRoute(innerPadding: PaddingValues) {
         viewModel.effects.collect { effect ->
             when (effect) {
                 is SettingsEffect.Saved -> snackbarHostState.showSnackbar(savedMessage)
-                is SettingsEffect.Message -> snackbarHostState.showSnackbar(effect.text)
+                is SettingsEffect.Message ->
+                    snackbarHostState.showSnackbar(
+                        message = effect.text,
+                        duration = SnackbarDuration.Long
+                    )
             }
         }
     }
@@ -204,6 +219,7 @@ fun SettingsRoute(innerPadding: PaddingValues) {
             exportBackupJsonLauncher.launch("sbs-georgia-backup-${LocalDate.now()}.json")
         },
         onImportBackupJson = {
+            BackupRestoreLog.info("SettingsScreen", "Launching OpenDocument for backup restore")
             importBackupJsonLauncher.launch(
                 arrayOf("application/json", "text/plain", "application/octet-stream")
             )
@@ -231,6 +247,10 @@ fun SettingsRoute(innerPadding: PaddingValues) {
             confirmButton = {
                 Button(
                     onClick = {
+                        BackupRestoreLog.info(
+                            "SettingsScreen",
+                            "Backup restore confirm clicked (${safeUriDiagnostic(uriString)})"
+                        )
                         pendingBackupImportUri = null
                         viewModel.importBackupJson(uriString)
                     },

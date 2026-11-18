@@ -2,7 +2,10 @@ package com.queukat.sbsgeorgia.ui.common.backup
 
 import android.content.Context
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.data.export.BackupRestoreLog
 import com.queukat.sbsgeorgia.data.export.BackupRestoreResult
+import com.queukat.sbsgeorgia.data.export.runLoggedOperation
+import com.queukat.sbsgeorgia.data.export.safeUriDiagnostic
 import com.queukat.sbsgeorgia.domain.model.isSetupComplete
 import com.queukat.sbsgeorgia.domain.repository.SettingsRepository
 import com.queukat.sbsgeorgia.domain.repository.TextDocumentStore
@@ -24,23 +27,43 @@ constructor(
     @param:ApplicationContext private val context: Context
 ) {
     suspend fun restore(uriString: String): BackupRestoreUiResult {
-        val content = textDocumentStore.readText(uriString)
-        val result = importBackupJsonUseCase(content)
-        val importedReminderConfig = settingsRepository.observeReminderConfig().first()
-        if (importedReminderConfig != null) {
-            reminderScheduler.reschedule(importedReminderConfig)
-        } else {
-            reminderScheduler.cancelAll()
+        val uriDiag = safeUriDiagnostic(uriString)
+        BackupRestoreLog.info("BackupController", "restore start ($uriDiag)")
+        return runLoggedOperation("BackupController", "restore failed ($uriDiag)") {
+            val content = textDocumentStore.readText(uriString)
+            BackupRestoreLog.info("BackupController", "document loaded (chars=${content.length}), importing JSON")
+
+            val result = importBackupJsonUseCase(content)
+            BackupRestoreLog.info(
+                "BackupController",
+                "importJson finished (income=${result.incomeEntryCount}, " +
+                    "monthly=${result.monthlyRecordCount}, statements=${result.importedStatementCount}, " +
+                    "tx=${result.importedTransactionCount}, reminderConfig=${result.reminderConfigImported})"
+            )
+
+            val importedReminderConfig = settingsRepository.observeReminderConfig().first()
+            if (importedReminderConfig != null) {
+                reminderScheduler.reschedule(importedReminderConfig)
+                BackupRestoreLog.info("BackupController", "reminders rescheduled")
+            } else {
+                reminderScheduler.cancelAll()
+                BackupRestoreLog.info("BackupController", "reminders cancelled (none in backup)")
+            }
+
+            val profile = settingsRepository.observeTaxpayerProfile().first()
+            val config = settingsRepository.observeStatusConfig().first()
+            val setupComplete = isSetupComplete(profile, config)
+            BackupRestoreLog.info(
+                "BackupController",
+                "restore finished (hasProfile=${profile != null}, hasConfig=${config != null}, " +
+                    "setupComplete=$setupComplete)"
+            )
+
+            BackupRestoreUiResult(
+                message = result.toSummaryMessage(context),
+                setupComplete = setupComplete
+            )
         }
-
-        val profile = settingsRepository.observeTaxpayerProfile().first()
-        val config = settingsRepository.observeStatusConfig().first()
-        val setupComplete = isSetupComplete(profile, config)
-
-        return BackupRestoreUiResult(
-            message = result.toSummaryMessage(context),
-            setupComplete = setupComplete
-        )
     }
 }
 

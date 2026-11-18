@@ -47,59 +47,82 @@ constructor(
     @param:IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : AppBackupRepository {
     override suspend fun exportJson(): String = withContext(ioDispatcher) {
-        val document = database.withTransaction {
-            val declarationFormConfig =
-                declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
-            AppBackupDocument(
-                exportedAtEpochMillis = clock.millis(),
-                taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
-                statusConfig = statusConfigDao.get()?.toPayload(),
-                reminderConfig = reminderConfigDao.get()?.toPayload(),
-                declarationFormConfig = declarationFormConfig.toPayload(),
-                incomeEntries = incomeEntryDao.getAll().map(IncomeEntryEntity::toPayload),
-                monthlyDeclarationRecords = monthlyDeclarationRecordDao.getAll().map(
-                    MonthlyDeclarationRecordEntity::toPayload
-                ),
-                fxRates = fxRateDao.getAll().map(FxRateEntity::toPayload),
-                importedStatements = importedStatementDao.getAll().map(
-                    ImportedStatementEntity::toPayload
-                ),
-                importedTransactions = importedTransactionDao.getAll().map(
-                    ImportedTransactionEntity::toPayload
+        BackupRestoreLog.info("AppBackupManager", "exportJson start")
+        runLoggedOperation("AppBackupManager", "exportJson failed") {
+            val document = database.withTransaction {
+                val declarationFormConfig =
+                    declarationFormConfigDao.get() ?: DeclarationFormConfig().toEntity()
+                AppBackupDocument(
+                    exportedAtEpochMillis = clock.millis(),
+                    taxpayerProfile = taxpayerProfileDao.get()?.toPayload(),
+                    statusConfig = statusConfigDao.get()?.toPayload(),
+                    reminderConfig = reminderConfigDao.get()?.toPayload(),
+                    declarationFormConfig = declarationFormConfig.toPayload(),
+                    incomeEntries = incomeEntryDao.getAll().map(IncomeEntryEntity::toPayload),
+                    monthlyDeclarationRecords = monthlyDeclarationRecordDao.getAll().map(
+                        MonthlyDeclarationRecordEntity::toPayload
+                    ),
+                    fxRates = fxRateDao.getAll().map(FxRateEntity::toPayload),
+                    importedStatements = importedStatementDao.getAll().map(
+                        ImportedStatementEntity::toPayload
+                    ),
+                    importedTransactions = importedTransactionDao.getAll().map(
+                        ImportedTransactionEntity::toPayload
+                    )
                 )
-            )
+            }
+            val encoded = json.encodeToString(document)
+            BackupRestoreLog.info("AppBackupManager", "exportJson completed (chars=${encoded.length})")
+            encoded
         }
-        json.encodeToString(document)
     }
 
     override suspend fun importJson(content: String): BackupRestoreResult = withContext(ioDispatcher) {
-        val restorePlan = backupValidator.buildRestorePlan(content)
+        BackupRestoreLog.info("AppBackupManager", "importJson start (chars=${content.length})")
+        runLoggedOperation("AppBackupManager", "importJson failed (chars=${content.length})") {
+            val restorePlan = backupValidator.buildRestorePlan(content)
+            BackupRestoreLog.info(
+                "AppBackupManager",
+                "restorePlan built (hasProfile=${restorePlan.taxpayerProfile != null}, " +
+                    "hasStatus=${restorePlan.statusConfig != null}, " +
+                    "hasReminder=${restorePlan.reminderConfig != null}, " +
+                    "income=${restorePlan.incomeEntries.size}, " +
+                    "monthly=${restorePlan.monthlyDeclarationRecords.size}, " +
+                    "fx=${restorePlan.fxRates.size}, " +
+                    "statements=${restorePlan.importedStatements.size}, " +
+                    "tx=${restorePlan.importedTransactions.size})"
+            )
 
-        database.withTransaction {
-            clearAllTablesForRestore()
+            database.withTransaction {
+                BackupRestoreLog.info("AppBackupManager", "Room transaction started; clearing tables")
+                clearAllTablesForRestore()
+                BackupRestoreLog.info("AppBackupManager", "Room tables cleared; inserting rows")
 
-            restorePlan.taxpayerProfile?.let { taxpayerProfileDao.upsert(it) }
-            restorePlan.statusConfig?.let { statusConfigDao.upsert(it) }
-            restorePlan.reminderConfig?.let { reminderConfigDao.upsert(it) }
-            declarationFormConfigDao.upsert(restorePlan.declarationFormConfig)
-            if (restorePlan.incomeEntries.isNotEmpty()) {
-                incomeEntryDao.insertAll(restorePlan.incomeEntries)
+                restorePlan.taxpayerProfile?.let { taxpayerProfileDao.upsert(it) }
+                restorePlan.statusConfig?.let { statusConfigDao.upsert(it) }
+                restorePlan.reminderConfig?.let { reminderConfigDao.upsert(it) }
+                declarationFormConfigDao.upsert(restorePlan.declarationFormConfig)
+                if (restorePlan.incomeEntries.isNotEmpty()) {
+                    incomeEntryDao.insertAll(restorePlan.incomeEntries)
+                }
+                if (restorePlan.monthlyDeclarationRecords.isNotEmpty()) {
+                    monthlyDeclarationRecordDao.insertAll(restorePlan.monthlyDeclarationRecords)
+                }
+                if (restorePlan.fxRates.isNotEmpty()) {
+                    fxRateDao.insertAll(restorePlan.fxRates)
+                }
+                if (restorePlan.importedStatements.isNotEmpty()) {
+                    importedStatementDao.insertAll(restorePlan.importedStatements)
+                }
+                if (restorePlan.importedTransactions.isNotEmpty()) {
+                    importedTransactionDao.replaceAll(restorePlan.importedTransactions)
+                }
+                BackupRestoreLog.info("AppBackupManager", "Room transaction inserts completed")
             }
-            if (restorePlan.monthlyDeclarationRecords.isNotEmpty()) {
-                monthlyDeclarationRecordDao.insertAll(restorePlan.monthlyDeclarationRecords)
-            }
-            if (restorePlan.fxRates.isNotEmpty()) {
-                fxRateDao.insertAll(restorePlan.fxRates)
-            }
-            if (restorePlan.importedStatements.isNotEmpty()) {
-                importedStatementDao.insertAll(restorePlan.importedStatements)
-            }
-            if (restorePlan.importedTransactions.isNotEmpty()) {
-                importedTransactionDao.replaceAll(restorePlan.importedTransactions)
-            }
+
+            BackupRestoreLog.info("AppBackupManager", "Room transaction committed")
+            restorePlan.toRestoreResult()
         }
-
-        restorePlan.toRestoreResult()
     }
 
     private suspend fun clearAllTablesForRestore() {

@@ -22,15 +22,39 @@ constructor(
 ) : TextDocumentStore {
     override suspend fun writeText(uriString: String, content: String) = withContext(ioDispatcher) {
         val uri = uriString.toUri()
-        context.contentResolver.openOutputStream(uri, "wt")?.use { output ->
-            output.writer(Charsets.UTF_8).use { writer -> writer.write(content) }
-        } ?: error("Unable to open the selected destination.")
+        val uriDiag = safeUriDiagnostic(uriString)
+        BackupRestoreLog.info("DocumentStore", "writeText start ($uriDiag, chars=${content.length})")
+        runLoggedOperation("DocumentStore", "writeText failed ($uriDiag)") {
+            val output = context.contentResolver.openOutputStream(uri, "wt")
+            if (output == null) {
+                BackupRestoreLog.error("DocumentStore", "writeText openOutputStream returned null ($uriDiag)")
+                error("Unable to open the selected destination.")
+            }
+            output.use { stream ->
+                stream.writer(Charsets.UTF_8).use { writer -> writer.write(content) }
+            }
+            BackupRestoreLog.info("DocumentStore", "writeText completed ($uriDiag)")
+        }
     }
 
     override suspend fun readText(uriString: String): String = withContext(ioDispatcher) {
         val uri = uriString.toUri()
-        context.contentResolver.openInputStream(uri)?.use { input ->
-            input.readBytesLimited(InputLimits.BACKUP_BYTES).toString(Charsets.UTF_8)
-        } ?: error("Unable to open the selected backup file.")
+        val uriDiag = safeUriDiagnostic(uriString)
+        val mimeType = runCatching { context.contentResolver.getType(uri) }.getOrNull()
+        BackupRestoreLog.info("DocumentStore", "readText start ($uriDiag, mimeType=$mimeType)")
+        runLoggedOperation("DocumentStore", "readText failed ($uriDiag)") {
+            val input = context.contentResolver.openInputStream(uri)
+            if (input == null) {
+                BackupRestoreLog.error("DocumentStore", "readText openInputStream returned null ($uriDiag)")
+                error("Unable to open the selected backup file.")
+            }
+            val bytes = input.use { stream -> stream.readBytesLimited(InputLimits.BACKUP_BYTES) }
+            val text = bytes.toString(Charsets.UTF_8)
+            BackupRestoreLog.info(
+                "DocumentStore",
+                "readText completed ($uriDiag, bytes=${bytes.size}, chars=${text.length})"
+            )
+            text
+        }
     }
 }

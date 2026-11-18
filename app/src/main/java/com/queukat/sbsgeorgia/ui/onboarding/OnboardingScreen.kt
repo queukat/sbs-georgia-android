@@ -37,6 +37,8 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.queukat.sbsgeorgia.R
+import com.queukat.sbsgeorgia.data.export.BackupRestoreLog
+import com.queukat.sbsgeorgia.data.export.safeUriDiagnostic
 import com.queukat.sbsgeorgia.domain.model.ExtractionConfidence
 import com.queukat.sbsgeorgia.domain.model.OnboardingDocumentType
 import com.queukat.sbsgeorgia.domain.model.OnboardingImportPreview
@@ -72,11 +74,18 @@ fun OnboardingRoute(innerPadding: PaddingValues = PaddingValues()) {
             contract = ActivityResultContracts.OpenDocument()
         ) { uri: Uri? ->
             if (uri != null) {
+                BackupRestoreLog.info(
+                    "OnboardingScreen",
+                    "restoreBackupLauncher returned uri (${safeUriDiagnostic(uri.toString())}, " +
+                        "hasExistingSetupData=${uiState.hasExistingSetupData})"
+                )
                 if (uiState.hasExistingSetupData) {
                     pendingRestoreBackupUri = uri.toString()
                 } else {
                     viewModel.restoreBackup(uri)
                 }
+            } else {
+                BackupRestoreLog.warn("OnboardingScreen", "restoreBackupLauncher cancelled (uri=null)")
             }
         }
 
@@ -92,6 +101,7 @@ fun OnboardingRoute(innerPadding: PaddingValues = PaddingValues()) {
             pickerLauncher.launch(arrayOf("application/pdf"))
         },
         onRestoreBackup = {
+            BackupRestoreLog.info("OnboardingScreen", "Launching OpenDocument for backup restore")
             restoreBackupLauncher.launch(
                 arrayOf("application/json", "text/plain", "application/octet-stream")
             )
@@ -123,6 +133,10 @@ fun OnboardingRoute(innerPadding: PaddingValues = PaddingValues()) {
             confirmButton = {
                 Button(
                     onClick = {
+                        BackupRestoreLog.info(
+                            "OnboardingScreen",
+                            "Overwrite confirm clicked (${safeUriDiagnostic(uriString)})"
+                        )
                         pendingRestoreBackupUri = null
                         viewModel.restoreBackup(uriString.toUri())
                     },
@@ -203,9 +217,19 @@ fun OnboardingScreen(
     LaunchedEffect(restoreRequested, isBusy, uiState.infoMessage, uiState.errorMessage) {
         if (!restoreRequested || isBusy) return@LaunchedEffect
         when {
-            uiState.errorMessage != null -> restoreRequested = false
+            uiState.errorMessage != null -> {
+                BackupRestoreLog.error(
+                    "OnboardingScreen",
+                    "Restore finished with UI errorMessage (chars=${uiState.errorMessage.length})"
+                )
+                restoreRequested = false
+            }
             uiState.infoMessage != null &&
                 uiState.infoMessage != restoreInfoMessageBeforeRequest -> {
+                BackupRestoreLog.info(
+                    "OnboardingScreen",
+                    "Restore finished with infoMessage; advancing to REVIEW_FOUND_VALUES"
+                )
                 selectedSetupMethod = OnboardingSetupMethod.RESTORE_BACKUP
                 currentStep = OnboardingWizardStep.REVIEW_FOUND_VALUES
                 restoreRequested = false
